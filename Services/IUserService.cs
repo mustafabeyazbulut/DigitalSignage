@@ -1,4 +1,5 @@
 using DigitalSignage.Models;
+using DigitalSignage.Models.Common;
 
 namespace DigitalSignage.Services
 {
@@ -6,10 +7,11 @@ namespace DigitalSignage.Services
     {
         Task<User?> GetByUserNameAsync(string userName);
         Task<User?> GetByEmailAsync(string email);
-        Task<bool> AuthenticateAsync(string userName, string password);
-        // Task<User> CreateUserAsync(CreateUserDTO dto); -- DTO'lar henüz oluşturulmadı, sonra eklenecek
+        Task<User?> AuthenticateAsync(string userName, string password);
         Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
         Task<IEnumerable<User>> GetActiveUsersAsync();
-        Task<IEnumerable<UserCompanyRole>> GetUserCompaniesAsync(int userId);
+        Task<User?> GetUserWithRolesAsync(int userId);
+        Task<IEnumerable<User>> GetUsersByCompanyAsync(int companyId);
+        Task<PagedResult<User>> GetUsersPagedAsync(int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null);
     }
 }

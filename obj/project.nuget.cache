@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "fyPjfFO7giU=",
+  "dgSpecHash": "sReQu4E3ijY=",
   "success": true,
-  "projectFilePath": "C:\\Users\\MBEYAZBULUT\\Desktop\\DigitalSignage\\DigitalSignage.csproj",
+  "projectFilePath": "C:\\Users\\MBEYAZBULUT\\Documents\\GitHub\\DigitalSignage\\DigitalSignage.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\MBEYAZBULUT\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
     "C:\\Users\\MBEYAZBULUT\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.1\\automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",
@@ -10,6 +10,7 @@
     "C:\\Users\\MBEYAZBULUT\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
     "C:\\Users\\MBEYAZBULUT\\.nuget\\packages\\azure.security.keyvault.certificates\\4.6.0\\azure.security.keyvault.certificates.4.6.0.nupkg.sha512",
     "C:\\Users\\MBEYAZBULUT\\.nuget\\packages\\azure.security.keyvault.secrets\\4.6.0\\azure.security.keyvault.secrets.4.6.0.nupkg.sha512",
+    "C:\\Users\\MBEYAZBULUT\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\MBEYAZBULUT\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\MBEYAZBULUT\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\9.0.0\\microsoft.aspnetcore.authentication.jwtbearer.9.0.0.nupkg.sha512",
     "C:\\Users\\MBEYAZBULUT\\.nuget\\packages\\microsoft.aspnetcore.authentication.openidconnect\\9.0.0\\microsoft.aspnetcore.authentication.openidconnect.9.0.0.nupkg.sha512",

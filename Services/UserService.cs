@@ -1,101 +1,127 @@
 using DigitalSignage.Models;
-using DigitalSignage.Data.Repositories;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
+using DigitalSignage.Models.Common;
+using DigitalSignage.Data;
+using DigitalSignage.Helpers;
 
 namespace DigitalSignage.Services
 {
     public class UserService : IUserService
     {
-        private readonly IUserRepository _userRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<UserService> _logger;
 
-        public UserService(
-            IUserRepository userRepository,
-            ILogger<UserService> logger)
+        public UserService(IUnitOfWork unitOfWork, ILogger<UserService> logger)
         {
-            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
             _logger = logger;
         }
 
         public async Task<User?> GetByIdAsync(int id)
         {
-            return await _userRepository.GetByIdAsync(id);
+            return await _unitOfWork.Users.GetByIdAsync(id);
         }
 
         public async Task<IEnumerable<User>> GetAllAsync()
         {
-            return await _userRepository.GetAllAsync();
+            return await _unitOfWork.Users.GetAllAsync();
         }
 
         public async Task<User> CreateAsync(User entity)
         {
-            // Burada şifre hashleme vb. business logic olacak
-            return await _userRepository.AddAsync(entity);
+            if (!string.IsNullOrEmpty(entity.PasswordHash))
+            {
+                entity.PasswordHash = PasswordHelper.HashPassword(entity.PasswordHash);
+            }
+
+            entity.CreatedDate = DateTime.UtcNow;
+            await _unitOfWork.Users.AddAsync(entity);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("User created: {UserName}", entity.UserName);
+            return entity;
         }
 
         public async Task<User> UpdateAsync(User entity)
         {
             entity.ModifiedDate = DateTime.UtcNow;
-            await _userRepository.UpdateAsync(entity);
+            await _unitOfWork.Users.UpdateAsync(entity);
+            await _unitOfWork.SaveChangesAsync();
             return entity;
         }
 
         public async Task DeleteAsync(int id)
         {
-            await _userRepository.DeleteAsync(id);
+            await _unitOfWork.Users.DeleteAsync(id);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<User?> GetByUserNameAsync(string userName)
         {
-            return await _userRepository.GetByUserNameAsync(userName);
+            return await _unitOfWork.Users.GetByUserNameAsync(userName);
         }
 
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _userRepository.GetByEmailAsync(email);
+            return await _unitOfWork.Users.GetByEmailAsync(email);
         }
 
-        public async Task<bool> AuthenticateAsync(string userName, string password)
+        public async Task<User?> AuthenticateAsync(string userName, string password)
         {
-            var user = await GetByUserNameAsync(userName);
+            var user = await _unitOfWork.Users.GetByUserNameAsync(userName);
             if (user == null || !user.IsActive)
-                return false;
+                return null;
 
-            // TODO: Password Hashing implementation (BCrypt etc.)
-            // Şimdilik plain text kontrolü (SECURITY RISK - DEV ONLY)
-            return user.PasswordHash == password;
+            if (string.IsNullOrEmpty(user.PasswordHash))
+                return null;
+
+            if (!PasswordHelper.VerifyPassword(password, user.PasswordHash))
+                return null;
+
+            user.LastLoginDate = DateTime.UtcNow;
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("User authenticated: {UserName}", userName);
+            return user;
         }
 
         public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
         {
-            var user = await GetByIdAsync(userId);
-            if (user == null) return false;
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+                return false;
 
-            // Verify current password logic here
-            // TODO: Implement proper hash verification
-            if (user.PasswordHash != currentPassword) return false;
+            if (!PasswordHelper.VerifyPassword(currentPassword, user.PasswordHash))
+                return false;
 
-            user.PasswordHash = newPassword; // TODO: Should be hashed
+            user.PasswordHash = PasswordHelper.HashPassword(newPassword);
             user.ModifiedDate = DateTime.UtcNow;
-            await _userRepository.UpdateAsync(user);
+            await _unitOfWork.Users.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
 
+            _logger.LogInformation("Password changed for user: {UserId}", userId);
             return true;
         }
 
         public async Task<IEnumerable<User>> GetActiveUsersAsync()
         {
-            return await _userRepository.GetActiveUsersAsync();
+            return await _unitOfWork.Users.GetActiveUsersAsync();
         }
 
-        public async Task<IEnumerable<UserCompanyRole>> GetUserCompaniesAsync(int userId)
+        public async Task<User?> GetUserWithRolesAsync(int userId)
         {
-            var user = await _userRepository.Query()
-                .Include(u => u.UserCompanyRoles)
-                .ThenInclude(ucr => ucr.Company)
-                .FirstOrDefaultAsync(u => u.UserID == userId);
+            return await _unitOfWork.Users.GetUserWithRolesAsync(userId);
+        }
 
-            return user?.UserCompanyRoles ?? new List<UserCompanyRole>();
+        public async Task<IEnumerable<User>> GetUsersByCompanyAsync(int companyId)
+        {
+            return await _unitOfWork.Users.GetUsersByCompanyAsync(companyId);
+        }
+
+        public async Task<PagedResult<User>> GetUsersPagedAsync(
+            int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null)
+        {
+            return await _unitOfWork.Users.GetUsersPagedAsync(pageNumber, pageSize, searchTerm, isActive);
         }
     }
 }

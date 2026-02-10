@@ -37,23 +37,21 @@ namespace DigitalSignage.Controllers
                 return View();
             }
 
-            var isValid = await _userService.AuthenticateAsync(userName, password);
-            if (isValid)
+            var user = await _userService.AuthenticateAsync(userName, password);
+            if (user != null)
             {
-                var user = await _userService.GetByUserNameAsync(userName);
-                
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.UserName),
                     new Claim(ClaimTypes.Email, user.Email),
-                    new Claim("UserId", user.UserID.ToString())
-                    // Rol bilgileri burada eklenebilir
+                    new Claim("UserId", user.UserID.ToString()),
+                    new Claim("IsSystemAdmin", user.IsSystemAdmin.ToString())
                 };
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var authProperties = new AuthenticationProperties
                 {
-                    IsPersistent = true, // Beni hatırla özelliği için true yapılabilir
+                    IsPersistent = true,
                     ExpiresUtc = DateTime.UtcNow.AddMinutes(60)
                 };
 

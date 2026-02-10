@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using DigitalSignage.Models.Common;
 
 namespace DigitalSignage.Data.Repositories
 {
@@ -18,6 +15,10 @@ namespace DigitalSignage.Data.Repositories
             _dbSet = context.Set<T>();
         }
 
+        // ========================
+        // CRUD Operations
+        // ========================
+
         public virtual async Task<T?> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
@@ -25,12 +26,12 @@ namespace DigitalSignage.Data.Repositories
 
         public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            return await _dbSet.AsNoTracking().ToListAsync();
         }
 
         public virtual async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
-            return await _dbSet.Where(predicate).ToListAsync();
+            return await _dbSet.AsNoTracking().Where(predicate).ToListAsync();
         }
 
         public virtual async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
@@ -38,30 +39,33 @@ namespace DigitalSignage.Data.Repositories
             return await _dbSet.FirstOrDefaultAsync(predicate);
         }
 
+        // ========================
+        // Add / Update / Delete
+        // (SaveChanges removed - use UnitOfWork)
+        // ========================
+
         public virtual async Task<T> AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
-            await SaveChangesAsync();
             return entity;
         }
 
         public virtual async Task<IEnumerable<T>> AddRangeAsync(IEnumerable<T> entities)
         {
             await _dbSet.AddRangeAsync(entities);
-            await SaveChangesAsync();
             return entities;
         }
 
-        public virtual async Task UpdateAsync(T entity)
+        public virtual Task UpdateAsync(T entity)
         {
-            _dbSet.Update(entity);
-            await SaveChangesAsync();
+            _context.Entry(entity).State = EntityState.Modified;
+            return Task.CompletedTask;
         }
 
-        public virtual async Task DeleteAsync(T entity)
+        public virtual Task DeleteAsync(T entity)
         {
             _dbSet.Remove(entity);
-            await SaveChangesAsync();
+            return Task.CompletedTask;
         }
 
         public virtual async Task DeleteAsync(int id)
@@ -70,18 +74,122 @@ namespace DigitalSignage.Data.Repositories
             if (entity != null)
             {
                 _dbSet.Remove(entity);
-                await SaveChangesAsync();
             }
         }
 
-        public virtual async Task<int> SaveChangesAsync()
+        // ========================
+        // Pagination
+        // ========================
+
+        public virtual async Task<PagedResult<T>> GetPagedAsync(
+            int pageNumber,
+            int pageSize,
+            Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+            params Expression<Func<T, object>>[] includes)
         {
-            return await _context.SaveChangesAsync();
+            IQueryable<T> query = _dbSet.AsNoTracking();
+
+            foreach (var include in includes)
+                query = query.Include(include);
+
+            if (filter != null)
+                query = query.Where(filter);
+
+            var totalCount = await query.CountAsync();
+
+            if (orderBy != null)
+                query = orderBy(query);
+
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<T>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
+
+        // ========================
+        // Counting & Existence
+        // ========================
+
+        public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null)
+        {
+            return predicate == null
+                ? await _dbSet.CountAsync()
+                : await _dbSet.CountAsync(predicate);
+        }
+
+        public virtual async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.AnyAsync(predicate);
+        }
+
+        public virtual async Task<bool> ExistsAsync(int id)
+        {
+            return await _dbSet.FindAsync(id) != null;
+        }
+
+        // ========================
+        // Include Support
+        // ========================
+
+        public virtual async Task<IEnumerable<T>> GetAllWithIncludesAsync(
+            params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var include in includes)
+                query = query.Include(include);
+            return await query.ToListAsync();
+        }
+
+        public virtual async Task<IEnumerable<T>> FindWithIncludesAsync(
+            Expression<Func<T, bool>> predicate,
+            params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var include in includes)
+                query = query.Include(include);
+            return await query.Where(predicate).ToListAsync();
+        }
+
+        public virtual async Task<T?> FirstOrDefaultWithIncludesAsync(
+            Expression<Func<T, bool>> predicate,
+            params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+            foreach (var include in includes)
+                query = query.Include(include);
+            return await query.FirstOrDefaultAsync(predicate);
+        }
+
+        // ========================
+        // Query Access
+        // ========================
 
         public virtual IQueryable<T> Query()
         {
             return _dbSet.AsQueryable();
+        }
+
+        public virtual IQueryable<T> QueryAsNoTracking()
+        {
+            return _dbSet.AsNoTracking();
+        }
+
+        // ========================
+        // SaveChanges
+        // ========================
+
+        public virtual async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
         }
     }
 }

@@ -1,47 +1,73 @@
 using DigitalSignage.Models;
-using DigitalSignage.Data.Repositories;
+using DigitalSignage.Models.Common;
+using DigitalSignage.Data;
 
 namespace DigitalSignage.Services
 {
     public class PageService : IPageService
     {
-        private readonly IPageRepository _pageRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PageService(IPageRepository pageRepository)
+        public PageService(IUnitOfWork unitOfWork)
         {
-            _pageRepository = pageRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Page?> GetByIdAsync(int id)
         {
-            // Include Layout and Content?
-            return await _pageRepository.GetByIdAsync(id);
+            return await _unitOfWork.Pages.GetPageWithLayoutAsync(id);
         }
 
         public async Task<IEnumerable<Page>> GetAllAsync()
         {
-            return await _pageRepository.GetAllAsync();
+            return await _unitOfWork.Pages.GetAllAsync();
         }
 
         public async Task<Page> CreateAsync(Page entity)
         {
-            return await _pageRepository.AddAsync(entity);
+            entity.CreatedDate = DateTime.UtcNow;
+            await _unitOfWork.Pages.AddAsync(entity);
+            await _unitOfWork.SaveChangesAsync();
+            return entity;
         }
 
         public async Task<Page> UpdateAsync(Page entity)
         {
-            await _pageRepository.UpdateAsync(entity);
+            await _unitOfWork.Pages.UpdateAsync(entity);
+            await _unitOfWork.SaveChangesAsync();
             return entity;
         }
 
         public async Task DeleteAsync(int id)
         {
-            await _pageRepository.DeleteAsync(id);
+            await _unitOfWork.Pages.DeleteAsync(id);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<Page>> GetByDepartmentIdAsync(int departmentId)
         {
-            return await _pageRepository.FindAsync(p => p.DepartmentID == departmentId);
+            return await _unitOfWork.Pages.GetPagesByDepartmentAsync(departmentId);
+        }
+
+        public async Task<Page?> GetPageWithLayoutAsync(int pageId)
+        {
+            return await _unitOfWork.Pages.GetPageWithLayoutAsync(pageId);
+        }
+
+        public async Task<Page?> GetPageFullDetailsAsync(int pageId)
+        {
+            return await _unitOfWork.Pages.GetPageFullDetailsAsync(pageId);
+        }
+
+        public async Task<IEnumerable<Page>> GetActivePagesByDepartmentAsync(int departmentId)
+        {
+            return await _unitOfWork.Pages.GetActivePagesByDepartmentAsync(departmentId);
+        }
+
+        public async Task<PagedResult<Page>> GetPagesPagedAsync(
+            int departmentId, int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null)
+        {
+            return await _unitOfWork.Pages.GetPagesPagedAsync(departmentId, pageNumber, pageSize, searchTerm, isActive);
         }
     }
 }

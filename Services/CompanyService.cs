@@ -1,47 +1,74 @@
 using DigitalSignage.Models;
-using DigitalSignage.Data.Repositories;
+using DigitalSignage.Models.Common;
+using DigitalSignage.Data;
 
 namespace DigitalSignage.Services
 {
     public class CompanyService : ICompanyService
     {
-        private readonly ICompanyRepository _companyRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CompanyService(ICompanyRepository companyRepository)
+        public CompanyService(IUnitOfWork unitOfWork)
         {
-            _companyRepository = companyRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<Company?> GetByIdAsync(int id)
         {
-            return await _companyRepository.GetByIdAsync(id);
+            return await _unitOfWork.Companies.GetByIdAsync(id);
         }
 
         public async Task<IEnumerable<Company>> GetAllAsync()
         {
-            return await _companyRepository.GetAllAsync();
+            return await _unitOfWork.Companies.GetAllAsync();
         }
 
         public async Task<Company> CreateAsync(Company entity)
         {
-            return await _companyRepository.AddAsync(entity);
+            entity.CreatedDate = DateTime.UtcNow;
+            await _unitOfWork.Companies.AddAsync(entity);
+            await _unitOfWork.SaveChangesAsync();
+            return entity;
         }
 
         public async Task<Company> UpdateAsync(Company entity)
         {
             entity.ModifiedDate = DateTime.UtcNow;
-            await _companyRepository.UpdateAsync(entity);
+            await _unitOfWork.Companies.UpdateAsync(entity);
+            await _unitOfWork.SaveChangesAsync();
             return entity;
         }
 
         public async Task DeleteAsync(int id)
         {
-            await _companyRepository.DeleteAsync(id);
+            await _unitOfWork.Companies.DeleteAsync(id);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<Company?> GetByCompanyCodeAsync(string companyCode)
         {
-            return await _companyRepository.FirstOrDefaultAsync(c => c.CompanyCode == companyCode);
+            return await _unitOfWork.Companies.GetByCompanyCodeAsync(companyCode);
+        }
+
+        public async Task<Company?> GetCompanyWithDepartmentsAsync(int companyId)
+        {
+            return await _unitOfWork.Companies.GetCompanyWithDepartmentsAsync(companyId);
+        }
+
+        public async Task<Company?> GetCompanyWithConfigurationAsync(int companyId)
+        {
+            return await _unitOfWork.Companies.GetCompanyWithConfigurationAsync(companyId);
+        }
+
+        public async Task<IEnumerable<Company>> GetActiveCompaniesAsync()
+        {
+            return await _unitOfWork.Companies.GetActiveCompaniesAsync();
+        }
+
+        public async Task<PagedResult<Company>> GetCompaniesPagedAsync(
+            int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null)
+        {
+            return await _unitOfWork.Companies.GetCompaniesPagedAsync(pageNumber, pageSize, searchTerm, isActive);
         }
     }
 }

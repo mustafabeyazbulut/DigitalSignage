@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DigitalSignage")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d2d7b78b2a57b6b183afa54b832abef267e7c5e3")]
 [assembly: System.Reflection.AssemblyProductAttribute("DigitalSignage")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DigitalSignage")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

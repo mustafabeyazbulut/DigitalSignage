@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using DigitalSignage.Data;
-using DigitalSignage.Data.Repositories;
 using DigitalSignage.Services;
+using DigitalSignage.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,20 +9,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // Configure DbContext
-builder.Services.AddDbContext<DigitalSignage.Data.AppDbContext>(options =>
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add Repositories
-builder.Services.AddScoped(typeof(DigitalSignage.Data.Repositories.IRepository<>), typeof(DigitalSignage.Data.Repositories.Repository<>));
-builder.Services.AddScoped<DigitalSignage.Data.Repositories.IUserRepository, DigitalSignage.Data.Repositories.UserRepository>();
-builder.Services.AddScoped<DigitalSignage.Data.Repositories.ICompanyRepository, DigitalSignage.Data.Repositories.CompanyRepository>();
-builder.Services.AddScoped<DigitalSignage.Data.Repositories.IDepartmentRepository, DigitalSignage.Data.Repositories.DepartmentRepository>();
-builder.Services.AddScoped<DigitalSignage.Data.Repositories.IPageRepository, DigitalSignage.Data.Repositories.PageRepository>();
-builder.Services.AddScoped<DigitalSignage.Data.Repositories.ILayoutRepository, DigitalSignage.Data.Repositories.LayoutRepository>();
-builder.Services.AddScoped<DigitalSignage.Data.Repositories.IContentRepository, DigitalSignage.Data.Repositories.ContentRepository>();
-builder.Services.AddScoped<DigitalSignage.Data.Repositories.IScheduleRepository, DigitalSignage.Data.Repositories.ScheduleRepository>();
+// Unit of Work
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-// Add Localization
+// Services
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICompanyService, CompanyService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IPageService, PageService>();
+builder.Services.AddScoped<ILayoutService, LayoutService>();
+builder.Services.AddScoped<IContentService, ContentService>();
+builder.Services.AddScoped<IScheduleService, ScheduleService>();
+
+// Localization
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
@@ -32,16 +34,7 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
         .AddSupportedUICultures(supportedCultures);
 });
 
-// Add Services
-builder.Services.AddScoped<DigitalSignage.Services.IUserService, DigitalSignage.Services.UserService>();
-builder.Services.AddScoped<DigitalSignage.Services.ICompanyService, DigitalSignage.Services.CompanyService>();
-builder.Services.AddScoped<DigitalSignage.Services.IDepartmentService, DigitalSignage.Services.DepartmentService>();
-builder.Services.AddScoped<DigitalSignage.Services.IPageService, DigitalSignage.Services.PageService>();
-builder.Services.AddScoped<DigitalSignage.Services.ILayoutService, DigitalSignage.Services.LayoutService>();
-builder.Services.AddScoped<DigitalSignage.Services.IContentService, DigitalSignage.Services.ContentService>();
-builder.Services.AddScoped<DigitalSignage.Services.IScheduleService, DigitalSignage.Services.ScheduleService>();
-
-// Add Authentication
+// Authentication
 builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -49,8 +42,6 @@ builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.C
         options.AccessDeniedPath = "/Account/AccessDenied";
         options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
     });
-
-// ... (Existing Service Registrations)
 
 var app = builder.Build();
 
@@ -60,8 +51,8 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        var context = services.GetRequiredService<DigitalSignage.Data.AppDbContext>();
-        context.Database.Migrate(); // Ensure database is created/migrated
+        var context = services.GetRequiredService<AppDbContext>();
+        context.Database.Migrate();
 
         if (!context.Users.Any())
         {
@@ -69,8 +60,9 @@ using (var scope = app.Services.CreateScope())
             {
                 UserName = "admin",
                 Email = "admin@digitalsignage.com",
-                PasswordHash = "admin123", // DEV ONLY: Plain text for now
+                PasswordHash = PasswordHelper.HashPassword("admin123"),
                 IsActive = true,
+                IsSystemAdmin = true,
                 CreatedDate = DateTime.UtcNow
             });
             context.SaveChanges();
@@ -87,7 +79,6 @@ using (var scope = app.Services.CreateScope())
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -104,6 +95,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();
