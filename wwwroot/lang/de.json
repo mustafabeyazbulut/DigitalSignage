@@ -45,7 +45,10 @@
         "requiredFields": "Benutzername und Passwort sind erforderlich.",
         "welcomeBack": "Willkommen zurück, {0}!",
         "accessDenied": "Zugang verweigert",
-        "accessDeniedMessage": "Sie haben keine Berechtigung, auf diese Ressource zuzugreifen."
+        "accessDeniedMessage": "Sie haben keine Berechtigung, auf diese Ressource zuzugreifen.",
+        "ssoFailed": "Microsoft 365-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+        "ssoNotRegistered": "Dieses Microsoft-Konto ist nicht im System registriert. Bitte wenden Sie sich an Ihren Administrator.",
+        "accountDisabled": "Ihr Konto wurde deaktiviert. Bitte wenden Sie sich an Ihren Administrator."
     },
     "nav": {
         "dashboard": "Dashboard",

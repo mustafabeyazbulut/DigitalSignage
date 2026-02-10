@@ -45,7 +45,10 @@
         "requiredFields": "Kullanıcı adı ve şifre gereklidir.",
         "welcomeBack": "Tekrar hoş geldiniz, {0}!",
         "accessDenied": "Erişim Reddedildi",
-        "accessDeniedMessage": "Bu kaynağa erişim izniniz bulunmamaktadır."
+        "accessDeniedMessage": "Bu kaynağa erişim izniniz bulunmamaktadır.",
+        "ssoFailed": "Microsoft 365 girişi başarısız oldu. Lütfen tekrar deneyin.",
+        "ssoNotRegistered": "Bu Microsoft hesabı sistemde kayıtlı değil. Lütfen yöneticinize başvurun.",
+        "accountDisabled": "Hesabınız devre dışı bırakılmış. Lütfen yöneticinize başvurun."
     },
     "nav": {
         "dashboard": "Kontrol Paneli",

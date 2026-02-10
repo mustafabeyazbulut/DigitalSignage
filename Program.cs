@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using DigitalSignage.Data;
 using DigitalSignage.Services;
 using DigitalSignage.Helpers;
@@ -37,14 +39,31 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
         .AddSupportedUICultures(supportedCultures);
 });
 
-// Authentication
-builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Account/Login";
-        options.AccessDeniedPath = "/Account/AccessDenied";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
-    });
+// Authentication - Cookie (default) + Azure AD OpenID Connect
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+.AddCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+})
+.AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
+{
+    var azureAd = builder.Configuration.GetSection("AzureAd");
+    options.Authority = $"{azureAd["Instance"]}{azureAd["TenantId"]}/v2.0";
+    options.ClientId = azureAd["ClientId"];
+    options.ResponseType = "id_token";
+    options.CallbackPath = azureAd["CallbackPath"] ?? "/signin-oidc";
+    options.SignedOutCallbackPath = "/signout-oidc";
+    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.TokenValidationParameters.NameClaimType = "name";
+    options.Scope.Add("email");
+    options.Scope.Add("profile");
+});
 
 var app = builder.Build();
 
