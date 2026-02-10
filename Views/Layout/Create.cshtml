@@ -1,0 +1,74 @@
+@model DigitalSignage.Models.Layout
+
+@{
+    ViewData["Title"] = "Create Layout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">Create Grid Layout</h2>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to List
+            </a>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-3">
+                         <label asp-for="CompanyID" class="form-label fw-bold">Company</label>
+                         @if(ViewBag.Companies != null)
+                         {
+                            <select asp-for="CompanyID" class="form-select" asp-items="@(new SelectList(ViewBag.Companies, "CompanyID", "CompanyName"))">
+                                <option value="">Select Company...</option>
+                            </select>
+                         }
+                         <span asp-validation-for="CompanyID" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="LayoutName" class="form-label fw-bold">Layout Name</label>
+                            <input asp-for="LayoutName" class="form-control" placeholder="e.g. 2x2 Video Wall" />
+                            <span asp-validation-for="LayoutName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LayoutCode" class="form-label fw-bold">Layout Code</label>
+                            <input asp-for="LayoutCode" class="form-control text-uppercase" placeholder="e.g. L-2X2" />
+                            <span asp-validation-for="LayoutCode" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="GridColumnsX" class="form-label fw-bold">Number of Columns (X)</label>
+                            <input asp-for="GridColumnsX" type="number" min="1" max="12" class="form-control" value="1" />
+                            <div class="form-text">Max 12 columns.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="GridRowsY" class="form-label fw-bold">Number of Rows (Y)</label>
+                            <input asp-for="GridRowsY" type="number" min="1" max="12" class="form-control" value="1" />
+                             <div class="form-text">Max 12 rows.</div>
+                        </div>
+
+                         <div class="col-md-12">
+                            <label asp-for="Description" class="form-label">Description</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-5">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-th me-2"></i> Define Grid Structure
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

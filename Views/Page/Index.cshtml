@@ -1,0 +1,78 @@
+@model IEnumerable<DigitalSignage.Models.Page>
+
+@{
+    ViewData["Title"] = "Pages";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold text-dark">Pages</h2>
+        <p class="text-muted mb-0">Design and manage your digital signage content.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary shadow-sm" asp-route-departmentId="@ViewBag.DepartmentId">
+        <i class="fas fa-plus me-2"></i> New Page
+    </a>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+    @foreach (var item in Model)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0 page-card">
+                 <!-- Preview Placeholder -->
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center border-bottom position-relative placeholder-glow" style="height: 180px;">
+                    <i class="fas fa-desktop fa-3x text-muted opacity-25"></i>
+                    <span class="position-absolute top-0 end-0 badge bg-primary m-2 shadow-sm">
+                        @(item.Layout != null ? $"{item.Layout.GridColumnsX}x{item.Layout.GridRowsY}" : "Custom")
+                    </span>
+                     @if (!item.IsActive)
+                    {
+                         <span class="position-absolute top-0 start-0 badge bg-danger m-2 shadow-sm">Inactive</span>
+                    }
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title fw-bold text-truncate mb-1">@item.PageTitle</h5>
+                    <p class="card-text text-muted small mb-2 text-truncate">@item.Description</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted"><i class="far fa-clock me-1"></i> @item.CreatedDate.ToString("dd MMM yyyy")</small>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0 pt-0 pb-3">
+                    <div class="d-grid gap-2">
+                        <a asp-action="Design" asp-route-id="@item.PageID" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-magic me-2"></i> Design Layout
+                        </a>
+                        <div class="btn-group w-100">
+                             <a asp-action="Edit" asp-route-id="@item.PageID" class="btn btn-outline-secondary btn-sm w-50">
+                                <i class="fas fa-pen"></i> Edit
+                            </a>
+                             <a asp-action="Delete" asp-route-id="@item.PageID" class="btn btn-outline-danger btn-sm w-50">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    @if (!Model.Any())
+    {
+        <div class="col-12">
+            <div class="text-center py-5 text-muted bg-white rounded border border-dashed">
+                <i class="fas fa-layer-group fa-3x mb-3 opacity-50"></i>
+                <p class="fs-5">No pages found yet.</p>
+                <a asp-action="Create" class="btn btn-sm btn-primary mt-2">Create your first page</a>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .page-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .page-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+</style>

@@ -1,0 +1,104 @@
+@model DigitalSignage.Models.Content
+
+@{
+    ViewData["Title"] = "Upload Content";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold mb-0">Upload New Content</h2>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i> Back to Library
+            </a>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <form asp-action="Create" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-3">
+                         <label asp-for="DepartmentID" class="form-label fw-bold">Department</label>
+                         @if(ViewBag.Departments != null)
+                         {
+                            <select asp-for="DepartmentID" class="form-select" asp-items="@(new SelectList(ViewBag.Departments, "DepartmentID", "DepartmentName"))">
+                                <option value="">Select Department...</option>
+                            </select>
+                         }
+                         else
+                         {
+                             <input type="hidden" asp-for="DepartmentID" value="@ViewBag.DepartmentId" />
+                             <input type="text" class="form-control" value="Current Department" disabled />
+                         }
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Content Type</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="ContentType" id="typeImage" value="Image" checked autocomplete="off">
+                                <label class="btn btn-outline-primary" for="typeImage"><i class="fas fa-image me-2"></i>Image</label>
+
+                                <input type="radio" class="btn-check" name="ContentType" id="typeVideo" value="Video" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="typeVideo"><i class="fas fa-video me-2"></i>Video</label>
+
+                                <input type="radio" class="btn-check" name="ContentType" id="typeText" value="Text" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="typeText"><i class="fas fa-font me-2"></i>Text / HTML</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12" id="fileUploadSection">
+                            <label class="form-label fw-bold">File Upload</label>
+                            <input type="file" name="mediaFile" class="form-control" accept="image/*,video/*" />
+                            <div class="form-text">Supported formats: JPG, PNG, MP4. Max size: 25MB.</div>
+                        </div>
+
+                         <div class="col-md-12 d-none" id="textContentSection">
+                            <label asp-for="ContentData" class="form-label fw-bold">HTML / Text Content</label>
+                            <textarea asp-for="ContentData" class="form-control" rows="5" placeholder="<b>Enter your content here...</b>"></textarea>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label asp-for="ContentTitle" class="form-label fw-bold">Title</label>
+                            <input asp-for="ContentTitle" class="form-control" placeholder="Descriptive title for this asset" />
+                            <span asp-validation-for="ContentTitle" class="text-danger small"></span>
+                        </div>
+                        
+                         <div class="col-md-6">
+                            <label asp-for="DurationSeconds" class="form-label">Default Duration (sec)</label>
+                            <input asp-for="DurationSeconds" type="number" class="form-control" value="10" />
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-5">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-cloud-upload-alt me-2"></i> Upload & Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('input[name="ContentType"]').change(function() {
+                if(this.value === 'Text') {
+                    $('#fileUploadSection').addClass('d-none');
+                    $('#textContentSection').removeClass('d-none');
+                } else {
+                    $('#fileUploadSection').removeClass('d-none');
+                    $('#textContentSection').addClass('d-none');
+                    
+                    // Update accepted file types
+                    if(this.value === 'Image') $('input[name="mediaFile"]').attr('accept', 'image/*');
+                    if(this.value === 'Video') $('input[name="mediaFile"]').attr('accept', 'video/*');
+                }
+            });
+        });
+    </script>
+    <partial name="_ValidationScriptsPartial" />
+}

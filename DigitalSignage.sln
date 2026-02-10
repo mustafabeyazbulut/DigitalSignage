@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36301.6 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalSignage", "DigitalSignage.csproj", "{4A437BF4-7017-41AC-A839-4A58EC49F4E5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4A437BF4-7017-41AC-A839-4A58EC49F4E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A437BF4-7017-41AC-A839-4A58EC49F4E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A437BF4-7017-41AC-A839-4A58EC49F4E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A437BF4-7017-41AC-A839-4A58EC49F4E5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9C948690-B027-4B15-B442-2AEFDB6109C8}
+	EndGlobalSection
+EndGlobal

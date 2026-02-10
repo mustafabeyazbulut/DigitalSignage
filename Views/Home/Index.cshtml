@@ -1,0 +1,137 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold text-dark">Welcome back, Admin!</h2>
+        <p class="text-muted">Here's what's happening in your digital signage network today.</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card h-100 border-start border-4 border-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-uppercase text-muted fw-bold mb-0">Total Companies</h6>
+                    <span class="text-primary"><i class="fas fa-building fa-lg"></i></span>
+                </div>
+                <h2 class="display-6 fw-bold mb-0">12</h2>
+                <small class="text-success"><i class="fas fa-arrow-up"></i> 2 New this month</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-start border-4 border-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-uppercase text-muted fw-bold mb-0">Active Screens</h6>
+                    <span class="text-success"><i class="fas fa-desktop fa-lg"></i></span>
+                </div>
+                <h2 class="display-6 fw-bold mb-0">145</h2>
+                <small class="text-success fw-bold">98% Online</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-start border-4 border-info">
+             <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-uppercase text-muted fw-bold mb-0">Total Content</h6>
+                    <span class="text-info"><i class="fas fa-photo-video fa-lg"></i></span>
+                </div>
+                <h2 class="display-6 fw-bold mb-0">850+</h2>
+                <small class="text-muted">GB Used: 1.25</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 border-start border-4 border-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-uppercase text-muted fw-bold mb-0">Pending Alerts</h6>
+                    <span class="text-warning"><i class="fas fa-exclamation-triangle fa-lg"></i></span>
+                </div>
+                <h2 class="display-6 fw-bold mb-0">3</h2>
+                <small class="text-danger">Action required</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity & Quick Actions -->
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 fw-bold text-primary">Recent Screen Activity</h6>
+                <a href="#" class="btn btn-sm btn-outline-primary rounded-pill">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Screen Name</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                                <th>Last Ping</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="ps-4 fw-bold">Lobby Main Screen</td>
+                                <td>Corporate HQ</td>
+                                <td><span class="badge bg-success rounded-pill">Online</span></td>
+                                <td class="text-muted">2 mins ago</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-bold">Cafeteria Menu Board</td>
+                                <td>Operations</td>
+                                <td><span class="badge bg-success rounded-pill">Online</span></td>
+                                <td class="text-muted">5 mins ago</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-bold">HR Hallway Display</td>
+                                <td>Human Resources</td>
+                                <td><span class="badge bg-warning rounded-pill">Syncing</span></td>
+                                <td class="text-muted">12 mins ago</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-bold">Warehouse Entry</td>
+                                <td>Logistics</td>
+                                <td><span class="badge bg-danger rounded-pill">Offline</span></td>
+                                <td class="text-muted">2 hours ago</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header bg-white py-3">
+                 <h6 class="m-0 fw-bold text-secondary">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-controller="Content" asp-action="Create" class="btn btn-primary shadow-sm text-start py-3">
+                        <i class="fas fa-plus-circle me-3 fa-lg"></i> Upload New Content
+                    </a>
+                    <a asp-controller="Page" asp-action="Create" class="btn btn-outline-secondary shadow-sm text-start py-3">
+                        <i class="fas fa-layer-group me-3 fa-lg"></i> Create New Page
+                    </a>
+                    <a asp-controller="Schedule" asp-action="Create" class="btn btn-outline-success shadow-sm text-start py-3">
+                        <i class="fas fa-clock me-3 fa-lg"></i> Schedule Playlist
+                    </a>
+                     <a asp-controller="Company" asp-action="Create" class="btn btn-light shadow-sm text-start py-3">
+                        <i class="fas fa-building me-3 fa-lg"></i> Add Company
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
