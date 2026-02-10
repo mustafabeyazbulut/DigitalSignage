@@ -24,6 +24,9 @@ builder.Services.AddScoped<ILayoutService, LayoutService>();
 builder.Services.AddScoped<IContentService, ContentService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 
+// Language Service (JSON-based localization)
+builder.Services.AddSingleton<ILanguageService, LanguageService>();
+
 // Localization
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.Configure<RequestLocalizationOptions>(options =>

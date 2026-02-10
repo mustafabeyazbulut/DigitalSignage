@@ -9,13 +9,36 @@ namespace DigitalSignage.Controllers
     [Authorize]
     public class BaseController : Controller
     {
-        // Burada ileride Tenant Context veya User Context işlemleri yapılabilir.
-        // Örneğin her request'te CompanyID'yi almak gibi.
+        /// <summary>
+        /// Dil servisi - tüm controller'lar tarafından kullanılır.
+        /// </summary>
+        protected ILanguageService? _languageService;
+
+        /// <summary>
+        /// Aktif dil kodu (cookie'den veya varsayılan)
+        /// </summary>
+        protected string CurrentLocale => HttpContext?.Request.Cookies["locale"] ?? "en";
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             base.OnActionExecuting(context);
-            // Global işlemler buraya
+
+            // DI'dan LanguageService'i al
+            _languageService = HttpContext.RequestServices.GetService<ILanguageService>();
+
+            // View'lara dil bilgilerini aktar
+            ViewBag.CurrentLocale = CurrentLocale;
+            ViewBag.Lang = _languageService;
+            ViewBag.SupportedLanguages = _languageService?.GetSupportedLanguages();
+        }
+
+        /// <summary>
+        /// View'larda kullanılmak üzere çeviri kısayolu.
+        /// Controller'dan TempData mesajlarında kullanılabilir.
+        /// </summary>
+        protected string T(string key)
+        {
+            return _languageService?.Get(CurrentLocale, key) ?? key;
         }
 
         protected void AddSuccessMessage(string message)

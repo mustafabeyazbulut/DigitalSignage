@@ -1,15 +1,18 @@
 @model DigitalSignage.Models.Page
 
 @{
-    ViewData["Title"] = "Create Page";
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("page.createTitle");
 }
 
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold mb-0">Create New Page</h2>
+            <h2 class="fw-bold mb-0">@T("page.createTitle")</h2>
             <a asp-action="Index" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i> Back to List
+                <i class="fas fa-arrow-left me-2"></i> @T("common.backToList")
             </a>
         </div>
 
@@ -18,63 +21,63 @@
                 <form asp-action="Create">
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                    <h5 class="text-primary fw-bold mb-3"><i class="fas fa-info-circle me-2"></i> Page Details</h5>
+                    <h5 class="text-primary fw-bold mb-3"><i class="fas fa-info-circle me-2"></i> @T("page.pageDetails")</h5>
                     
                     <div class="mb-3">
-                         <label asp-for="DepartmentID" class="form-label fw-bold">Department</label>
+                         <label asp-for="DepartmentID" class="form-label fw-bold">@T("dashboard.department")</label>
                          @if(ViewBag.Departments != null)
                          {
                             <select asp-for="DepartmentID" class="form-select" asp-items="@(new SelectList(ViewBag.Departments, "DepartmentID", "DepartmentName"))">
-                                <option value="">Select Department...</option>
+                                <option value="">@T("page.selectDepartment")</option>
                             </select>
                          }
                          else
                          {
                              <input type="hidden" asp-for="DepartmentID" value="@ViewBag.DepartmentId" />
-                             <input type="text" class="form-control" value="Current Department" disabled />
+                             <input type="text" class="form-control" value="@T("page.currentDepartment")" disabled />
                          }
                          <span asp-validation-for="DepartmentID" class="text-danger small"></span>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label asp-for="PageName" class="form-label fw-bold">Page Name (Internal)</label>
-                            <input asp-for="PageName" class="form-control" placeholder="e.g. Lobby_Monitor_Morning" />
+                            <label asp-for="PageName" class="form-label fw-bold">@T("page.pageName")</label>
+                            <input asp-for="PageName" class="form-control" placeholder="@T("page.pageNamePlaceholder")" />
                             <span asp-validation-for="PageName" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="PageTitle" class="form-label fw-bold">Display Title</label>
-                            <input asp-for="PageTitle" class="form-control" placeholder="e.g. Welcome to Our Office" />
+                            <label asp-for="PageTitle" class="form-label fw-bold">@T("page.displayTitle")</label>
+                            <input asp-for="PageTitle" class="form-control" placeholder="@T("page.displayTitlePlaceholder")" />
                             <span asp-validation-for="PageTitle" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="PageCode" class="form-label fw-bold">Page Code</label>
-                            <input asp-for="PageCode" class="form-control text-uppercase" placeholder="e.g. PG-001" />
+                            <label asp-for="PageCode" class="form-label fw-bold">@T("page.pageCode")</label>
+                            <input asp-for="PageCode" class="form-control text-uppercase" placeholder="@T("page.pageCodePlaceholder")" />
                             <span asp-validation-for="PageCode" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="LayoutID" class="form-label fw-bold">Grid Layout</label>
+                            <label asp-for="LayoutID" class="form-label fw-bold">@T("page.gridLayout")</label>
                              <select asp-for="LayoutID" class="form-select" asp-items="@(new SelectList(ViewBag.Layouts, "LayoutID", "LayoutName"))">
-                                <option value="">Select Layout...</option>
+                                <option value="">@T("page.selectLayout")</option>
                             </select>
                             <span asp-validation-for="LayoutID" class="text-danger small"></span>
                         </div>
                          <div class="col-md-12">
-                            <label asp-for="Description" class="form-label">Description</label>
+                            <label asp-for="Description" class="form-label">@T("company.description")</label>
                             <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                             <span asp-validation-for="Description" class="text-danger small"></span>
                         </div>
                          <div class="col-md-6 pt-4">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" asp-for="IsActive" checked>
-                                <label class="form-check-label fw-bold" asp-for="IsActive">Active Status</label>
+                                <label class="form-check-label fw-bold" asp-for="IsActive">@T("company.activeStatus")</label>
                             </div>
                         </div>
                     </div>
 
                     <div class="d-grid gap-2 mt-5">
                         <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-save me-2"></i> Create Page & Start Designing
+                            <i class="fas fa-save me-2"></i> @T("page.createAndDesign")
                         </button>
                     </div>
                 </form>

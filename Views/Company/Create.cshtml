@@ -1,15 +1,18 @@
 @model DigitalSignage.Models.Company
 
 @{
-    ViewData["Title"] = "Create Company";
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("company.createTitle");
 }
 
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold mb-0">Create New Company</h2>
+            <h2 class="fw-bold mb-0">@T("company.createTitle")</h2>
             <a asp-action="Index" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i> Back to List
+                <i class="fas fa-arrow-left me-2"></i> @T("common.backToList")
             </a>
         </div>
 
@@ -18,57 +21,57 @@
                 <form asp-action="Create">
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                    <h5 class="text-primary fw-bold mb-3"><i class="fas fa-info-circle me-2"></i> Basic Information</h5>
+                    <h5 class="text-primary fw-bold mb-3"><i class="fas fa-info-circle me-2"></i> @T("company.basicInfo")</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label asp-for="CompanyName" class="form-label fw-bold">Company Name</label>
-                            <input asp-for="CompanyName" class="form-control" placeholder="e.g. ACME Corp" />
+                            <label asp-for="CompanyName" class="form-label fw-bold">@T("company.companyName")</label>
+                            <input asp-for="CompanyName" class="form-control" placeholder="@T("company.companyNamePlaceholder")" />
                             <span asp-validation-for="CompanyName" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="CompanyCode" class="form-label fw-bold">Company Code</label>
-                            <input asp-for="CompanyCode" class="form-control text-uppercase" placeholder="e.g. ACM" />
-                            <div class="form-text">Unique identifier for the company (3-5 chars).</div>
+                            <label asp-for="CompanyCode" class="form-label fw-bold">@T("company.companyCode")</label>
+                            <input asp-for="CompanyCode" class="form-control text-uppercase" placeholder="@T("company.companyCodePlaceholder")" />
+                            <div class="form-text">@T("company.companyCodeHelp")</div>
                             <span asp-validation-for="CompanyCode" class="text-danger small"></span>
                         </div>
                         <div class="col-md-12">
-                            <label asp-for="Description" class="form-label">Description</label>
+                            <label asp-for="Description" class="form-label">@T("company.description")</label>
                             <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                             <span asp-validation-for="Description" class="text-danger small"></span>
                         </div>
                     </div>
 
-                    <h5 class="text-primary fw-bold mt-4 mb-3"><i class="fas fa-cogs me-2"></i> Settings & Branding</h5>
+                    <h5 class="text-primary fw-bold mt-4 mb-3"><i class="fas fa-cogs me-2"></i> @T("company.settingsBranding")</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label asp-for="EmailDomain" class="form-label">Email Domain</label>
+                            <label asp-for="EmailDomain" class="form-label">@T("company.emailDomain")</label>
                             <div class="input-group">
                                 <span class="input-group-text">@@</span>
-                                <input asp-for="EmailDomain" class="form-control" placeholder="acme.com" />
+                                <input asp-for="EmailDomain" class="form-control" placeholder="@T("company.emailDomainPlaceholder")" />
                             </div>
-                            <div class="form-text">Used for auto-assigning users.</div>
+                            <div class="form-text">@T("company.emailDomainHelp")</div>
                             <span asp-validation-for="EmailDomain" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="LogoUrl" class="form-label">Logo URL</label>
+                            <label asp-for="LogoUrl" class="form-label">@T("company.logoUrl")</label>
                             <input asp-for="LogoUrl" class="form-control" placeholder="https://..." />
                             <span asp-validation-for="LogoUrl" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="PrimaryColor" class="form-label">Brand Color</label>
+                            <label asp-for="PrimaryColor" class="form-label">@T("company.brandColor")</label>
                             <input asp-for="PrimaryColor" type="color" class="form-control form-control-color w-100" value="#0d6efd" title="Choose your color">
                         </div>
                          <div class="col-md-6 pt-4">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" asp-for="IsActive" checked>
-                                <label class="form-check-label fw-bold" asp-for="IsActive">Active Status</label>
+                                <label class="form-check-label fw-bold" asp-for="IsActive">@T("company.activeStatus")</label>
                             </div>
                         </div>
                     </div>
 
                     <div class="d-grid gap-2 mt-5">
                         <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-save me-2"></i> Create Company
+                            <i class="fas fa-save me-2"></i> @T("company.createButton")
                         </button>
                     </div>
                 </form>

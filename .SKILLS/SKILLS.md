@@ -21,6 +21,7 @@
 8. [Multi-Tenant Company System](./SKILLS/08_MULTI_TENANT.md)
 9. [Dinamik Sayfa Tasarımları (Grid System)](./SKILLS/09_DYNAMIC_LAYOUTS.md)
 10. [Deployment & Maintenance](./SKILLS/10_DEPLOYMENT.md)
+11. [Çok Dilli Destek (i18n/Localization)](./SKILLS/11_LOCALIZATION.md)
 
 ---
 
@@ -88,6 +89,14 @@ Digital Signage Platform
 - ✅ Recurring Schedules
 - ✅ Media Support (Image, Video, HTML)
 
+### 🌍 Çok Dilli Destek (i18n)
+- ✅ JSON tabanlı dil paketleri (wwwroot/lang/)
+- ✅ Dinamik dil değiştirme (Cookie-based)
+- ✅ Desteklenen diller: Türkçe, English, Deutsch
+- ✅ Yeni dil ekleme: Sadece JSON dosyası ekle
+- ✅ Fallback mekanizması (varsayılan: İngilizce)
+- ✅ Server-side & Client-side çeviri desteği
+
 ---
 
 ## 🎯 Teknoloji Stack
@@ -99,6 +108,7 @@ Digital Signage Platform
 | **Database** | SQL Server 2022+ |
 | **Auth** | Azure AD (Office 365) + Identity |
 | **Frontend** | Bootstrap 5, JavaScript, Responsive CSS |
+| **Localization** | JSON Language Packs (wwwroot/lang/) |
 | **Caching** | In-Memory/Redis |
 | **Logging** | Serilog, Application Insights |
 | **Testing** | xUnit, Moq |
@@ -171,10 +181,31 @@ dotnet run
 
 ---
 
+## 🌍 Çok Dilli Destek (Localization)
+
+Sistem JSON tabanlı dil paketi mimarisi kullanır. Detaylı dokümantasyon için:
+📄 [Çok Dilli Destek Kılavuzu](./SKILLS/11_LOCALIZATION.md)
+
+### Hızlı Bakış
+```
+wwwroot/lang/
+├── en.json    (English - varsayılan)
+├── tr.json    (Türkçe)
+└── de.json    (Deutsch)
+```
+
+### Yeni Dil Ekleme
+1. `wwwroot/lang/xx.json` dosyası oluştur (`en.json`'ı kopyala)
+2. Tüm değerleri çevir
+3. `_Layout.cshtml` ve `Login.cshtml` içindeki `langFlags` ve `langNames` sözlüklerine bayrak/isim ekle
+4. Otomatik olarak dil seçiciye eklenir
+
+
 ## 🔄 Sürüm Geçmişi
 
 | Versiyon | Tarih | Değişiklikler |
 |----------|-------|---------------|
+| 2.1 | Feb 2026 | JSON tabanlı Çok Dilli Destek (i18n), Dil Paketleri |
 | 2.0 | Feb 2025 | Office 365 Auth, Dinamik Config, Sistem Kaldırıldı |
 | 1.0 | 2024 | Initial Release |
 
@@ -182,9 +213,9 @@ dotnet run
 
 ## 📝 Son Güncelleme
 
-**Tarih**: 9 Şubat 2025
+**Tarih**: 11 Şubat 2026
 **Güncelleyen**: Development Team
-**Versiyon**: 2.0 Professional Edition
+**Versiyon**: 2.1 Professional Edition
 
 ---
 

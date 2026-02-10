@@ -1,0 +1,82 @@
+# =============================================
+# .NET / ASP.NET Core / Visual Studio .gitignore
+# =============================================
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+
+# NuGet
+*.nupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+
+# MSBuild
+*.log
+msbuild.wrn
+msbuild.err
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.env
+.env.local
+appsettings.Development.json
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Uploads (kullanıcı yüklediği dosyalar)
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
+
+# Publish output
+publish/
+out/
+
+# Entity Framework Migrations (isteğe bağlı)
+# Migrations/ 
+
+# Logs
+logs/
+*.log
+
+# Temp
+*.tmp
+*.temp
+~$*

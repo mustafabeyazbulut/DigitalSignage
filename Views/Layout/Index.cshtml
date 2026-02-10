@@ -1,16 +1,19 @@
 @model IEnumerable<DigitalSignage.Models.Layout>
 
 @{
-    ViewData["Title"] = "Layouts";
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("layout.title");
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2 class="fw-bold text-dark">Layout Library</h2>
-        <p class="text-muted mb-0">Standardize your screen grids.</p>
+        <h2 class="fw-bold text-dark">@T("layout.title")</h2>
+        <p class="text-muted mb-0">@T("layout.subtitle")</p>
     </div>
     <a asp-action="Create" class="btn btn-primary shadow-sm">
-        <i class="fas fa-plus me-2"></i> New Layout
+        <i class="fas fa-plus me-2"></i> @T("layout.newLayout")
     </a>
 </div>
 
@@ -29,13 +32,13 @@
                         </div>
                     </div>
                     <h5 class="fw-bold mb-1">@item.LayoutName</h5>
-                    <span class="badge bg-light text-dark border mb-2">@item.GridColumnsX x @item.GridRowsY Grid</span>
+                    <span class="badge bg-light text-dark border mb-2">@item.GridColumnsX x @item.GridRowsY @T("layout.grid")</span>
                     <p class="text-muted small">@item.Description</p>
                 </div>
                 <div class="card-footer bg-white border-top-0 pt-0 pb-3">
                      <div class="btn-group w-100">
                          <a asp-action="Edit" asp-route-id="@item.LayoutID" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-pen"></i> Edit
+                            <i class="fas fa-pen"></i> @T("common.edit")
                         </a>
                          <a asp-action="Delete" asp-route-id="@item.LayoutID" class="btn btn-outline-danger btn-sm">
                             <i class="fas fa-trash"></i>

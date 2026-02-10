@@ -33,7 +33,7 @@ namespace DigitalSignage.Controllers
 
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
             {
-                AddErrorMessage("Username and password are required.");
+                AddErrorMessage(T("auth.requiredFields"));
                 return View();
             }
 
@@ -60,7 +60,7 @@ namespace DigitalSignage.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
-                AddSuccessMessage($"Welcome back, {user.UserName}!");
+                AddSuccessMessage(string.Format(T("auth.welcomeBack"), user.UserName));
 
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {
@@ -69,7 +69,7 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            AddErrorMessage("Invalid username or password.");
+            AddErrorMessage(T("auth.invalidCredentials"));
             return View();
         }
 

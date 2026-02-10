@@ -1,15 +1,18 @@
 @model DigitalSignage.Models.Schedule
 
 @{
-    ViewData["Title"] = "Create Schedule";
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("schedule.createTitle");
 }
 
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold mb-0">Create New Schedule</h2>
+            <h2 class="fw-bold mb-0">@T("schedule.createTitle")</h2>
             <a asp-action="Index" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i> Back to List
+                <i class="fas fa-arrow-left me-2"></i> @T("common.backToList")
             </a>
         </div>
 
@@ -19,63 +22,63 @@
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
                     <div class="mb-3">
-                         <label asp-for="DepartmentID" class="form-label fw-bold">Department</label>
+                         <label asp-for="DepartmentID" class="form-label fw-bold">@T("dashboard.department")</label>
                          @if(ViewBag.Departments != null)
                          {
                             <select asp-for="DepartmentID" class="form-select" asp-items="@(new SelectList(ViewBag.Departments, "DepartmentID", "DepartmentName"))">
-                                <option value="">Select Department...</option>
+                                <option value="">@T("schedule.selectDepartment")</option>
                             </select>
                          }
                          else
                          {
                              <input type="hidden" asp-for="DepartmentID" value="@ViewBag.DepartmentId" />
-                             <input type="text" class="form-control" value="Current Department" disabled />
+                             <input type="text" class="form-control" value="@T("schedule.currentDepartment")" disabled />
                          }
                     </div>
 
-                    <h5 class="text-primary fw-bold mb-3"><i class="fas fa-clock me-2"></i> Timing Details</h5>
+                    <h5 class="text-primary fw-bold mb-3"><i class="fas fa-clock me-2"></i> @T("schedule.timingDetails")</h5>
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label asp-for="ScheduleName" class="form-label fw-bold">Schedule Name</label>
-                            <input asp-for="ScheduleName" class="form-control" placeholder="e.g. Morning Playlist" />
+                            <label asp-for="ScheduleName" class="form-label fw-bold">@T("schedule.scheduleName")</label>
+                            <input asp-for="ScheduleName" class="form-control" placeholder="@T("schedule.scheduleNamePlaceholder")" />
                             <span asp-validation-for="ScheduleName" class="text-danger small"></span>
                         </div>
                         
                         <div class="col-md-6">
-                            <label asp-for="StartDate" class="form-label">Start Date</label>
+                            <label asp-for="StartDate" class="form-label">@T("schedule.startDate")</label>
                             <input asp-for="StartDate" type="date" class="form-control" />
                              <span asp-validation-for="StartDate" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="EndDate" class="form-label">End Date</label>
+                            <label asp-for="EndDate" class="form-label">@T("schedule.endDate")</label>
                             <input asp-for="EndDate" type="date" class="form-control" />
                              <span asp-validation-for="EndDate" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
-                            <label asp-for="StartTime" class="form-label">Daily Start Time</label>
+                            <label asp-for="StartTime" class="form-label">@T("schedule.startTime")</label>
                             <input asp-for="StartTime" type="time" class="form-control" />
                         </div>
                          <div class="col-md-6">
-                            <label asp-for="EndTime" class="form-label">Daily End Time</label>
+                            <label asp-for="EndTime" class="form-label">@T("schedule.endTime")</label>
                             <input asp-for="EndTime" type="time" class="form-control" />
                         </div>
 
                          <div class="col-md-12 pt-3">
                             <div class="form-check form-switch mb-2">
                                 <input class="form-check-input" type="checkbox" asp-for="IsRecurring">
-                                <label class="form-check-label" asp-for="IsRecurring">Recurring Schedule (Repeat daily)</label>
+                                <label class="form-check-label" asp-for="IsRecurring">@T("schedule.recurring")</label>
                             </div>
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" asp-for="IsActive" checked>
-                                <label class="form-check-label fw-bold" asp-for="IsActive">Active</label>
+                                <label class="form-check-label fw-bold" asp-for="IsActive">@T("common.active")</label>
                             </div>
                         </div>
                     </div>
 
                     <div class="d-grid gap-2 mt-5">
                         <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-save me-2"></i> Save Schedule
+                            <i class="fas fa-save me-2"></i> @T("schedule.saveSchedule")
                         </button>
                     </div>
                 </form>
