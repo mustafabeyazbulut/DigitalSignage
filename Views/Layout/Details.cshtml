@@ -1,0 +1,67 @@
+@model DigitalSignage.Models.Layout
+
+@{
+    ViewData["Title"] = "Layout Details";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>@Model.LayoutName</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Edit" asp-route-id="@Model.LayoutID" class="btn btn-warning">Edit</a>
+            <a asp-action="Delete" asp-route-id="@Model.LayoutID" class="btn btn-danger">Delete</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Layout Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Layout Code</dt>
+                        <dd class="col-sm-8"><code>@Model.LayoutCode</code></dd>
+
+                        <dt class="col-sm-4">Grid Size</dt>
+                        <dd class="col-sm-8">@Model.GridColumnsX × @Model.GridRowsY</dd>
+
+                        <dt class="col-sm-4">Total Sections</dt>
+                        <dd class="col-sm-8">@(Model.GridColumnsX * Model.GridRowsY)</dd>
+
+                        <dt class="col-sm-4">Description</dt>
+                        <dd class="col-sm-8">@(Model.Description ?? "N/A")</dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                                @(Model.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">Created Date</dt>
+                        <dd class="col-sm-8">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Grid Preview</h5>
+                </div>
+                <div class="card-body">
+                    @await Component.InvokeAsync("LayoutGrid", new { layoutId = Model.LayoutID })
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>

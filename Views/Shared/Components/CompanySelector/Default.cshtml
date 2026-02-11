@@ -1,0 +1,38 @@
+@model DigitalSignage.Models.Company
+
+@{
+    var companies = ViewBag.Companies as List<DigitalSignage.Models.Company>;
+    var selectedCompany = ViewBag.SelectedCompany as DigitalSignage.Models.Company;
+}
+
+<li class="nav-item dropdown me-3">
+    <a class="nav-link dropdown-toggle" href="#" id="tenantDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        @if (selectedCompany != null)
+        {
+            <span class="badge bg-primary me-2">@selectedCompany.CompanyName</span>
+        }
+        else
+        {
+            <span class="badge bg-secondary me-2">Select Company</span>
+        }
+    </a>
+    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="tenantDropdown">
+        <h6 class="dropdown-header">Switch Company</h6>
+        <div class="dropdown-divider"></div>
+        @if (companies != null && companies.Any())
+        {
+            @foreach (var company in companies)
+            {
+                <a class="dropdown-item @(company.CompanyID == selectedCompany?.CompanyID ? "active" : "")"
+                   href="@Url.Action("SwitchCompany", "Account", new { companyId = company.CompanyID, returnUrl = Context.Request.Path })">
+                    <i class="bi @(company.CompanyID == selectedCompany?.CompanyID ? "bi-check-circle-fill text-success" : "bi-building") me-2"></i>
+                    @company.CompanyName
+                </a>
+            }
+        }
+        else
+        {
+            <span class="dropdown-item text-muted">No companies available</span>
+        }
+    </div>
+</li>

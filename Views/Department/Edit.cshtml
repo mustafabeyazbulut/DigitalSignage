@@ -1,0 +1,61 @@
+@model DigitalSignage.Models.Department
+
+@{
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("department.editTitle");
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1>@T("department.editTitle")</h1>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="DepartmentID" />
+                        <input type="hidden" asp-for="CreatedDate" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="CompanyID" class="form-label fw-bold">@T("department.company")</label>
+                            <select asp-for="CompanyID" class="form-select" asp-items="ViewBag.Companies" disabled>
+                            </select>
+                            <input type="hidden" asp-for="CompanyID" />
+                            <div class="form-text">@T("department.companyCannotChange")</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DepartmentName" class="form-label fw-bold">@T("department.departmentName")</label>
+                            <input asp-for="DepartmentName" class="form-control" />
+                            <span asp-validation-for="DepartmentName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">@T("company.description")</label>
+                            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label"></label>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> @T("common.update")
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">@T("common.cancel")</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

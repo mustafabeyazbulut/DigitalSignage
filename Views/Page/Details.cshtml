@@ -1,0 +1,62 @@
+@model DigitalSignage.Models.Page
+
+@{
+    ViewData["Title"] = "Page Details";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>@Model.PageTitle</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Design" asp-route-id="@Model.PageID" class="btn btn-info">
+                <i class="bi bi-grid-3x3"></i> Design
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.PageID" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a asp-action="Delete" asp-route-id="@Model.PageID" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Page Name</dt>
+                <dd class="col-sm-9">@Model.PageName</dd>
+
+                <dt class="col-sm-3">Page Code</dt>
+                <dd class="col-sm-9"><code>@Model.PageCode</code></dd>
+
+                <dt class="col-sm-3">Department</dt>
+                <dd class="col-sm-9">@Model.Department?.DepartmentName</dd>
+
+                <dt class="col-sm-3">Layout</dt>
+                <dd class="col-sm-9">@Model.Layout?.LayoutName</dd>
+
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <dt class="col-sm-3">Description</dt>
+                    <dd class="col-sm-9">@Model.Description</dd>
+                }
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                        @(Model.IsActive ? "Active" : "Inactive")
+                    </span>
+                </dd>
+
+                <dt class="col-sm-3">Created Date</dt>
+                <dd class="col-sm-9">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>

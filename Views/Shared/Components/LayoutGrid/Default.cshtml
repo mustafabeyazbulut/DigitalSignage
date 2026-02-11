@@ -1,0 +1,28 @@
+@model DigitalSignage.ViewModels.DynamicLayoutViewModel
+
+<div class="layout-grid" style="display: grid;
+    grid-template-columns: repeat(@Model.GridColumnsX, 1fr);
+    grid-template-rows: repeat(@Model.GridRowsY, 1fr);
+    gap: 10px;
+    min-height: 400px;
+    border: 2px solid #dee2e6;
+    padding: 10px;">
+
+    @foreach (var section in Model.Sections.OrderBy(s => s.Row).ThenBy(s => s.Column))
+    {
+        <div class="grid-section" style="
+            grid-column: @(section.Column + 1);
+            grid-row: @(section.Row + 1);
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;">
+            <h5 class="mb-1">@(section.Position)</h5>
+            <small class="text-muted">Section @(section.SectionID)</small>
+        </div>
+    }
+</div>

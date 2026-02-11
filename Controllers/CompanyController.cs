@@ -38,7 +38,7 @@ namespace DigitalSignage.Controllers
             if (ModelState.IsValid)
             {
                 await _companyService.CreateAsync(company);
-                AddSuccessMessage("Company created successfully.");
+                AddSuccessMessage(T("company.createdSuccess"));
                 return RedirectToAction(nameof(Index));
             }
             return View(company);
@@ -60,7 +60,7 @@ namespace DigitalSignage.Controllers
             if (ModelState.IsValid)
             {
                 await _companyService.UpdateAsync(company);
-                AddSuccessMessage("Company updated successfully.");
+                AddSuccessMessage(T("company.updatedSuccess"));
                 return RedirectToAction(nameof(Index));
             }
             return View(company);
@@ -78,7 +78,7 @@ namespace DigitalSignage.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             await _companyService.DeleteAsync(id);
-            AddSuccessMessage("Company deleted successfully.");
+            AddSuccessMessage(T("company.deletedSuccess"));
             return RedirectToAction(nameof(Index));
         }
     }

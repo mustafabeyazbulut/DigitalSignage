@@ -4,19 +4,51 @@
     var locale = ViewBag.CurrentLocale as string ?? "en";
     var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
     string T(string key) => lang?.Get(locale, key) ?? key;
-    ViewData["Title"] = T("layout.title");
+    ViewData["Title"] = "Layouts";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold text-dark">@T("layout.title")</h2>
-        <p class="text-muted mb-0">@T("layout.subtitle")</p>
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2 class="fw-bold text-dark">Layouts</h2>
+            <p class="text-muted mb-0">Manage page layouts and grid configurations</p>
+        </div>
+        <div class="col-md-6">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label for="companySelect" class="form-label">Select Company:</label>
+                        <select id="companySelect" class="form-select" onchange="changeCompany(this.value)">
+                            @if (ViewBag.Companies != null)
+                            {
+                                @foreach (var item in ViewBag.Companies)
+                                {
+                                    <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <a asp-action="Create" asp-route-companyId="@ViewBag.SelectedCompanyId" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-circle"></i> New Layout
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-    <a asp-action="Create" class="btn btn-primary shadow-sm">
-        <i class="fas fa-plus me-2"></i> @T("layout.newLayout")
-    </a>
 </div>
 
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No layouts found for this company. Create one to get started!
+    </div>
+}
+
+else
+{
+<div class="container">
 <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
     @foreach (var item in Model)
     {
@@ -32,16 +64,19 @@
                         </div>
                     </div>
                     <h5 class="fw-bold mb-1">@item.LayoutName</h5>
-                    <span class="badge bg-light text-dark border mb-2">@item.GridColumnsX x @item.GridRowsY @T("layout.grid")</span>
-                    <p class="text-muted small">@item.Description</p>
+                    <span class="badge bg-light text-dark border mb-2">@item.GridColumnsX x @item.GridRowsY Grid</span>
+                    <p class="text-muted small">@(item.Description ?? "No description")</p>
                 </div>
                 <div class="card-footer bg-white border-top-0 pt-0 pb-3">
                      <div class="btn-group w-100">
+                         <a asp-action="Details" asp-route-id="@item.LayoutID" class="btn btn-outline-info btn-sm">
+                            <i class="bi bi-eye"></i> View
+                        </a>
                          <a asp-action="Edit" asp-route-id="@item.LayoutID" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-pen"></i> @T("common.edit")
+                            <i class="bi bi-pencil"></i> Edit
                         </a>
                          <a asp-action="Delete" asp-route-id="@item.LayoutID" class="btn btn-outline-danger btn-sm">
-                            <i class="fas fa-trash"></i>
+                            <i class="bi bi-trash"></i> Delete
                         </a>
                     </div>
                 </div>
@@ -49,3 +84,15 @@
         </div>
     }
 </div>
+</div>
+}
+
+@section Scripts {
+    <script>
+        function changeCompany(companyId) {
+            if (companyId) {
+                window.location.href = '@Url.Action("Index", "Layout")?companyId=' + companyId;
+            }
+        }
+    </script>
+}

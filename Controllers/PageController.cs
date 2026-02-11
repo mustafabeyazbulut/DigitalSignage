@@ -9,12 +9,14 @@ namespace DigitalSignage.Controllers
         private readonly IPageService _pageService;
         private readonly ILayoutService _layoutService;
         private readonly IDepartmentService _departmentService;
+        private readonly ICompanyService _companyService;
 
-        public PageController(IPageService pageService, ILayoutService layoutService, IDepartmentService departmentService)
+        public PageController(IPageService pageService, ILayoutService layoutService, IDepartmentService departmentService, ICompanyService companyService)
         {
             _pageService = pageService;
             _layoutService = layoutService;
             _departmentService = departmentService;
+            _companyService = companyService;
         }
 
         public async Task<IActionResult> Index(int? departmentId)
@@ -49,7 +51,7 @@ namespace DigitalSignage.Controllers
             if (ModelState.IsValid)
             {
                 await _pageService.CreateAsync(page);
-                AddSuccessMessage("Page created successfully.");
+                AddSuccessMessage(T("page.createdSuccess"));
                 return RedirectToAction(nameof(Index), new { departmentId = page.DepartmentID });
             }
             ViewBag.Layouts = await _layoutService.GetAllAsync();
@@ -61,10 +63,80 @@ namespace DigitalSignage.Controllers
         {
             var page = await _pageService.GetByIdAsync(id);
             if (page == null) return NotFound();
-            
+
             // Layout ve PageContent bilgilerini de getir (Service'de Include eklenmeli veya ayrı call yapılmalı)
             // Şimdilik sadece page dönüyoruz.
             return View(page);
+        }
+
+        public async Task<IActionResult> Details(int id)
+        {
+            var page = await _pageService.GetByIdAsync(id);
+            if (page == null)
+            {
+                AddErrorMessage(T("page.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
+            return View(page);
+        }
+
+        public async Task<IActionResult> Edit(int id)
+        {
+            var page = await _pageService.GetByIdAsync(id);
+            if (page == null)
+            {
+                AddErrorMessage(T("page.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewBag.Departments = await _departmentService.GetAllAsync();
+            ViewBag.Layouts = await _layoutService.GetAllAsync();
+            return View(page);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Page page)
+        {
+            if (id != page.PageID)
+                return BadRequest();
+
+            if (ModelState.IsValid)
+            {
+                await _pageService.UpdateAsync(page);
+                AddSuccessMessage(T("page.updatedSuccess"));
+                return RedirectToAction(nameof(Index), new { departmentId = page.DepartmentID });
+            }
+
+            ViewBag.Departments = await _departmentService.GetAllAsync();
+            ViewBag.Layouts = await _layoutService.GetAllAsync();
+            return View(page);
+        }
+
+        public async Task<IActionResult> Delete(int id)
+        {
+            var page = await _pageService.GetByIdAsync(id);
+            if (page == null)
+            {
+                AddErrorMessage(T("page.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
+            return View(page);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var page = await _pageService.GetByIdAsync(id);
+            if (page != null)
+            {
+                var departmentId = page.DepartmentID;
+                await _pageService.DeleteAsync(id);
+                AddSuccessMessage(T("page.deletedSuccess"));
+                return RedirectToAction(nameof(Index), new { departmentId });
+            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }

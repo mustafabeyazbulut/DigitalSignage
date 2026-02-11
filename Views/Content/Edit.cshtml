@@ -1,0 +1,118 @@
+@model DigitalSignage.Models.Content
+
+@{
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("content.editTitle");
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <h1>@T("content.editTitle")</h1>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                        <input type="hidden" asp-for="ContentID" />
+                        <input type="hidden" asp-for="CreatedDate" />
+                        <input type="hidden" asp-for="MediaPath" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="DepartmentID" class="form-label fw-bold">@T("dashboard.department")</label>
+                            <select asp-for="DepartmentID" class="form-select" asp-items="ViewBag.Departments" disabled>
+                            </select>
+                            <input type="hidden" asp-for="DepartmentID" />
+                            <div class="form-text">@T("content.departmentCannotChange")</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ContentTitle" class="form-label fw-bold">@T("content.contentTitle")</label>
+                                    <input asp-for="ContentTitle" class="form-control" />
+                                    <span asp-validation-for="ContentTitle" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="ContentType" class="form-label fw-bold">@T("content.contentType")</label>
+                                    <select asp-for="ContentType" class="form-select" disabled>
+                                        <option value="Text">@T("content.text")</option>
+                                        <option value="Image">@T("content.image")</option>
+                                        <option value="Video">@T("content.video")</option>
+                                        <option value="HTML">@T("content.html")</option>
+                                    </select>
+                                    <input type="hidden" asp-for="ContentType" />
+                                    <div class="form-text">@T("content.contentTypeCannotChange")</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ContentData" class="form-label">@T("content.contentData")</label>
+                            <textarea asp-for="ContentData" class="form-control" rows="5"></textarea>
+                            <div class="form-text">@T("content.contentDataHelp")</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@T("content.currentMediaFile")</label>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    @if (Model.ContentType == "Image" && !string.IsNullOrEmpty(Model.MediaPath))
+                                    {
+                                        <img src="@Model.MediaPath" alt="@Model.ContentTitle" class="img-thumbnail" style="max-height: 200px;" />
+                                    }
+                                    else if (Model.ContentType == "Video" && !string.IsNullOrEmpty(Model.MediaPath))
+                                    {
+                                        <video controls style="max-width: 100%; max-height: 200px;">
+                                            <source src="@Model.MediaPath" />
+                                        </video>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted">@T("content.noMediaFile")</p>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.MediaPath))
+                                    {
+                                        <p class="small text-muted mt-2 mb-0">@Model.MediaPath</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@T("content.replaceMediaFile")</label>
+                            <input type="file" name="file" class="form-control" />
+                            <div class="form-text">@T("common.leaveEmpty")</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DurationSeconds" class="form-label">@T("content.durationSeconds")</label>
+                            <input asp-for="DurationSeconds" type="number" class="form-control" />
+                            <span asp-validation-for="DurationSeconds" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label"></label>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> @T("common.update")
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">@T("common.cancel")</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

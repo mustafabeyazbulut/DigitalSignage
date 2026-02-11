@@ -1,0 +1,99 @@
+@model DigitalSignage.Models.Page
+
+@{
+    ViewData["Title"] = "Page Design - " + Model.PageTitle;
+}
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Design: @Model.PageTitle</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Details" asp-route-id="@Model.PageID" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Layout Preview - @Model.Layout?.LayoutName (@Model.Layout?.GridColumnsX x @Model.Layout?.GridRowsY)</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Layout != null)
+                    {
+                        <div style="display: grid;
+                                    grid-template-columns: repeat(@Model.Layout.GridColumnsX, 1fr);
+                                    grid-template-rows: repeat(@Model.Layout.GridRowsY, 1fr);
+                                    gap: 10px;
+                                    min-height: 600px;
+                                    border: 2px solid #ddd;
+                                    padding: 10px;">
+                            @if (Model.Layout.LayoutSections != null)
+                            {
+                                @foreach (var section in Model.Layout.LayoutSections.OrderBy(s => s.RowIndex).ThenBy(s => s.ColumnIndex))
+                                {
+                                    <div style="grid-column: @(section.ColumnIndex + 1);
+                                                grid-row: @(section.RowIndex + 1);
+                                                background-color: #f8f9fa;
+                                                border: 1px solid #dee2e6;
+                                                padding: 15px;
+                                                border-radius: 5px;">
+                                        <strong>@(section.SectionPosition)</strong>
+                                        <p class="text-muted small mb-0">Position: @(section.ColumnIndex), @(section.RowIndex)</p>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">No layout assigned to this page.</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Page Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl>
+                        <dt>Page Name</dt>
+                        <dd>@Model.PageName</dd>
+
+                        <dt>Department</dt>
+                        <dd>@Model.Department?.DepartmentName</dd>
+
+                        <dt>Layout</dt>
+                        <dd>@Model.Layout?.LayoutName</dd>
+
+                        <dt>Grid Size</dt>
+                        <dd>@Model.Layout?.GridColumnsX x @Model.Layout?.GridRowsY</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.PageID" class="btn btn-primary">
+                            Edit Page
+                        </a>
+                        <a asp-controller="Content" asp-action="Index" asp-route-departmentId="@Model.DepartmentID" class="btn btn-secondary">
+                            Manage Content
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

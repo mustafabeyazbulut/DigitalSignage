@@ -49,6 +49,7 @@ namespace DigitalSignage.Controllers
             {
                 var claims = new List<Claim>
                 {
+                    new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
                     new Claim(ClaimTypes.Name, user.UserName),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim("UserId", user.UserID.ToString()),
@@ -141,6 +142,7 @@ namespace DigitalSignage.Controllers
             // Cookie claim'leri oluştur (veritabanındaki bilgilerle)
             var claims = new List<Claim>
             {
+                new Claim(ClaimTypes.NameIdentifier, existingUser.UserID.ToString()),
                 new Claim(ClaimTypes.Name, existingUser.UserName),
                 new Claim(ClaimTypes.Email, existingUser.Email),
                 new Claim("UserId", existingUser.UserID.ToString()),
@@ -183,6 +185,25 @@ namespace DigitalSignage.Controllers
         public IActionResult AccessDenied()
         {
             return View();
+        }
+
+        /// <summary>
+        /// Switches the current company context globally.
+        /// Updates session and redirects back to the referring page.
+        /// </summary>
+        [HttpGet]
+        public IActionResult SwitchCompany(int companyId, string? returnUrl = null)
+        {
+            // Update the selected company in session
+            HttpContext.Session.SetInt32("SelectedCompanyId", companyId);
+
+            // Redirect to the return URL or home
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            return RedirectToAction("Index", "Home");
         }
     }
 }

@@ -1,0 +1,88 @@
+@model DigitalSignage.Models.Content
+
+@{
+    ViewData["Title"] = "Content Details";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>@Model.ContentTitle</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Edit" asp-route-id="@Model.ContentID" class="btn btn-warning">Edit</a>
+            <a asp-action="Delete" asp-route-id="@Model.ContentID" class="btn btn-danger">Delete</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Content Type</dt>
+                <dd class="col-sm-9">
+                    <span class="badge bg-info">@Model.ContentType</span>
+                </dd>
+
+                <dt class="col-sm-3">Department</dt>
+                <dd class="col-sm-9">@Model.Department?.DepartmentName</dd>
+
+                <dt class="col-sm-3">Content Data</dt>
+                <dd class="col-sm-9">
+                    @if (Model.ContentType == "Text" || Model.ContentType == "HTML")
+                    {
+                        <div class="border p-3 bg-light">@Html.Raw(Model.ContentData)</div>
+                    }
+                    else
+                    {
+                        <code>@Model.ContentData</code>
+                    }
+                </dd>
+
+                @if (!string.IsNullOrEmpty(Model.MediaPath))
+                {
+                    <dt class="col-sm-3">Media</dt>
+                    <dd class="col-sm-9">
+                        @if (Model.ContentType == "Image")
+                        {
+                            <img src="@Model.MediaPath" alt="@Model.ContentTitle" class="img-fluid" style="max-width: 400px;" />
+                        }
+                        else if (Model.ContentType == "Video")
+                        {
+                            <video controls style="max-width: 400px;">
+                                <source src="@Model.MediaPath" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        }
+                        else
+                        {
+                            <a href="@Model.MediaPath" target="_blank">@Model.MediaPath</a>
+                        }
+                    </dd>
+                }
+
+                @if (Model.DurationSeconds.HasValue)
+                {
+                    <dt class="col-sm-3">Duration</dt>
+                    <dd class="col-sm-9">@Model.DurationSeconds seconds</dd>
+                }
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                        @(Model.IsActive ? "Active" : "Inactive")
+                    </span>
+                </dd>
+
+                <dt class="col-sm-3">Created Date</dt>
+                <dd class="col-sm-9">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
+
+                <dt class="col-sm-3">Created By</dt>
+                <dd class="col-sm-9">@Model.CreatedBy</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>

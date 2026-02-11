@@ -1,0 +1,92 @@
+@model DigitalSignage.Models.Company
+
+@{
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("company.detailsTitle");
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>@T("company.detailsTitle")</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Edit" asp-route-id="@Model.CompanyID" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> @T("common.edit")
+            </a>
+            <a asp-action="Delete" asp-route-id="@Model.CompanyID" class="btn btn-danger">
+                <i class="bi bi-trash"></i> @T("common.delete")
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">@T("company.companyName")</dt>
+                <dd class="col-sm-9">@Model.CompanyName</dd>
+
+                <dt class="col-sm-3">@T("company.companyCode")</dt>
+                <dd class="col-sm-9"><code>@Model.CompanyCode</code></dd>
+
+                @if (!string.IsNullOrEmpty(Model.EmailDomain))
+                {
+                    <dt class="col-sm-3">@T("company.emailDomain")</dt>
+                    <dd class="col-sm-9">@Model.EmailDomain</dd>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <dt class="col-sm-3">@T("company.description")</dt>
+                    <dd class="col-sm-9">@Model.Description</dd>
+                }
+
+                <dt class="col-sm-3">@T("common.status")</dt>
+                <dd class="col-sm-9">
+                    <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                        @(Model.IsActive ? T("common.active") : T("common.inactive"))
+                    </span>
+                </dd>
+
+                @if (!string.IsNullOrEmpty(Model.PrimaryColor))
+                {
+                    <dt class="col-sm-3">@T("company.primaryColor")</dt>
+                    <dd class="col-sm-9">
+                        <span style="display: inline-block; width: 30px; height: 30px; background-color: @Model.PrimaryColor; border: 1px solid #ccc;"></span>
+                        @Model.PrimaryColor
+                    </dd>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.SecondaryColor))
+                {
+                    <dt class="col-sm-3">@T("company.secondaryColor")</dt>
+                    <dd class="col-sm-9">
+                        <span style="display: inline-block; width: 30px; height: 30px; background-color: @Model.SecondaryColor; border: 1px solid #ccc;"></span>
+                        @Model.SecondaryColor
+                    </dd>
+                }
+
+                <dt class="col-sm-3">@T("common.createdDate")</dt>
+                <dd class="col-sm-9">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
+
+                <dt class="col-sm-3">@T("content.createdBy")</dt>
+                <dd class="col-sm-9">@Model.CreatedBy</dd>
+
+                @if (Model.ModifiedDate.HasValue)
+                {
+                    <dt class="col-sm-3">@T("common.updatedDate")</dt>
+                    <dd class="col-sm-9">@Model.ModifiedDate.Value.ToString("yyyy-MM-dd HH:mm")</dd>
+                }
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">@T("common.backToList")</a>
+        <a asp-controller="Department" asp-action="Index" asp-route-companyId="@Model.CompanyID" class="btn btn-primary">
+            @T("department.viewPages")
+        </a>
+    </div>
+</div>

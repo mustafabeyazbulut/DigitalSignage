@@ -1,0 +1,61 @@
+@model DigitalSignage.Models.Department
+
+@{
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("department.deleteTitle");
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="text-danger">@T("department.deleteTitle")</h1>
+
+            <div class="alert alert-danger">
+                <h4>@T("department.deleteWarning")</h4>
+                <p>@T("department.deleteAffects")</p>
+                <p><strong>@T("common.cannotUndo")</strong></p>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">@T("department.departmentName")</dt>
+                        <dd class="col-sm-8">@Model.DepartmentName</dd>
+
+                        <dt class="col-sm-4">@T("department.company")</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Company != null)
+                            {
+                                @Model.Company.CompanyName
+                            }
+                            else
+                            {
+                                <span>@T("company.companyID"): @Model.CompanyID</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">@T("company.description")</dt>
+                        <dd class="col-sm-8">@(Model.Description ?? T("common.noDescription"))</dd>
+
+                        <dt class="col-sm-4">@T("common.status")</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                                @(Model.IsActive ? T("common.active") : T("common.inactive"))
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <form asp-action="Delete" method="post" class="mt-3">
+                <input type="hidden" asp-for="DepartmentID" />
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> @T("common.confirmDelete")
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">@T("common.cancel")</a>
+            </form>
+        </div>
+    </div>
+</div>

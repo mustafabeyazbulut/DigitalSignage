@@ -1,0 +1,80 @@
+@model DigitalSignage.Models.Schedule
+
+@{
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("schedule.deleteTitle");
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h1 class="text-danger">@T("schedule.deleteTitle")</h1>
+
+            <div class="alert alert-danger">
+                <h4>@T("schedule.deleteWarning")</h4>
+                <p><strong>@T("common.cannotUndo")</strong></p>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">@T("schedule.scheduleName")</dt>
+                        <dd class="col-sm-8">@Model.ScheduleName</dd>
+
+                        <dt class="col-sm-4">@T("dashboard.department")</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.Department != null)
+                            {
+                                @Model.Department.DepartmentName
+                            }
+                            else
+                            {
+                                <span>@T("department.departmentID"): @Model.DepartmentID</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">@T("schedule.schedulePeriod")</dt>
+                        <dd class="col-sm-8">
+                            @Model.StartDate.ToString("dd/MM/yyyy HH:mm") - @Model.EndDate.ToString("dd/MM/yyyy HH:mm")
+                        </dd>
+
+                        <dt class="col-sm-4">@T("schedule.timeRange")</dt>
+                        <dd class="col-sm-8">
+                            @Model.StartTime.ToString(@"hh\:mm") - @Model.EndTime.ToString(@"hh\:mm")
+                        </dd>
+
+                        <dt class="col-sm-4">@T("schedule.isRecurring")</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @(Model.IsRecurring ? "bg-info" : "bg-secondary")">
+                                @(Model.IsRecurring ? T("common.yes") : T("common.no"))
+                            </span>
+                        </dd>
+
+                        @if (Model.IsRecurring && !string.IsNullOrEmpty(Model.RecurrencePattern))
+                        {
+                            <dt class="col-sm-4">@T("schedule.recurrencePattern")</dt>
+                            <dd class="col-sm-8">@Model.RecurrencePattern</dd>
+                        }
+
+                        <dt class="col-sm-4">@T("common.status")</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                                @(Model.IsActive ? T("common.active") : T("common.inactive"))
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <form asp-action="Delete" method="post" class="mt-3">
+                <input type="hidden" asp-for="ScheduleID" />
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> @T("common.confirmDelete")
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">@T("common.cancel")</a>
+            </form>
+        </div>
+    </div>
+</div>

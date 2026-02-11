@@ -1,0 +1,103 @@
+@model DigitalSignage.ViewModels.UserViewModel
+
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>User Details</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Edit" asp-route-id="@Model.UserID" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a asp-action="Delete" asp-route-id="@Model.UserID" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Delete
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">User Name</dt>
+                <dd class="col-sm-9">@Model.UserName</dd>
+
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@Model.Email</dd>
+
+                <dt class="col-sm-3">Full Name</dt>
+                <dd class="col-sm-9">@Model.FullName</dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                        @Model.StatusText
+                    </span>
+                </dd>
+
+                <dt class="col-sm-3">System Admin</dt>
+                <dd class="col-sm-9">
+                    @if (Model.IsSystemAdmin)
+                    {
+                        <span class="badge bg-danger">Yes</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">No</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Authentication Type</dt>
+                <dd class="col-sm-9">
+                    @if (Model.IsOffice365User)
+                    {
+                        <span class="badge bg-info">Office 365</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Local</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Created Date</dt>
+                <dd class="col-sm-9">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
+
+                @if (Model.LastLoginDate.HasValue)
+                {
+                    <dt class="col-sm-3">Last Login</dt>
+                    <dd class="col-sm-9">@Model.LastLoginDate.Value.ToString("yyyy-MM-dd HH:mm")</dd>
+                }
+            </dl>
+        </div>
+    </div>
+
+    @if (!Model.IsOffice365User)
+    {
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Change Password</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="ChangePassword" method="post">
+                    <input type="hidden" name="id" value="@Model.UserID" />
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="currentPassword" name="currentPassword" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword" required minlength="6" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Change Password</button>
+                </form>
+            </div>
+        </div>
+    }
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>

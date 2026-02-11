@@ -1,0 +1,55 @@
+@model DigitalSignage.Models.Department
+
+@{
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("department.detailsTitle");
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>@Model.DepartmentName</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Edit" asp-route-id="@Model.DepartmentID" class="btn btn-warning">@T("common.edit")</a>
+            <a asp-action="Delete" asp-route-id="@Model.DepartmentID" class="btn btn-danger">@T("common.delete")</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">@T("department.code")</dt>
+                <dd class="col-sm-9"><code>@Model.DepartmentCode</code></dd>
+
+                <dt class="col-sm-3">@T("department.company")</dt>
+                <dd class="col-sm-9">@Model.Company?.CompanyName</dd>
+
+                <dt class="col-sm-3">@T("company.description")</dt>
+                <dd class="col-sm-9">@(Model.Description ?? T("common.notSpecified"))</dd>
+
+                <dt class="col-sm-3">@T("common.status")</dt>
+                <dd class="col-sm-9">
+                    <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                        @(Model.IsActive ? T("common.active") : T("common.inactive"))
+                    </span>
+                </dd>
+
+                <dt class="col-sm-3">@T("common.createdDate")</dt>
+                <dd class="col-sm-9">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
+
+                <dt class="col-sm-3">@T("content.createdBy")</dt>
+                <dd class="col-sm-9">@Model.CreatedBy</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a asp-action="Index" class="btn btn-secondary">@T("common.backToList")</a>
+        <a asp-controller="Page" asp-action="Index" asp-route-departmentId="@Model.DepartmentID" class="btn btn-primary">
+            @T("department.viewPages")
+        </a>
+    </div>
+</div>
