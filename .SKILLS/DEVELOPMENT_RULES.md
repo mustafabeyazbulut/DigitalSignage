@@ -4,6 +4,111 @@
 
 ---
 
+## 🚨 KRİTİK: SKILLS Dokümantasyon Yönetimi
+
+### ⚠️ ZORUNLU KURALLAR
+
+```
+✓ HER ZAMAN .SKILLS/ klasöründeki dokümantasyonu ÖNCE OKUYUN
+✓ HER değişiklikten sonra ilgili SKILLS dosyasını GÜNCELLEYIN
+✓ Yeni özellik eklerken SKILLS/XX_*.md dosyalarını kontrol edin
+✓ Mevcut mimariye UYGUN kod yazın (SKILLS'de belirtildiği gibi)
+✗ SKILLS dokümantasyonunu ASLA göz ardı etmeyin
+✗ Dokümante edilmemiş değişiklik yapmayın
+```
+
+### SKILLS Dosya Yapısı
+
+```
+.SKILLS/
+├── DEVELOPMENT_RULES.md         ← Bu dosya - Tüm geliştirme kuralları
+├── CONTRIBUTING.md              ← Katkı kuralları
+├── SKILLS.md                    ← Genel bakış
+└── SKILLS/
+    ├── 01_ARCHITECTURE.md       ← Mimari yapı
+    ├── 02_DATABASE_SCHEMA.md    ← Veritabanı şeması
+    ├── 03_DATA_MODELS.md        ← Entity modelleri
+    ├── 04_ORM_DATA_ACCESS.md    ← EF Core & Repository
+    ├── 05_BUSINESS_LOGIC.md     ← Service katmanı
+    ├── 06_MVC_LAYER.md          ← Controller & View
+    ├── 07_OFFICE365_AUTH.md     ← Office 365 kimlik doğrulama
+    ├── 08_MULTI_TENANT.md       ← Çok kiracılı mimari
+    ├── 09_DYNAMIC_LAYOUTS.md    ← Dinamik grid sistemi
+    ├── 10_DEPLOYMENT.md         ← Deployment & production
+    ├── 11_LOCALIZATION.md       ← Çok dilli destek
+    └── 12_AUTHORIZATION.md      ← Yetkilendirme sistemi
+```
+
+### Değişiklik Yaparken İzlenecek Adımlar
+
+**1. ÖNCESİ (Kod Yazmadan Önce):**
+```bash
+# Hangi bölümü değiştireceğinize göre ilgili SKILLS dosyasını okuyun
+- Veritabanı değişikliği → 02_DATABASE_SCHEMA.md
+- Entity ekleme/değiştirme → 03_DATA_MODELS.md
+- Repository ekleme → 04_ORM_DATA_ACCESS.md
+- Service mantığı → 05_BUSINESS_LOGIC.md
+- Controller/View → 06_MVC_LAYER.md
+- Dil paketi → 11_LOCALIZATION.md
+- Yetkilendirme → 12_AUTHORIZATION.md
+```
+
+**2. SIRASINDA (Kod Yazarken):**
+```bash
+# SKILLS'de belirtilen kurallara uyun
+✓ Naming convention
+✓ Folder structure
+✓ Pattern kullanımı (Repository, Service, DTO)
+✓ Multi-tenant kuralları
+✓ Authorization kontrolleri
+```
+
+**3. SONRASI (Kod Yazdıktan Sonra):**
+```bash
+# İlgili SKILLS dosyasını MUTLAKA güncelleyin
+✓ Yeni entity eklediyseniz → 02_DATABASE_SCHEMA.md ve 03_DATA_MODELS.md
+✓ Yeni service eklediyseniz → 05_BUSINESS_LOGIC.md
+✓ Yeni controller eklediyseniz → 06_MVC_LAYER.md
+✓ Yeni dil anahtarı eklediyseniz → 11_LOCALIZATION.md
+✓ Yeni yetkilendirme kuralı eklediyseniz → 12_AUTHORIZATION.md
+✓ README.md'de version number ve "Recent Updates" bölümünü güncelleyin
+```
+
+### Örnek Senaryo
+
+```
+Senaryo: Email notification özelliği ekliyorsunuz
+
+1. ÖNCE OKU:
+   ✓ 03_DATA_MODELS.md → User entity yapısını anla
+   ✓ 05_BUSINESS_LOGIC.md → Service pattern'i anla
+   ✓ 11_LOCALIZATION.md → Dil paketi yapısını anla
+
+2. KOD YAZ:
+   ✓ User modeline EmailNotificationsEnabled ekle
+   ✓ Migration oluştur
+   ✓ UpdateSettings action'ı ekle
+   ✓ Dil paketlerine settings.* anahtarları ekle
+
+3. DÖKÜMAN GÜNCELLE:
+   ✓ 03_DATA_MODELS.md → User entity'sine yeni field ekle
+   ✓ 11_LOCALIZATION.md → settings.* bölümünü güncelle
+   ✓ README.md → v2.2.1 güncelle, "Recent Updates" ekle
+```
+
+### ⚡ HIZLI KONTROL LİSTESİ
+
+Kod yazmadan önce kendinize sorun:
+
+- [ ] İlgili SKILLS dosyasını okudum mu?
+- [ ] Mevcut pattern'lere uygun kod mu yazıyorum?
+- [ ] Bu değişiklik hangi SKILLS dosyalarını etkiliyor?
+- [ ] Kod yazdıktan sonra hangi SKILLS dosyalarını güncelleyeceğim?
+
+**UNUTMAYIN:** SKILLS dosyaları projenin "kaynak doğruluğu" (source of truth) dır. Her zaman güncel ve doğru tutulmalıdır!
+
+---
+
 ## 1. Dosya & Folder Management
 
 ### 1.1 Yeni Dosya Ekleme
@@ -580,4 +685,4 @@ Kural:
 
 ---
 
-**Son güncelleme:** 9 Şubat 2025
+**Son güncelleme:** 12 Şubat 2026
