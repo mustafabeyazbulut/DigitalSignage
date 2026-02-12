@@ -71,7 +71,9 @@
         "accountDisabled": "Ihr Konto wurde deaktiviert. Bitte wenden Sie sich an Ihren Administrator.",
         "contactAdmin": "Wenn Sie glauben, dass Sie Zugriff haben sollten, wenden Sie sich bitte an Ihren Administrator.",
         "goToHome": "Zur Startseite",
-        "loggedOut": "Sie wurden erfolgreich abgemeldet."
+        "loggedOut": "Sie wurden erfolgreich abgemeldet.",
+        "username": "Benutzername",
+        "usernamePlaceholder": "Geben Sie Ihren Benutzernamen ein"
     },
     "nav": {
         "dashboard": "Dashboard",

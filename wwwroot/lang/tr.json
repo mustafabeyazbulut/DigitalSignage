@@ -71,7 +71,9 @@
         "accountDisabled": "Hesabınız devre dışı bırakılmış. Lütfen yöneticinize başvurun.",
         "contactAdmin": "Erişim hakkınız olması gerektiğini düşünüyorsanız, lütfen yöneticinize başvurun.",
         "goToHome": "Ana Sayfaya Git",
-        "loggedOut": "Başarıyla çıkış yaptınız."
+        "loggedOut": "Başarıyla çıkış yaptınız.",
+        "username": "Kullanıcı Adı",
+        "usernamePlaceholder": "Kullanıcı adınızı girin"
     },
     "nav": {
         "dashboard": "Kontrol Paneli",

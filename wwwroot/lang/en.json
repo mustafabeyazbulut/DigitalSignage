@@ -71,7 +71,9 @@
         "accountDisabled": "Your account has been disabled. Please contact your administrator.",
         "contactAdmin": "If you believe you should have access, please contact your administrator.",
         "goToHome": "Go to Home",
-        "loggedOut": "You have been logged out successfully."
+        "loggedOut": "You have been logged out successfully.",
+        "username": "Username",
+        "usernamePlaceholder": "Enter your username"
     },
     "nav": {
         "dashboard": "Dashboard",
