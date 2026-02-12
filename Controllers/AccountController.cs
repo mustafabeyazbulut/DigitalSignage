@@ -194,9 +194,52 @@ namespace DigitalSignage.Controllers
 
         [HttpGet]
         [Authorize]
-        public IActionResult Settings()
+        public async Task<IActionResult> Settings()
         {
-            return View();
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
+            {
+                var user = await _userService.GetByIdAsync(userId);
+                if (user != null)
+                {
+                    return View(user);
+                }
+            }
+
+            AddErrorMessage(T("user.notFound"));
+            return RedirectToAction("Index", "Home");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> UpdateSettings(bool emailNotificationsEnabled = false)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
+                {
+                    var user = await _userService.GetByIdAsync(userId);
+                    if (user != null)
+                    {
+                        user.EmailNotificationsEnabled = emailNotificationsEnabled;
+                        user.ModifiedDate = DateTime.UtcNow;
+                        await _userService.UpdateAsync(user);
+
+                        AddSuccessMessage(T("settings.settingsSaved"));
+                        return RedirectToAction(nameof(Settings));
+                    }
+                }
+
+                AddErrorMessage(T("user.notFound"));
+                return RedirectToAction(nameof(Settings));
+            }
+            catch (Exception)
+            {
+                AddErrorMessage(T("settings.errorSaving"));
+                return RedirectToAction(nameof(Settings));
+            }
         }
 
         [HttpPost]

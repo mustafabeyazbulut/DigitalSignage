@@ -28,6 +28,7 @@ namespace DigitalSignage.Models
         public bool IsActive { get; set; } = true;
         public bool IsSystemAdmin { get; set; }
         public bool IsOffice365User { get; set; }
+        public bool EmailNotificationsEnabled { get; set; } = true;
         
         [MaxLength(255)]
         public string? AzureADObjectId { get; set; }

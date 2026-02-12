@@ -412,6 +412,8 @@
         "emailNotificationsDescription": "Önemli güncellemeler için e-posta bildirimleri alın",
         "languageRegion": "Dil ve Bölge",
         "currentLanguage": "Mevcut Dil",
-        "languageSwitcherHint": "Üst menüdeki dil değiştiricisini kullanın"
+        "languageSwitcherHint": "Üst menüdeki dil değiştiricisini kullanın",
+        "settingsSaved": "Ayarlar başarıyla kaydedildi",
+        "errorSaving": "Ayarlar kaydedilirken hata oluştu"
     }
 }

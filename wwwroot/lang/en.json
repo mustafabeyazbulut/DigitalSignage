@@ -413,6 +413,8 @@
         "emailNotificationsDescription": "Receive email notifications for important updates",
         "languageRegion": "Language & Region",
         "currentLanguage": "Current Language",
-        "languageSwitcherHint": "Use the language switcher in the top menu"
+        "languageSwitcherHint": "Use the language switcher in the top menu",
+        "settingsSaved": "Settings saved successfully",
+        "errorSaving": "Error saving settings"
     }
 }

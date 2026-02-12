@@ -25,5 +25,7 @@ namespace DigitalSignage.DTOs
         public bool IsActive { get; set; } = true;
 
         public bool IsSystemAdmin { get; set; }
+
+        public bool EmailNotificationsEnabled { get; set; } = true;
     }
 }

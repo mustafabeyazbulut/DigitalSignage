@@ -412,6 +412,8 @@
         "emailNotificationsDescription": "E-Mail-Benachrichtigungen für wichtige Updates erhalten",
         "languageRegion": "Sprache & Region",
         "currentLanguage": "Aktuelle Sprache",
-        "languageSwitcherHint": "Verwenden Sie den Sprachwechsler im oberen Menü"
+        "languageSwitcherHint": "Verwenden Sie den Sprachwechsler im oberen Menü",
+        "settingsSaved": "Einstellungen erfolgreich gespeichert",
+        "errorSaving": "Fehler beim Speichern der Einstellungen"
     }
 }

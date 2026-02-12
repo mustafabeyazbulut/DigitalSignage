@@ -17,7 +17,8 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nActivate user menu in layout with Profile, Settings and Logout functionality\n\n## Added\n- Profile action in AccountController \\(displays user details\\)\n- Settings action in AccountController \\(settings page placeholder\\)\n- Settings.cshtml view with account settings, notifications, and language preferences\n- auth.loggedOut translation key \\(EN, TR, DE\\)\n\n## Changed\n- Layout: User dropdown now shows actual username from User.Identity\n- Layout: Added \"Admin\" badge for SystemAdmin users\n- Layout: Profile link now points to Account/Profile\n- Layout: Settings link now points to Account/Settings\n- Layout: Logout now uses POST form \\(secure logout\\)\n- AccountController: Logout now shows success message\n\n## Features\n- Dynamic username display in header\n- Visual admin badge for system administrators\n- Functional Profile page \\(existing view\\)\n- Settings page with placeholder for future features\n- Secure logout via POST form\n- Multi-language logout confirmation message\n\n## Technical Details\n- 6 files modified\n- 1 file created \\(Settings.cshtml\\)\n- 3 translation keys added\n- Build status: ✅ 0 errors, 0 warnings\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git push:*)",
       "Bash(python:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(dotnet ef database update:*)"
     ]
   }
 }
