@@ -43,7 +43,10 @@
         "replaceFile": "Replace File",
         "leaveEmpty": "Leave empty to keep current",
         "preview": "Preview",
-        "noPreview": "No preview available"
+        "noPreview": "No preview available",
+        "selectCompany": "Select Company",
+        "previous": "Previous",
+        "next": "Next"
     },
     "auth": {
         "login": "Sign In",
@@ -65,7 +68,9 @@
         "accessDeniedMessage": "You do not have permission to access this resource.",
         "ssoFailed": "Microsoft 365 sign-in failed. Please try again.",
         "ssoNotRegistered": "This Microsoft account is not registered in the system. Please contact your administrator.",
-        "accountDisabled": "Your account has been disabled. Please contact your administrator."
+        "accountDisabled": "Your account has been disabled. Please contact your administrator.",
+        "contactAdmin": "If you believe you should have access, please contact your administrator.",
+        "goToHome": "Go to Home"
     },
     "nav": {
         "dashboard": "Dashboard",
@@ -229,6 +234,7 @@
         "defineGrid": "Define Grid Structure",
         "layoutNamePlaceholder": "e.g. 2x2 Video Wall",
         "layoutCodePlaceholder": "e.g. L-2X2",
+        "noLayoutsFound": "No layouts found. Click \"New Layout\" to create one.",
         "createdSuccess": "Layout created successfully.",
         "updatedSuccess": "Layout updated successfully.",
         "deletedSuccess": "Layout deleted successfully.",
@@ -339,5 +345,56 @@
         "en": "English",
         "tr": "Türkçe",
         "de": "Deutsch"
+    },
+    "user": {
+        "title": "Users",
+        "subtitle": "Manage user accounts and permissions.",
+        "newUser": "New User",
+        "createTitle": "Create New User",
+        "editTitle": "Edit User",
+        "detailsTitle": "User Details",
+        "deleteTitle": "Delete User",
+        "deleteWarning": "Are you sure you want to delete this user?",
+        "userName": "Username",
+        "email": "Email",
+        "password": "Password",
+        "passwordHelp": "Leave empty for Office 365 users",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "fullName": "Full Name",
+        "isOffice365User": "Office 365 User",
+        "azureObjectId": "Azure AD Object ID",
+        "isSystemAdmin": "System Administrator",
+        "type": "Type",
+        "authenticationType": "Authentication Type",
+        "office365": "Office 365",
+        "local": "Local",
+        "lastLogin": "Last Login",
+        "changePassword": "Change Password",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "passwordIncorrect": "Current password is incorrect",
+        "passwordChanged": "Password changed successfully",
+        "noUsers": "No users found.",
+        "errorLoading": "Error loading users",
+        "errorLoadingDetails": "Error loading user details",
+        "errorCreating": "Error creating user",
+        "errorUpdating": "Error updating user",
+        "errorDeleting": "Error deleting user",
+        "errorChangingPassword": "Error changing password",
+        "createdSuccess": "User created successfully.",
+        "updatedSuccess": "User updated successfully.",
+        "deletedSuccess": "User deleted successfully.",
+        "notFound": "User not found."
+    },
+    "error": {
+        "title": "Error",
+        "heading": "Error.",
+        "message": "An error occurred while processing your request.",
+        "requestId": "Request ID",
+        "devMode": "Development Mode",
+        "devModeDesc": "Swapping to Development environment will display more detailed information about the error that occurred.",
+        "devModeWarning": "The Development environment shouldn't be enabled for deployed applications.",
+        "devModeDetails": "It can result in displaying sensitive information from exceptions to end users. For local debugging, enable the Development environment by setting the ASPNETCORE_ENVIRONMENT environment variable to Development and restarting the app."
     }
 }

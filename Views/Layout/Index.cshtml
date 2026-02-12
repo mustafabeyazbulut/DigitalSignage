@@ -4,20 +4,20 @@
     var locale = ViewBag.CurrentLocale as string ?? "en";
     var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
     string T(string key) => lang?.Get(locale, key) ?? key;
-    ViewData["Title"] = "Layouts";
+    ViewData["Title"] = T("layout.title");
 }
 
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col-md-6">
-            <h2 class="fw-bold text-dark">Layouts</h2>
-            <p class="text-muted mb-0">Manage page layouts and grid configurations</p>
+            <h2 class="fw-bold text-dark">@T("layout.title")</h2>
+            <p class="text-muted mb-0">@T("layout.subtitle")</p>
         </div>
         <div class="col-md-6">
             <div class="row">
                 <div class="col-md-8">
                     <div class="form-group">
-                        <label for="companySelect" class="form-label">Select Company:</label>
+                        <label for="companySelect" class="form-label">@T("common.selectCompany"):</label>
                         <select id="companySelect" class="form-select" onchange="changeCompany(this.value)">
                             @if (ViewBag.Companies != null)
                             {
@@ -31,7 +31,7 @@
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                     <a asp-action="Create" asp-route-companyId="@ViewBag.SelectedCompanyId" class="btn btn-primary w-100">
-                        <i class="bi bi-plus-circle"></i> New Layout
+                        <i class="bi bi-plus-circle"></i> @T("layout.newLayout")
                     </a>
                 </div>
             </div>
@@ -42,7 +42,7 @@
 @if (!Model.Any())
 {
     <div class="alert alert-info">
-        No layouts found for this company. Create one to get started!
+        @T("layout.noLayoutsFound")
     </div>
 }
 

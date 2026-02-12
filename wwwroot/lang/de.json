@@ -43,7 +43,10 @@
         "replaceFile": "Datei ersetzen",
         "leaveEmpty": "Leer lassen, um aktuellen Wert zu behalten",
         "preview": "Vorschau",
-        "noPreview": "Keine Vorschau verfügbar"
+        "noPreview": "Keine Vorschau verfügbar",
+        "selectCompany": "Unternehmen auswählen",
+        "previous": "Zurück",
+        "next": "Weiter"
     },
     "auth": {
         "login": "Anmelden",
@@ -65,7 +68,9 @@
         "accessDeniedMessage": "Sie haben keine Berechtigung, auf diese Ressource zuzugreifen.",
         "ssoFailed": "Microsoft 365-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
         "ssoNotRegistered": "Dieses Microsoft-Konto ist nicht im System registriert. Bitte wenden Sie sich an Ihren Administrator.",
-        "accountDisabled": "Ihr Konto wurde deaktiviert. Bitte wenden Sie sich an Ihren Administrator."
+        "accountDisabled": "Ihr Konto wurde deaktiviert. Bitte wenden Sie sich an Ihren Administrator.",
+        "contactAdmin": "Wenn Sie glauben, dass Sie Zugriff haben sollten, wenden Sie sich bitte an Ihren Administrator.",
+        "goToHome": "Zur Startseite"
     },
     "nav": {
         "dashboard": "Dashboard",
@@ -229,6 +234,7 @@
         "defineGrid": "Rasterstruktur definieren",
         "layoutNamePlaceholder": "z.B. 2x2 Videowand",
         "layoutCodePlaceholder": "z.B. L-2X2",
+        "noLayoutsFound": "Keine Layouts gefunden. Klicken Sie auf \"Neues Layout\" um eines zu erstellen.",
         "createdSuccess": "Layout erfolgreich erstellt.",
         "updatedSuccess": "Layout erfolgreich aktualisiert.",
         "deletedSuccess": "Layout erfolgreich gelöscht.",
@@ -338,5 +344,56 @@
         "en": "English",
         "tr": "Türkçe",
         "de": "Deutsch"
+    },
+    "user": {
+        "title": "Benutzer",
+        "subtitle": "Benutzerkonten und Berechtigungen verwalten.",
+        "newUser": "Neuer Benutzer",
+        "createTitle": "Neuen Benutzer erstellen",
+        "editTitle": "Benutzer bearbeiten",
+        "detailsTitle": "Benutzerdetails",
+        "deleteTitle": "Benutzer löschen",
+        "deleteWarning": "Sind Sie sicher, dass Sie diesen Benutzer löschen möchten?",
+        "userName": "Benutzername",
+        "email": "E-Mail",
+        "password": "Passwort",
+        "passwordHelp": "Für Office 365-Benutzer leer lassen",
+        "firstName": "Vorname",
+        "lastName": "Nachname",
+        "fullName": "Vollständiger Name",
+        "isOffice365User": "Office 365-Benutzer",
+        "azureObjectId": "Azure AD Objekt-ID",
+        "isSystemAdmin": "Systemadministrator",
+        "type": "Typ",
+        "authenticationType": "Authentifizierungstyp",
+        "office365": "Office 365",
+        "local": "Lokal",
+        "lastLogin": "Letzte Anmeldung",
+        "changePassword": "Passwort ändern",
+        "currentPassword": "Aktuelles Passwort",
+        "newPassword": "Neues Passwort",
+        "passwordIncorrect": "Das aktuelle Passwort ist falsch",
+        "passwordChanged": "Passwort erfolgreich geändert",
+        "noUsers": "Keine Benutzer gefunden.",
+        "errorLoading": "Fehler beim Laden der Benutzer",
+        "errorLoadingDetails": "Fehler beim Laden der Benutzerdetails",
+        "errorCreating": "Fehler beim Erstellen des Benutzers",
+        "errorUpdating": "Fehler beim Aktualisieren des Benutzers",
+        "errorDeleting": "Fehler beim Löschen des Benutzers",
+        "errorChangingPassword": "Fehler beim Ändern des Passworts",
+        "createdSuccess": "Benutzer erfolgreich erstellt.",
+        "updatedSuccess": "Benutzer erfolgreich aktualisiert.",
+        "deletedSuccess": "Benutzer erfolgreich gelöscht.",
+        "notFound": "Benutzer nicht gefunden."
+    },
+    "error": {
+        "title": "Fehler",
+        "heading": "Fehler.",
+        "message": "Bei der Verarbeitung Ihrer Anfrage ist ein Fehler aufgetreten.",
+        "requestId": "Anfrage-ID",
+        "devMode": "Entwicklungsmodus",
+        "devModeDesc": "Der Wechsel zur Development-Umgebung zeigt detailliertere Informationen über den aufgetretenen Fehler an.",
+        "devModeWarning": "Die Development-Umgebung sollte für bereitgestellte Anwendungen nicht aktiviert werden.",
+        "devModeDetails": "Dies kann dazu führen, dass vertrauliche Informationen aus Ausnahmen für Endbenutzer angezeigt werden. Aktivieren Sie für lokales Debugging die Development-Umgebung, indem Sie die Umgebungsvariable ASPNETCORE_ENVIRONMENT auf Development setzen und die App neu starten."
     }
 }

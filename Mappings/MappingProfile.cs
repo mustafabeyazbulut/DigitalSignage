@@ -16,12 +16,26 @@ namespace DigitalSignage.Mappings
                 .ForMember(dest => dest.UserID, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true));
+            CreateMap<UpdateUserDTO, User>()
+                .ForMember(dest => dest.UserID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
+                .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
+                .ForMember(dest => dest.IsOffice365User, opt => opt.Ignore())
+                .ForMember(dest => dest.AzureADObjectId, opt => opt.Ignore())
+                .ForMember(dest => dest.PhotoUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.LastLoginDate, opt => opt.Ignore())
+                .ForMember(dest => dest.ModifiedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
+            CreateMap<User, UpdateUserDTO>();
 
             // Company Mappings
             CreateMap<Company, CompanyViewModel>()
                 .ForMember(dest => dest.DepartmentCount, opt => opt.MapFrom(src => src.Departments != null ? src.Departments.Count : 0))
                 .ForMember(dest => dest.LayoutCount, opt => opt.MapFrom(src => src.Layouts != null ? src.Layouts.Count : 0));
             CreateMap<CompanyViewModel, Company>();
+            CreateMap<CreateCompanyDTO, Company>()
+                .ForMember(dest => dest.CompanyID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true));
             CreateMap<UpdateCompanyDTO, Company>()
                 .ForMember(dest => dest.CompanyID, opt => opt.Ignore())
                 .ForMember(dest => dest.ModifiedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
@@ -33,10 +47,31 @@ namespace DigitalSignage.Mappings
                 .ForMember(dest => dest.ContentCount, opt => opt.MapFrom(src => src.Contents != null ? src.Contents.Count : 0))
                 .ForMember(dest => dest.ScheduleCount, opt => opt.MapFrom(src => src.Schedules != null ? src.Schedules.Count : 0));
             CreateMap<DepartmentViewModel, Department>();
+            CreateMap<CreateDepartmentDTO, Department>()
+                .ForMember(dest => dest.DepartmentID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true));
+            CreateMap<UpdateDepartmentDTO, Department>()
+                .ForMember(dest => dest.DepartmentID, opt => opt.Ignore())
+                .ForMember(dest => dest.CompanyID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore());
 
             // Layout Mappings
             CreateMap<Layout, LayoutViewModel>();
             CreateMap<LayoutViewModel, Layout>();
+            CreateMap<CreateLayoutDTO, Layout>()
+                .ForMember(dest => dest.LayoutID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true));
+            CreateMap<DynamicLayoutDTO, Layout>()
+                .ForMember(dest => dest.LayoutID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true));
+            CreateMap<UpdateLayoutDTO, Layout>()
+                .ForMember(dest => dest.LayoutID, opt => opt.Ignore())
+                .ForMember(dest => dest.CompanyID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore());
             CreateMap<Layout, DynamicLayoutViewModel>()
                 .ForMember(dest => dest.Sections, opt => opt.MapFrom(src => src.LayoutSections != null
                     ? src.LayoutSections.Select(ls => new DynamicLayoutViewModel.GridSectionDTO
@@ -60,6 +95,10 @@ namespace DigitalSignage.Mappings
                 .ForMember(dest => dest.PageID, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true));
+            CreateMap<UpdatePageDTO, Page>()
+                .ForMember(dest => dest.PageID, opt => opt.Ignore())
+                .ForMember(dest => dest.DepartmentID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore());
 
             // Content Mappings
             CreateMap<Content, ContentViewModel>();
@@ -68,11 +107,26 @@ namespace DigitalSignage.Mappings
                 .ForMember(dest => dest.ContentID, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true));
+            CreateMap<UpdateContentDTO, Content>()
+                .ForMember(dest => dest.ContentID, opt => opt.Ignore())
+                .ForMember(dest => dest.DepartmentID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+                .ForMember(dest => dest.ModifiedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             // Schedule Mappings
             CreateMap<Schedule, ScheduleViewModel>()
                 .ForMember(dest => dest.PageCount, opt => opt.MapFrom(src => src.SchedulePages != null ? src.SchedulePages.Count : 0));
             CreateMap<ScheduleViewModel, Schedule>();
+            CreateMap<CreateScheduleDTO, Schedule>()
+                .ForMember(dest => dest.ScheduleID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true))
+                .ForMember(dest => dest.SchedulePages, opt => opt.Ignore());
+            CreateMap<UpdateScheduleDTO, Schedule>()
+                .ForMember(dest => dest.ScheduleID, opt => opt.Ignore())
+                .ForMember(dest => dest.DepartmentID, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore());
 
             // UserCompanyRole Mappings
             CreateMap<UserCompanyRole, UserCompanyRoleViewModel>()

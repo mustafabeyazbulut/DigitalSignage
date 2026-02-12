@@ -73,8 +73,23 @@ namespace DigitalSignage.Services
 
         public async Task<bool> IsDepartmentManagerAsync(int departmentId)
         {
-            // TODO: Implement department manager check with department lookup
-            return true;
+            if (CurrentUserId == 0)
+                return false;
+
+            // Get department first
+            var department = await _unitOfWork.Departments.GetByIdAsync(departmentId);
+            if (department == null)
+                return false;
+
+            // Check if user is company admin or department manager for this company
+            var role = await _unitOfWork.UserCompanyRoles.FirstOrDefaultAsync(ucr =>
+                ucr.UserID == CurrentUserId &&
+                ucr.CompanyID == department.CompanyID &&
+                (ucr.Role == "CompanyAdmin" || ucr.Role == "DepartmentManager") &&
+                ucr.IsActive
+            );
+
+            return role != null;
         }
 
         public async Task<CompanyConfiguration?> GetCompanyConfigAsync(int companyId)

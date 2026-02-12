@@ -4,7 +4,16 @@
       "Bash(dir:*)",
       "Bash(powershell -Command:*)",
       "Bash(dotnet add package:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(dotnet ef migrations:*)",
+      "Bash(dotnet ef dbcontext:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(taskkill:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)"
     ]
   }
 }

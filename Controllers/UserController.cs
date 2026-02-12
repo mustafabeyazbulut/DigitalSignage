@@ -37,9 +37,9 @@ namespace DigitalSignage.Controllers
 
                 return View(viewModels);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                AddErrorMessage($"Error loading users: {ex.Message}");
+                AddErrorMessage(T("user.errorLoading"));
                 return View(new List<UserViewModel>());
             }
         }
@@ -59,9 +59,9 @@ namespace DigitalSignage.Controllers
                 var viewModel = _mapper.Map<UserViewModel>(user);
                 return View(viewModel);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                AddErrorMessage($"Error loading user details: {ex.Message}");
+                AddErrorMessage(T("user.errorLoadingDetails"));
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -86,12 +86,12 @@ namespace DigitalSignage.Controllers
 
                 var user = await _userService.CreateAsync(_mapper.Map<Models.User>(dto));
 
-                AddSuccessMessage(T("common.createSuccess"));
+                AddSuccessMessage(T("user.createdSuccess"));
                 return RedirectToAction(nameof(Details), new { id = user.UserID });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                AddErrorMessage($"Error creating user: {ex.Message}");
+                AddErrorMessage(T("user.errorCreating"));
                 return View(dto);
             }
         }
@@ -105,16 +105,16 @@ namespace DigitalSignage.Controllers
                 var user = await _userService.GetByIdAsync(id);
                 if (user == null)
                 {
-                    AddErrorMessage(T("common.notFound"));
+                    AddErrorMessage(T("user.notFound"));
                     return RedirectToAction(nameof(Index));
                 }
 
-                var viewModel = _mapper.Map<UserViewModel>(user);
-                return View(viewModel);
+                var dto = _mapper.Map<UpdateUserDTO>(user);
+                return View(dto);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                AddErrorMessage($"Error loading user: {ex.Message}");
+                AddErrorMessage(T("user.errorLoading"));
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -123,26 +123,30 @@ namespace DigitalSignage.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "SystemAdmin")]
-        public async Task<IActionResult> Edit(int id, UserViewModel viewModel)
+        public async Task<IActionResult> Edit(int id, UpdateUserDTO dto)
         {
             try
             {
-                if (id != viewModel.UserID)
-                    return BadRequest();
-
                 if (!ModelState.IsValid)
-                    return View(viewModel);
+                    return View(dto);
 
-                var user = _mapper.Map<Models.User>(viewModel);
+                var user = await _userService.GetByIdAsync(id);
+                if (user == null)
+                {
+                    AddErrorMessage(T("user.notFound"));
+                    return RedirectToAction(nameof(Index));
+                }
+
+                _mapper.Map(dto, user);
                 await _userService.UpdateAsync(user);
 
-                AddSuccessMessage(T("common.updateSuccess"));
+                AddSuccessMessage(T("user.updatedSuccess"));
                 return RedirectToAction(nameof(Details), new { id });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                AddErrorMessage($"Error updating user: {ex.Message}");
-                return View(viewModel);
+                AddErrorMessage(T("user.errorUpdating"));
+                return View(dto);
             }
         }
 
@@ -155,16 +159,16 @@ namespace DigitalSignage.Controllers
                 var user = await _userService.GetByIdAsync(id);
                 if (user == null)
                 {
-                    AddErrorMessage(T("common.notFound"));
+                    AddErrorMessage(T("user.notFound"));
                     return RedirectToAction(nameof(Index));
                 }
 
                 var viewModel = _mapper.Map<UserViewModel>(user);
                 return View(viewModel);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                AddErrorMessage($"Error loading user: {ex.Message}");
+                AddErrorMessage(T("user.errorLoading"));
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -178,12 +182,12 @@ namespace DigitalSignage.Controllers
             try
             {
                 await _userService.DeleteAsync(id);
-                AddSuccessMessage(T("common.deleteSuccess"));
+                AddSuccessMessage(T("user.deletedSuccess"));
                 return RedirectToAction(nameof(Index));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                AddErrorMessage($"Error deleting user: {ex.Message}");
+                AddErrorMessage(T("user.errorDeleting"));
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -199,16 +203,16 @@ namespace DigitalSignage.Controllers
 
                 if (!success)
                 {
-                    AddErrorMessage("Current password is incorrect");
+                    AddErrorMessage(T("user.passwordIncorrect"));
                     return RedirectToAction(nameof(Details), new { id });
                 }
 
-                AddSuccessMessage("Password changed successfully");
+                AddSuccessMessage(T("user.passwordChanged"));
                 return RedirectToAction(nameof(Details), new { id });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                AddErrorMessage($"Error changing password: {ex.Message}");
+                AddErrorMessage(T("user.errorChangingPassword"));
                 return RedirectToAction(nameof(Details), new { id });
             }
         }

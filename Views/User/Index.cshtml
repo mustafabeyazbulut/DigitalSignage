@@ -1,7 +1,10 @@
 @model List<DigitalSignage.ViewModels.UserViewModel>
 
 @{
-    ViewData["Title"] = "Users";
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("user.title");
     var currentPage = (int)ViewBag.CurrentPage;
     var totalPages = (int)ViewBag.TotalPages;
 }
@@ -9,11 +12,12 @@
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1>@ViewData["Title"]</h1>
+            <h1>@T("user.title")</h1>
+            <p class="text-muted mb-0">@T("user.subtitle")</p>
         </div>
         <div class="col-md-4 text-end">
             <a asp-action="Create" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Create New
+                <i class="bi bi-plus-circle"></i> @T("user.newUser")
             </a>
         </div>
     </div>
@@ -24,13 +28,13 @@
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Full Name</th>
-                        <th>Status</th>
-                        <th>Type</th>
-                        <th>Created Date</th>
-                        <th>Actions</th>
+                        <th>@T("user.userName")</th>
+                        <th>@T("user.email")</th>
+                        <th>@T("user.fullName")</th>
+                        <th>@T("common.status")</th>
+                        <th>@T("user.type")</th>
+                        <th>@T("common.createdDate")</th>
+                        <th>@T("common.actions")</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -42,17 +46,17 @@
                             <td>@user.FullName</td>
                             <td>
                                 <span class="badge @(user.IsActive ? "bg-success" : "bg-danger")">
-                                    @user.StatusText
+                                    @(user.IsActive ? T("common.active") : T("common.inactive"))
                                 </span>
                             </td>
                             <td>
                                 @if (user.IsOffice365User)
                                 {
-                                    <span class="badge bg-info">Office 365</span>
+                                    <span class="badge bg-info">@T("user.office365")</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary">Local</span>
+                                    <span class="badge bg-secondary">@T("user.local")</span>
                                 }
                             </td>
                             <td>@user.CreatedDate.ToString("yyyy-MM-dd")</td>
@@ -79,7 +83,7 @@
             <nav>
                 <ul class="pagination justify-content-center">
                     <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)">Previous</a>
+                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)">@T("common.previous")</a>
                     </li>
                     @for (int i = 1; i <= totalPages; i++)
                     {
@@ -88,7 +92,7 @@
                         </li>
                     }
                     <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)">Next</a>
+                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)">@T("common.next")</a>
                     </li>
                 </ul>
             </nav>
@@ -97,7 +101,7 @@
     else
     {
         <div class="alert alert-info">
-            No users found.
+            @T("user.noUsers")
         </div>
     }
 </div>

@@ -15,6 +15,5 @@ namespace DigitalSignage.ViewModels
 
         // Display Properties
         public string FullName => $"{FirstName} {LastName}".Trim();
-        public string StatusText => IsActive ? "Active" : "Inactive";
     }
 }

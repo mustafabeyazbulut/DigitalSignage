@@ -1,26 +1,28 @@
-@model DigitalSignage.ViewModels.UserViewModel
+@model DigitalSignage.DTOs.UpdateUserDTO
 
 @{
-    ViewData["Title"] = "Edit User";
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("user.editTitle");
 }
 
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-8 offset-md-2">
-            <h1>Edit User</h1>
+            <h1>@T("user.editTitle")</h1>
 
             <form asp-action="Edit" method="post">
-                <input type="hidden" asp-for="UserID" />
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                 <div class="mb-3">
-                    <label asp-for="UserName" class="form-label"></label>
+                    <label asp-for="UserName" class="form-label">@T("user.userName")</label>
                     <input asp-for="UserName" class="form-control" />
                     <span asp-validation-for="UserName" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Email" class="form-label"></label>
+                    <label asp-for="Email" class="form-label">@T("user.email")</label>
                     <input asp-for="Email" type="email" class="form-control" />
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
@@ -28,13 +30,13 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label asp-for="FirstName" class="form-label"></label>
+                            <label asp-for="FirstName" class="form-label">@T("user.firstName")</label>
                             <input asp-for="FirstName" class="form-control" />
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label asp-for="LastName" class="form-label"></label>
+                            <label asp-for="LastName" class="form-label">@T("user.lastName")</label>
                             <input asp-for="LastName" class="form-control" />
                         </div>
                     </div>
@@ -42,17 +44,17 @@
 
                 <div class="mb-3 form-check">
                     <input asp-for="IsActive" class="form-check-input" />
-                    <label asp-for="IsActive" class="form-check-label"></label>
+                    <label asp-for="IsActive" class="form-check-label">@T("common.active")</label>
                 </div>
 
                 <div class="mb-3 form-check">
                     <input asp-for="IsSystemAdmin" class="form-check-input" />
-                    <label asp-for="IsSystemAdmin" class="form-check-label"></label>
+                    <label asp-for="IsSystemAdmin" class="form-check-label">@T("user.isSystemAdmin")</label>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Update</button>
-                    <a asp-action="Details" asp-route-id="@Model.UserID" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">@T("common.update")</button>
+                    <a asp-action="Index" class="btn btn-secondary">@T("common.cancel")</a>
                 </div>
             </form>
         </div>

@@ -1,0 +1,27 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace DigitalSignage.DTOs
+{
+    public class CreateCompanyDTO
+    {
+        [Required(ErrorMessage = "Company name is required")]
+        [MaxLength(255, ErrorMessage = "Company name cannot exceed 255 characters")]
+        public string CompanyName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Company code is required")]
+        [MaxLength(50, ErrorMessage = "Company code cannot exceed 50 characters")]
+        [RegularExpression(@"^[A-Z0-9_-]+$", ErrorMessage = "Company code must contain only uppercase letters, numbers, hyphens, and underscores")]
+        public string CompanyCode { get; set; } = string.Empty;
+
+        [MaxLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
+        public string? Description { get; set; }
+
+        [EmailAddress(ErrorMessage = "Invalid email domain format")]
+        public string? EmailDomain { get; set; }
+
+        public string? PrimaryColor { get; set; } = "#0078D4";
+        public string? SecondaryColor { get; set; } = "#50E6FF";
+
+        public string CreatedBy { get; set; } = "System";
+    }
+}
