@@ -70,7 +70,8 @@
         "ssoNotRegistered": "This Microsoft account is not registered in the system. Please contact your administrator.",
         "accountDisabled": "Your account has been disabled. Please contact your administrator.",
         "contactAdmin": "If you believe you should have access, please contact your administrator.",
-        "goToHome": "Go to Home"
+        "goToHome": "Go to Home",
+        "loggedOut": "You have been logged out successfully."
     },
     "nav": {
         "dashboard": "Dashboard",

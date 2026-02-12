@@ -70,7 +70,8 @@
         "ssoNotRegistered": "Bu Microsoft hesabı sistemde kayıtlı değil. Lütfen yöneticinize başvurun.",
         "accountDisabled": "Hesabınız devre dışı bırakılmış. Lütfen yöneticinize başvurun.",
         "contactAdmin": "Erişim hakkınız olması gerektiğini düşünüyorsanız, lütfen yöneticinize başvurun.",
-        "goToHome": "Ana Sayfaya Git"
+        "goToHome": "Ana Sayfaya Git",
+        "loggedOut": "Başarıyla çıkış yaptınız."
     },
     "nav": {
         "dashboard": "Kontrol Paneli",

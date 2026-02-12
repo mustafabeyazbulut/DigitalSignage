@@ -125,13 +125,29 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-user-circle fs-4 me-2 text-secondary"></i>
-                                <span>Admin User</span>
+                                <span>@(User.Identity?.Name ?? "User")</span>
+                                @if (User.FindFirst("IsSystemAdmin")?.Value == "True")
+                                {
+                                    <span class="badge bg-danger ms-2 small">Admin</span>
+                                }
                             </a>
                             <div class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="#">@T("nav.profile")</a>
-                                <a class="dropdown-item" href="#">@T("nav.settings")</a>
+                                <h6 class="dropdown-header">
+                                    <i class="fas fa-user me-1"></i> @(User.Identity?.Name ?? "User")
+                                </h6>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item text-danger" href="#">@T("auth.logout")</a>
+                                <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
+                                    <i class="fas fa-user-circle me-2"></i>@T("nav.profile")
+                                </a>
+                                <a class="dropdown-item" asp-controller="Account" asp-action="Settings">
+                                    <i class="fas fa-cog me-2"></i>@T("nav.settings")
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-sign-out-alt me-2"></i>@T("auth.logout")
+                                    </button>
+                                </form>
                             </div>
                         </li>
                     </ul>

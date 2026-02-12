@@ -174,10 +174,36 @@ namespace DigitalSignage.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Profile()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
+            {
+                var user = await _userService.GetByIdAsync(userId);
+                if (user != null)
+                {
+                    return View(user);
+                }
+            }
+
+            AddErrorMessage(T("user.notFound"));
+            return RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        [Authorize]
+        public IActionResult Settings()
+        {
+            return View();
+        }
+
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            AddSuccessMessage(T("auth.loggedOut"));
             return RedirectToAction("Login");
         }
 
