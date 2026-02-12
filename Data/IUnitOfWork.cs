@@ -17,6 +17,7 @@ namespace DigitalSignage.Data
         IScheduleRepository Schedules { get; }
         ISchedulePageRepository SchedulePages { get; }
         IUserCompanyRoleRepository UserCompanyRoles { get; }
+        IUserDepartmentRoleRepository UserDepartmentRoles { get; }
         ICompanyConfigurationRepository CompanyConfigurations { get; }
 
         // === Transaction Management ===

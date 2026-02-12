@@ -22,6 +22,7 @@ namespace DigitalSignage.Data
         public DbSet<Schedule> Schedules { get; set; }
         public DbSet<SchedulePage> SchedulePages { get; set; }
         public DbSet<UserCompanyRole> UserCompanyRoles { get; set; }
+        public DbSet<UserDepartmentRole> UserDepartmentRoles { get; set; }
         public DbSet<CompanyConfiguration> CompanyConfigurations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -78,6 +79,27 @@ namespace DigitalSignage.Data
                     .WithMany(c => c.UserCompanyRoles)
                     .HasForeignKey(ucr => ucr.CompanyID)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                // Unique index: Bir kullanıcı bir şirkette sadece bir role sahip olabilir
+                entity.HasIndex(e => new { e.UserID, e.CompanyID }).IsUnique();
+            });
+
+            // === User Department Role ===
+            modelBuilder.Entity<UserDepartmentRole>(entity =>
+            {
+                entity.HasKey(e => e.UserDepartmentRoleID);
+                entity.HasOne(udr => udr.User)
+                    .WithMany(u => u.UserDepartmentRoles)
+                    .HasForeignKey(udr => udr.UserID)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(udr => udr.Department)
+                    .WithMany(d => d.UserDepartmentRoles)
+                    .HasForeignKey(udr => udr.DepartmentID)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Unique index: Bir kullanıcı bir departmanda sadece bir role sahip olabilir
+                entity.HasIndex(e => new { e.UserID, e.DepartmentID }).IsUnique();
             });
 
             // === Layout Configuration ===

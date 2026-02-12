@@ -330,31 +330,6 @@
         "deleteTitle": "Benutzer löschen",
         "deleteWarning": "Sind Sie sicher, dass Sie diesen Benutzer löschen möchten?",
         "userName": "Benutzername",
-        "userID": "Benutzer-ID",
-        "email": "E-Mail",
-        "fullName": "Vollständiger Name",
-        "isSystemAdmin": "Systemadministrator",
-        "createdSuccess": "Benutzer erfolgreich erstellt.",
-        "updatedSuccess": "Benutzer erfolgreich aktualisiert.",
-        "deletedSuccess": "Benutzer erfolgreich gelöscht.",
-        "notFound": "Benutzer nicht gefunden."
-    },
-    "language": {
-        "title": "Sprache",
-        "en": "English",
-        "tr": "Türkçe",
-        "de": "Deutsch"
-    },
-    "user": {
-        "title": "Benutzer",
-        "subtitle": "Benutzerkonten und Berechtigungen verwalten.",
-        "newUser": "Neuer Benutzer",
-        "createTitle": "Neuen Benutzer erstellen",
-        "editTitle": "Benutzer bearbeiten",
-        "detailsTitle": "Benutzerdetails",
-        "deleteTitle": "Benutzer löschen",
-        "deleteWarning": "Sind Sie sicher, dass Sie diesen Benutzer löschen möchten?",
-        "userName": "Benutzername",
         "email": "E-Mail",
         "password": "Passwort",
         "passwordHelp": "Für Office 365-Benutzer leer lassen",
@@ -386,6 +361,12 @@
         "deletedSuccess": "Benutzer erfolgreich gelöscht.",
         "notFound": "Benutzer nicht gefunden."
     },
+    "language": {
+        "title": "Sprache",
+        "en": "English",
+        "tr": "Türkçe",
+        "de": "Deutsch"
+    },
     "error": {
         "title": "Fehler",
         "heading": "Fehler.",
@@ -395,5 +376,24 @@
         "devModeDesc": "Der Wechsel zur Development-Umgebung zeigt detailliertere Informationen über den aufgetretenen Fehler an.",
         "devModeWarning": "Die Development-Umgebung sollte für bereitgestellte Anwendungen nicht aktiviert werden.",
         "devModeDetails": "Dies kann dazu führen, dass vertrauliche Informationen aus Ausnahmen für Endbenutzer angezeigt werden. Aktivieren Sie für lokales Debugging die Development-Umgebung, indem Sie die Umgebungsvariable ASPNETCORE_ENVIRONMENT auf Development setzen und die App neu starten."
+    },
+    "role": {
+        "title": "Rollenverwaltung",
+        "companyRoles": "Firmenrollen",
+        "departmentRoles": "Abteilungsrollen",
+        "assignCompanyRole": "Firmenrolle zuweisen",
+        "assignDepartmentRole": "Abteilungsrolle zuweisen",
+        "companyRoleAssigned": "Firmenrolle erfolgreich zugewiesen.",
+        "departmentRoleAssigned": "Abteilungsrolle erfolgreich zugewiesen.",
+        "companyRoleRemoved": "Firmenrolle erfolgreich entfernt.",
+        "departmentRoleRemoved": "Abteilungsrolle erfolgreich entfernt.",
+        "errorAssigning": "Fehler beim Zuweisen der Rolle.",
+        "errorRemoving": "Fehler beim Entfernen der Rolle.",
+        "selectCompany": "Firma auswählen",
+        "selectDepartment": "Abteilung auswählen",
+        "selectRole": "Rolle auswählen",
+        "manageRoles": "Rollen verwalten",
+        "noRolesAssigned": "Keine Rollen zugewiesen.",
+        "confirmRemove": "Sind Sie sicher, dass Sie diese Rolle entfernen möchten?"
     }
 }

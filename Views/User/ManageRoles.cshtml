@@ -1,0 +1,244 @@
+@model DigitalSignage.ViewModels.UserRoleManagementViewModel
+@{
+    ViewData["Title"] = $"Manage Roles - {Model.User.UserName}";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>@ViewData["Title"]</h2>
+            <p class="text-muted">User: @Model.User.Email</p>
+            <hr />
+        </div>
+    </div>
+
+    <!-- Company Roles Section -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Company Roles</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Existing Company Roles -->
+                    @if (Model.CompanyRoles.Any())
+                    {
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var role in Model.CompanyRoles)
+                                {
+                                    <tr>
+                                        <td>@role.CompanyName</td>
+                                        <td><span class="badge bg-info">@role.Role</span></td>
+                                        <td>
+                                            @if (role.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <form asp-action="RemoveCompanyRole" method="post" class="d-inline">
+                                                <input type="hidden" name="userId" value="@Model.User.UserID" />
+                                                <input type="hidden" name="companyId" value="@role.CompanyID" />
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Remove this role?')">
+                                                    Remove
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No company roles assigned.</p>
+                    }
+
+                    <!-- Add Company Role Form -->
+                    <hr />
+                    <h5>Assign Company Role</h5>
+                    <form asp-action="AssignCompanyRole" method="post" class="row g-3">
+                        <input type="hidden" name="UserID" value="@Model.User.UserID" />
+
+                        <div class="col-md-4">
+                            <label class="form-label">Company</label>
+                            <select name="CompanyID" class="form-select" required>
+                                <option value="">-- Select Company --</option>
+                                @foreach (var company in Model.AvailableCompanies)
+                                {
+                                    <option value="@company.CompanyID">@company.CompanyName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Role</label>
+                            <select name="Role" class="form-select" required>
+                                <option value="CompanyAdmin">Company Admin</option>
+                                <option value="Viewer">Viewer</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">Assign</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Roles Section -->
+    <div class="row mb-5">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Department Roles</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Existing Department Roles -->
+                    @if (Model.DepartmentRoles.Any())
+                    {
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Department</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var role in Model.DepartmentRoles)
+                                {
+                                    <tr>
+                                        <td>@role.CompanyName</td>
+                                        <td>@role.DepartmentName</td>
+                                        <td><span class="badge bg-info">@role.Role</span></td>
+                                        <td>
+                                            @if (role.IsActive)
+                                            {
+                                                <span class="badge bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <form asp-action="RemoveDepartmentRole" method="post" class="d-inline">
+                                                <input type="hidden" name="userId" value="@Model.User.UserID" />
+                                                <input type="hidden" name="departmentId" value="@role.DepartmentID" />
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Remove this role?')">
+                                                    Remove
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No department roles assigned.</p>
+                    }
+
+                    <!-- Add Department Role Form -->
+                    <hr />
+                    <h5>Assign Department Role</h5>
+                    <form asp-action="AssignDepartmentRole" method="post" class="row g-3" id="departmentRoleForm">
+                        <input type="hidden" name="UserID" value="@Model.User.UserID" />
+
+                        <div class="col-md-3">
+                            <label class="form-label">Company</label>
+                            <select id="companySelect" class="form-select" required>
+                                <option value="">-- Select Company --</option>
+                                @foreach (var company in Model.AvailableCompanies)
+                                {
+                                    <option value="@company.CompanyID">@company.CompanyName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Department</label>
+                            <select name="DepartmentID" id="departmentSelect" class="form-select" required disabled>
+                                <option value="">-- Select Department --</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Role</label>
+                            <select name="Role" class="form-select" required>
+                                <option value="DepartmentManager">Department Manager</option>
+                                <option value="Editor">Editor</option>
+                                <option value="Viewer">Viewer</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-success w-100">Assign</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="row">
+        <div class="col-md-12">
+            <a asp-action="Index" class="btn btn-secondary">Back to Users</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // AJAX: Load departments when company is selected
+        document.getElementById('companySelect').addEventListener('change', function() {
+            const companyId = this.value;
+            const departmentSelect = document.getElementById('departmentSelect');
+
+            // Clear and disable department dropdown
+            departmentSelect.innerHTML = '<option value="">-- Select Department --</option>';
+            departmentSelect.disabled = true;
+
+            if (!companyId) return;
+
+            // Fetch departments via AJAX
+            fetch(`/User/GetCompanyDepartments?companyId=${companyId}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.id;
+                        option.textContent = dept.name;
+                        departmentSelect.appendChild(option);
+                    });
+                    departmentSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error loading departments:', error);
+                    alert('Failed to load departments');
+                });
+        });
+    </script>
+}

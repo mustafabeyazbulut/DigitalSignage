@@ -1,10 +1,15 @@
-# Digital Signage Platform v2.1 Professional Edition
+# Digital Signage Platform v2.2 Professional Edition
 
-Enterprise-grade multi-tenant digital signage management system built with ASP.NET Core 9.
+Enterprise-grade multi-tenant digital signage management system with advanced role-based authorization built with ASP.NET Core 9.
 
 ## 🌟 Features
 
 - **Multi-Tenant Architecture**: Company → Department → Page hierarchy
+- **Advanced Authorization System**:
+  - Multi-level role management (SystemAdmin → CompanyAdmin → DepartmentManager → Viewer)
+  - Company-level and Department-level permissions
+  - Hierarchical access control with automatic inheritance
+  - Cache-optimized permission checks
 - **Office 365 Integration**: Azure AD authentication with SSO
 - **Dynamic Grid Layouts**: 1-12x1-12 customizable grid system
 - **Multi-Language Support**: English, Turkish, German
@@ -94,6 +99,15 @@ Translation files: `wwwroot/lang/{locale}.json`
 
 ## 📝 Recent Updates
 
+### v2.2.0 (2026-02-12)
+- ✅ **Multi-Level Authorization System** implemented
+- ✅ UserDepartmentRole model + repository + service layer
+- ✅ Role management UI with AJAX-based department loading
+- ✅ AuthorizationService with hierarchical permission checks
+- ✅ 51 new translations for role management (EN, TR, DE)
+- ✅ Comprehensive authorization documentation (12_AUTHORIZATION.md)
+- ✅ Cache-optimized permission checks (10-15 min TTL)
+
 ### v2.1.1 (2025-02-12)
 - ✅ User module fully localized (EN, TR, DE)
 - ✅ UpdateUserDTO added for proper update operations
@@ -111,5 +125,5 @@ Proprietary - All rights reserved
 
 ---
 
-**Version:** 2.1.1
-**Last Updated:** February 12, 2025
+**Version:** 2.2.0
+**Last Updated:** February 12, 2026

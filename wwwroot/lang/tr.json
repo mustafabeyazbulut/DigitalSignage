@@ -330,31 +330,6 @@
         "deleteTitle": "Kullanıcıyı Sil",
         "deleteWarning": "Bu kullanıcıyı silmek istediğinizden emin misiniz?",
         "userName": "Kullanıcı Adı",
-        "userID": "Kullanıcı ID",
-        "email": "E-posta",
-        "fullName": "Ad Soyad",
-        "isSystemAdmin": "Sistem Yöneticisi",
-        "createdSuccess": "Kullanıcı başarıyla oluşturuldu.",
-        "updatedSuccess": "Kullanıcı başarıyla güncellendi.",
-        "deletedSuccess": "Kullanıcı başarıyla silindi.",
-        "notFound": "Kullanıcı bulunamadı."
-    },
-    "language": {
-        "title": "Dil",
-        "en": "English",
-        "tr": "Türkçe",
-        "de": "Deutsch"
-    },
-    "user": {
-        "title": "Kullanıcılar",
-        "subtitle": "Kullanıcı hesaplarını ve izinleri yönetin.",
-        "newUser": "Yeni Kullanıcı",
-        "createTitle": "Yeni Kullanıcı Oluştur",
-        "editTitle": "Kullanıcıyı Düzenle",
-        "detailsTitle": "Kullanıcı Detayları",
-        "deleteTitle": "Kullanıcıyı Sil",
-        "deleteWarning": "Bu kullanıcıyı silmek istediğinizden emin misiniz?",
-        "userName": "Kullanıcı Adı",
         "email": "E-posta",
         "password": "Şifre",
         "passwordHelp": "Office 365 kullanıcıları için boş bırakın",
@@ -386,6 +361,12 @@
         "deletedSuccess": "Kullanıcı başarıyla silindi.",
         "notFound": "Kullanıcı bulunamadı."
     },
+    "language": {
+        "title": "Dil",
+        "en": "English",
+        "tr": "Türkçe",
+        "de": "Deutsch"
+    },
     "error": {
         "title": "Hata",
         "heading": "Hata.",
@@ -395,5 +376,24 @@
         "devModeDesc": "Development ortamına geçiş yapılması, oluşan hata hakkında daha ayrıntılı bilgi gösterecektir.",
         "devModeWarning": "Development ortamı canlı uygulamalar için etkinleştirilmemelidir.",
         "devModeDetails": "Son kullanıcılara hassas istisna bilgilerinin gösterilmesine neden olabilir. Yerel hata ayıklama için ASPNETCORE_ENVIRONMENT ortam değişkenini Development olarak ayarlayıp uygulamayı yeniden başlatarak Development ortamını etkinleştirin."
+    },
+    "role": {
+        "title": "Rol Yönetimi",
+        "companyRoles": "Şirket Rolleri",
+        "departmentRoles": "Departman Rolleri",
+        "assignCompanyRole": "Şirket Rolü Ata",
+        "assignDepartmentRole": "Departman Rolü Ata",
+        "companyRoleAssigned": "Şirket rolü başarıyla atandı.",
+        "departmentRoleAssigned": "Departman rolü başarıyla atandı.",
+        "companyRoleRemoved": "Şirket rolü başarıyla kaldırıldı.",
+        "departmentRoleRemoved": "Departman rolü başarıyla kaldırıldı.",
+        "errorAssigning": "Rol atama hatası.",
+        "errorRemoving": "Rol kaldırma hatası.",
+        "selectCompany": "Şirket Seçin",
+        "selectDepartment": "Departman Seçin",
+        "selectRole": "Rol Seçin",
+        "manageRoles": "Rolleri Yönet",
+        "noRolesAssigned": "Atanmış rol yok.",
+        "confirmRemove": "Bu rolü kaldırmak istediğinizden emin misiniz?"
     }
 }

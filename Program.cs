@@ -29,6 +29,7 @@ builder.Services.AddScoped<IPageService, PageService>();
 builder.Services.AddScoped<ILayoutService, LayoutService>();
 builder.Services.AddScoped<IContentService, ContentService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
+builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
 
 // Language Service (JSON-based localization)
 builder.Services.AddSingleton<ILanguageService, LanguageService>();

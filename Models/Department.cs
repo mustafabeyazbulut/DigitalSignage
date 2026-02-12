@@ -31,5 +31,6 @@ namespace DigitalSignage.Models
         public ICollection<Page> Pages { get; set; } = new List<Page>();
         public ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
         public ICollection<Content> Contents { get; set; } = new List<Content>();
+        public ICollection<UserDepartmentRole> UserDepartmentRoles { get; set; } = new List<UserDepartmentRole>();
     }
 }

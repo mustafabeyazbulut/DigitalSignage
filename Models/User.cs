@@ -41,5 +41,6 @@ namespace DigitalSignage.Models
 
         // Navigation Properties
         public ICollection<UserCompanyRole> UserCompanyRoles { get; set; } = new List<UserCompanyRole>();
+        public ICollection<UserDepartmentRole> UserDepartmentRoles { get; set; } = new List<UserDepartmentRole>();
     }
 }

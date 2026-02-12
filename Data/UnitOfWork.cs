@@ -20,6 +20,7 @@ namespace DigitalSignage.Data
         private IScheduleRepository? _schedules;
         private ISchedulePageRepository? _schedulePages;
         private IUserCompanyRoleRepository? _userCompanyRoles;
+        private IUserDepartmentRoleRepository? _userDepartmentRoles;
         private ICompanyConfigurationRepository? _companyConfigurations;
 
         public UnitOfWork(AppDbContext context)
@@ -40,6 +41,7 @@ namespace DigitalSignage.Data
         public IScheduleRepository Schedules => _schedules ??= new ScheduleRepository(_context);
         public ISchedulePageRepository SchedulePages => _schedulePages ??= new SchedulePageRepository(_context);
         public IUserCompanyRoleRepository UserCompanyRoles => _userCompanyRoles ??= new UserCompanyRoleRepository(_context);
+        public IUserDepartmentRoleRepository UserDepartmentRoles => _userDepartmentRoles ??= new UserDepartmentRoleRepository(_context);
         public ICompanyConfigurationRepository CompanyConfigurations => _companyConfigurations ??= new CompanyConfigurationRepository(_context);
 
         // === Transaction Management ===

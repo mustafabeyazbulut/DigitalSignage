@@ -61,13 +61,16 @@
                             </td>
                             <td>@user.CreatedDate.ToString("yyyy-MM-dd")</td>
                             <td>
-                                <a asp-action="Details" asp-route-id="@user.UserID" class="btn btn-sm btn-info">
+                                <a asp-action="Details" asp-route-id="@user.UserID" class="btn btn-sm btn-info" title="@T("common.details")">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a asp-action="Edit" asp-route-id="@user.UserID" class="btn btn-sm btn-warning">
+                                <a asp-action="Edit" asp-route-id="@user.UserID" class="btn btn-sm btn-warning" title="@T("common.edit")">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a asp-action="Delete" asp-route-id="@user.UserID" class="btn btn-sm btn-danger">
+                                <a asp-action="ManageRoles" asp-route-id="@user.UserID" class="btn btn-sm btn-primary" title="Manage Roles">
+                                    <i class="bi bi-shield-lock"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@user.UserID" class="btn btn-sm btn-danger" title="@T("common.delete")">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </td>
