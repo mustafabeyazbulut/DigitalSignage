@@ -415,5 +415,13 @@
         "languageSwitcherHint": "Üst menüdeki dil değiştiricisini kullanın",
         "settingsSaved": "Ayarlar başarıyla kaydedildi",
         "errorSaving": "Ayarlar kaydedilirken hata oluştu"
+    },
+    "profile": {
+        "systemAdmin": "Sistem Yöneticisi",
+        "personalInfo": "Kişisel Bilgiler",
+        "lastLogin": "Son Giriş",
+        "office365Info": "Office 365 Bilgileri",
+        "changePasswordInfo": "Şifre Değiştir",
+        "contactAdmin": "Şifrenizi değiştirmek için sistem yöneticinizle iletişime geçin"
     }
 }

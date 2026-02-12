@@ -415,5 +415,13 @@
         "languageSwitcherHint": "Verwenden Sie den Sprachwechsler im oberen Menü",
         "settingsSaved": "Einstellungen erfolgreich gespeichert",
         "errorSaving": "Fehler beim Speichern der Einstellungen"
+    },
+    "profile": {
+        "systemAdmin": "Systemadministrator",
+        "personalInfo": "Persönliche Informationen",
+        "lastLogin": "Letzte Anmeldung",
+        "office365Info": "Office 365 Informationen",
+        "changePasswordInfo": "Passwort ändern",
+        "contactAdmin": "Um Ihr Passwort zu ändern, wenden Sie sich bitte an Ihren Systemadministrator"
     }
 }

@@ -1,111 +1,147 @@
-@using System.Security.Claims
-@using DigitalSignage.Extensions
-
+@model DigitalSignage.Models.User
 @{
-    ViewData["Title"] = "Profile";
-    var user = User;
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("nav.profile");
 }
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <h1>User Profile</h1>
-
-            <div class="card">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-circle me-2"></i>@T("nav.profile")
+                    </h4>
+                </div>
                 <div class="card-body">
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        <div class="text-center mb-4">
-                            @if (!string.IsNullOrEmpty(user.GetPhotoUrl()))
+                    <div class="row mb-4">
+                        <div class="col-md-3 text-center">
+                            @if (!string.IsNullOrEmpty(Model.PhotoUrl))
                             {
-                                <img src="@user.GetPhotoUrl()" alt="Profile Photo" class="rounded-circle" style="width: 150px; height: 150px;" />
+                                <img src="@Model.PhotoUrl" alt="Profile Photo" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
                             }
                             else
                             {
-                                <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width: 150px; height: 150px; font-size: 3rem;">
-                                    @(user.GetGivenName()?.Substring(0, 1) ?? "U")
-                                </div>
+                                <i class="fas fa-user-circle" style="font-size: 100px; color: #6c757d;"></i>
                             }
                         </div>
-
-                        <dl class="row">
-                            <dt class="col-sm-4">Display Name</dt>
-                            <dd class="col-sm-8">@(user.GetDisplayName() ?? "N/A")</dd>
-
-                            <dt class="col-sm-4">Email</dt>
-                            <dd class="col-sm-8">@(user.GetMail() ?? "N/A")</dd>
-
-                            <dt class="col-sm-4">First Name</dt>
-                            <dd class="col-sm-8">@(user.GetGivenName() ?? "N/A")</dd>
-
-                            <dt class="col-sm-4">Last Name</dt>
-                            <dd class="col-sm-8">@(user.GetSurname() ?? "N/A")</dd>
-
-                            @if (!string.IsNullOrEmpty(user.GetObjectId()))
+                        <div class="col-md-9">
+                            <h3>@Model.UserName</h3>
+                            <p class="text-muted mb-1">
+                                <i class="fas fa-envelope me-2"></i>@Model.Email
+                            </p>
+                            @if (Model.IsSystemAdmin)
                             {
-                                <dt class="col-sm-4">Object ID</dt>
-                                <dd class="col-sm-8"><code>@user.GetObjectId()</code></dd>
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-shield-alt me-1"></i>@T("profile.systemAdmin")
+                                </span>
                             }
-
-                            @if (!string.IsNullOrEmpty(user.GetTenantId()))
+                            @if (Model.IsOffice365User)
                             {
-                                <dt class="col-sm-4">Tenant ID</dt>
-                                <dd class="col-sm-8"><code>@user.GetTenantId()</code></dd>
+                                <span class="badge bg-info ms-2">
+                                    <i class="fab fa-microsoft me-1"></i>@T("user.office365")
+                                </span>
                             }
+                            else
+                            {
+                                <span class="badge bg-secondary ms-2">
+                                    <i class="fas fa-user me-1"></i>@T("user.local")
+                                </span>
+                            }
+                        </div>
+                    </div>
 
-                            <dt class="col-sm-4">Roles</dt>
-                            <dd class="col-sm-8">
-                                @{
-                                    var roles = user.GetRoles();
-                                }
-                                @if (roles.Any())
-                                {
-                                    foreach (var role in roles)
+                    <hr />
+
+                    <h5 class="mb-3">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>@T("profile.personalInfo")
+                    </h5>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-id-card me-2 text-primary"></i>@T("user.firstName"):</strong><br />
+                                <span class="ms-4">@(Model.FirstName ?? T("common.notSet"))</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-id-card me-2 text-primary"></i>@T("user.lastName"):</strong><br />
+                                <span class="ms-4">@(Model.LastName ?? T("common.notSet"))</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-calendar-plus me-2 text-success"></i>@T("common.createdDate"):</strong><br />
+                                <span class="ms-4">@Model.CreatedDate.ToString("dd MMM yyyy HH:mm")</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-sign-in-alt me-2 text-info"></i>@T("profile.lastLogin"):</strong><br />
+                                <span class="ms-4">@(Model.LastLoginDate?.ToString("dd MMM yyyy HH:mm") ?? T("common.notSet"))</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong><i class="fas fa-toggle-on me-2 text-warning"></i>@T("common.status"):</strong><br />
+                                <span class="ms-4">
+                                    @if (Model.IsActive)
                                     {
-                                        <span class="badge bg-primary me-1">@role</span>
+                                        <span class="badge bg-success">@T("common.active")</span>
                                     }
-                                }
-                                else
-                                {
-                                    <span class="text-muted">No roles assigned</span>
-                                }
-                            </dd>
-                        </dl>
-
-                        <div class="mt-4">
-                            <h5>All Claims</h5>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Type</th>
-                                            <th>Value</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var claim in User.Claims.OrderBy(c => c.Type))
-                                        {
-                                            <tr>
-                                                <td><small>@claim.Type</small></td>
-                                                <td><small>@claim.Value</small></td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
+                                    else
+                                    {
+                                        <span class="badge bg-danger">@T("common.inactive")</span>
+                                    }
+                                </span>
+                            </p>
                         </div>
-                    }
-                    else
+                        @if (Model.ModifiedDate != null)
+                        {
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong><i class="fas fa-edit me-2 text-secondary"></i>@T("common.updatedDate"):</strong><br />
+                                    <span class="ms-4">@Model.ModifiedDate?.ToString("dd MMM yyyy HH:mm")</span>
+                                </p>
+                            </div>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.AzureADObjectId))
                     {
-                        <div class="alert alert-warning">
-                            You are not authenticated. Please <a asp-action="Login">login</a>.
+                        <hr />
+                        <h5 class="mb-3">
+                            <i class="fab fa-microsoft me-2 text-info"></i>@T("profile.office365Info")
+                        </h5>
+                        <p class="mb-2">
+                            <strong>Azure AD Object ID:</strong><br />
+                            <code class="ms-4">@Model.AzureADObjectId</code>
+                        </p>
+                    }
+
+                    @if (!Model.IsOffice365User)
+                    {
+                        <hr />
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>@T("profile.changePasswordInfo"):</strong> @T("profile.contactAdmin")
                         </div>
                     }
                 </div>
-            </div>
-
-            <div class="mt-3">
-                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Back to Home</a>
+                <div class="card-footer text-end">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>@T("common.back")
+                    </a>
+                </div>
             </div>
         </div>
     </div>

@@ -153,6 +153,9 @@ Her dil paketi aynı anahtar yapısını kullanır:
 | `content` | Medya kütüphanesi | Content/* |
 | `schedule` | Zamanlama yönetimi | Schedule/* |
 | `language` | Dil adları | Dil seçici |
+| `profile` | Kullanıcı profili | Account/Profile |
+| `settings` | Kullanıcı ayarları | Account/Settings |
+| `role` | Rol yönetimi | User/ManageRoles |
 
 ---
 
@@ -337,4 +340,24 @@ var langNames = new Dictionary<string, string> {
 
 ---
 
-**Son Güncelleme**: 11 Şubat 2026
+## 🔄 Son Güncellemeler
+
+### v2.2.1 (12 Şubat 2026)
+- ✅ **Profil Sayfası Yerelleştirme**: 6 yeni çeviri anahtarı (profile.*)
+  - systemAdmin, personalInfo, lastLogin, office365Info, changePasswordInfo, contactAdmin
+  - Extensions bağımlılığı kaldırıldı, doğrudan User modeli kullanılıyor
+- ✅ **Ayarlar Sayfası Yerelleştirme**: 15 yeni çeviri anahtarı (settings.*)
+  - Email bildirim ayarları eklendi (EmailNotificationsEnabled)
+  - Browser notifications kaldırıldı
+  - Fonksiyonel toggle ve kaydetme özelliği
+- ✅ **Login Sayfası Düzeltme**: Email etiketi username olarak değiştirildi
+  - auth.username, auth.usernamePlaceholder anahtarları eklendi
+
+### v2.2.0 (12 Şubat 2026)
+- ✅ **Rol Yönetimi Yerelleştirme**: 51 yeni çeviri anahtarı (role.*)
+  - Şirket ve departman seviyesi rol atama arayüzleri
+  - AJAX tabanlı dinamik departman yükleme
+
+---
+
+**Son Güncelleme**: 12 Şubat 2026

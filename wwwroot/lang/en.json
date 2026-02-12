@@ -416,5 +416,13 @@
         "languageSwitcherHint": "Use the language switcher in the top menu",
         "settingsSaved": "Settings saved successfully",
         "errorSaving": "Error saving settings"
+    },
+    "profile": {
+        "systemAdmin": "System Administrator",
+        "personalInfo": "Personal Information",
+        "lastLogin": "Last Login",
+        "office365Info": "Office 365 Information",
+        "changePasswordInfo": "Change Password",
+        "contactAdmin": "To change your password, please contact your system administrator"
     }
 }

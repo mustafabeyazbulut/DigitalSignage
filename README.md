@@ -99,6 +99,13 @@ Translation files: `wwwroot/lang/{locale}.json`
 
 ## 📝 Recent Updates
 
+### v2.2.1 (2026-02-12)
+- ✅ **Email Notification Settings** - Users can enable/disable email notifications
+- ✅ Profile page fully localized (EN, TR, DE)
+- ✅ Settings page fully localized with functional email toggle
+- ✅ User model extended with EmailNotificationsEnabled field
+- ✅ 25+ new translations for profile and settings pages
+
 ### v2.2.0 (2026-02-12)
 - ✅ **Multi-Level Authorization System** implemented
 - ✅ UserDepartmentRole model + repository + service layer
@@ -125,5 +132,5 @@ Proprietary - All rights reserved
 
 ---
 
-**Version:** 2.2.0
+**Version:** 2.2.1
 **Last Updated:** February 12, 2026
