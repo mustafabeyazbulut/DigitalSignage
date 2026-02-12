@@ -399,5 +399,20 @@
         "manageRoles": "Manage Roles",
         "noRolesAssigned": "No roles assigned.",
         "confirmRemove": "Are you sure you want to remove this role?"
+    },
+    "settings": {
+        "title": "Settings Page",
+        "description": "User settings and preferences will be available here",
+        "accountSettings": "Account Settings",
+        "profileDescription": "View and edit your profile information",
+        "changePassword": "Change Password",
+        "changePasswordDescription": "Update your password",
+        "comingSoon": "Coming Soon",
+        "notifications": "Notifications",
+        "emailNotifications": "Email Notifications",
+        "emailNotificationsDescription": "Receive email notifications for important updates",
+        "languageRegion": "Language & Region",
+        "currentLanguage": "Current Language",
+        "languageSwitcherHint": "Use the language switcher in the top menu"
     }
 }

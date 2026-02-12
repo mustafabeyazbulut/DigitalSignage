@@ -17,58 +17,49 @@
                 <div class="card-body">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Settings Page:</strong> User settings and preferences will be available here.
+                        <strong>@T("settings.title"):</strong> @T("settings.description")
                     </div>
 
-                    <h5 class="mb-3"><i class="fas fa-user me-2"></i>Account Settings</h5>
+                    <h5 class="mb-3"><i class="fas fa-user me-2"></i>@T("settings.accountSettings")</h5>
                     <ul class="list-group mb-4">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <i class="fas fa-user-circle me-2 text-primary"></i>
-                                <strong>Profile</strong>
-                                <p class="mb-0 text-muted small">View and edit your profile information</p>
+                                <strong>@T("nav.profile")</strong>
+                                <p class="mb-0 text-muted small">@T("settings.profileDescription")</p>
                             </div>
-                            <a asp-action="Profile" class="btn btn-sm btn-outline-primary">View</a>
+                            <a asp-action="Profile" class="btn btn-sm btn-outline-primary">@T("common.view")</a>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <i class="fas fa-key me-2 text-warning"></i>
-                                <strong>Change Password</strong>
-                                <p class="mb-0 text-muted small">Update your password</p>
+                                <strong>@T("settings.changePassword")</strong>
+                                <p class="mb-0 text-muted small">@T("settings.changePasswordDescription")</p>
                             </div>
-                            <button class="btn btn-sm btn-outline-warning" disabled>Coming Soon</button>
+                            <button class="btn btn-sm btn-outline-warning" disabled>@T("settings.comingSoon")</button>
                         </li>
                     </ul>
 
-                    <h5 class="mb-3"><i class="fas fa-bell me-2"></i>Notifications</h5>
+                    <h5 class="mb-3"><i class="fas fa-bell me-2"></i>@T("settings.notifications")</h5>
                     <ul class="list-group mb-4">
                         <li class="list-group-item">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="emailNotifications" checked disabled>
                                 <label class="form-check-label" for="emailNotifications">
-                                    Email Notifications
+                                    <strong>@T("settings.emailNotifications")</strong>
                                 </label>
-                                <p class="mb-0 text-muted small">Receive email notifications for important updates</p>
-                            </div>
-                        </li>
-                        <li class="list-group-item">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="browserNotifications" disabled>
-                                <label class="form-check-label" for="browserNotifications">
-                                    Browser Notifications
-                                </label>
-                                <p class="mb-0 text-muted small">Show desktop notifications</p>
+                                <p class="mb-0 text-muted small">@T("settings.emailNotificationsDescription")</p>
                             </div>
                         </li>
                     </ul>
 
-                    <h5 class="mb-3"><i class="fas fa-globe me-2"></i>Language & Region</h5>
+                    <h5 class="mb-3"><i class="fas fa-globe me-2"></i>@T("settings.languageRegion")</h5>
                     <ul class="list-group">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <i class="fas fa-language me-2 text-info"></i>
-                                <strong>Current Language</strong>
-                                <p class="mb-0 text-muted small">@locale (Use the language switcher in the top menu)</p>
+                                <strong>@T("settings.currentLanguage")</strong>
+                                <p class="mb-0 text-muted small">@locale (@T("settings.languageSwitcherHint"))</p>
                             </div>
                         </li>
                     </ul>

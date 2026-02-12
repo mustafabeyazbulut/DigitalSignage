@@ -398,5 +398,20 @@
         "manageRoles": "Rollen verwalten",
         "noRolesAssigned": "Keine Rollen zugewiesen.",
         "confirmRemove": "Sind Sie sicher, dass Sie diese Rolle entfernen möchten?"
+    },
+    "settings": {
+        "title": "Einstellungsseite",
+        "description": "Benutzereinstellungen und Präferenzen werden hier verfügbar sein",
+        "accountSettings": "Kontoeinstellungen",
+        "profileDescription": "Profilinformationen anzeigen und bearbeiten",
+        "changePassword": "Passwort ändern",
+        "changePasswordDescription": "Passwort aktualisieren",
+        "comingSoon": "Demnächst",
+        "notifications": "Benachrichtigungen",
+        "emailNotifications": "E-Mail-Benachrichtigungen",
+        "emailNotificationsDescription": "E-Mail-Benachrichtigungen für wichtige Updates erhalten",
+        "languageRegion": "Sprache & Region",
+        "currentLanguage": "Aktuelle Sprache",
+        "languageSwitcherHint": "Verwenden Sie den Sprachwechsler im oberen Menü"
     }
 }

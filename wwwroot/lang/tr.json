@@ -398,5 +398,20 @@
         "manageRoles": "Rolleri Yönet",
         "noRolesAssigned": "Atanmış rol yok.",
         "confirmRemove": "Bu rolü kaldırmak istediğinizden emin misiniz?"
+    },
+    "settings": {
+        "title": "Ayarlar Sayfası",
+        "description": "Kullanıcı ayarları ve tercihleri burada mevcut olacak",
+        "accountSettings": "Hesap Ayarları",
+        "profileDescription": "Profil bilgilerinizi görüntüleyin ve düzenleyin",
+        "changePassword": "Şifre Değiştir",
+        "changePasswordDescription": "Şifrenizi güncelleyin",
+        "comingSoon": "Yakında",
+        "notifications": "Bildirimler",
+        "emailNotifications": "E-posta Bildirimleri",
+        "emailNotificationsDescription": "Önemli güncellemeler için e-posta bildirimleri alın",
+        "languageRegion": "Dil ve Bölge",
+        "currentLanguage": "Mevcut Dil",
+        "languageSwitcherHint": "Üst menüdeki dil değiştiricisini kullanın"
     }
 }
