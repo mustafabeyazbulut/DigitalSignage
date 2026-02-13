@@ -428,3 +428,56 @@ const NavigationAnalytics = {
 window.NavigationHelper = NavigationHelper;
 window.SwipeHandler = SwipeHandler;
 window.NavigationAnalytics = NavigationAnalytics;
+
+// Table Action Dropdown Handler
+const TableActionDropdown = {
+    init: function () {
+        // Tüm dropdown toggle butonlarına event listener ekle
+        document.addEventListener('click', function (e) {
+            const toggle = e.target.closest('.action-dropdown-toggle');
+
+            if (toggle) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const dropdown = toggle.closest('.action-dropdown');
+                const isOpen = dropdown.classList.contains('show');
+
+                // Diğer tüm açık dropdown'ları kapat
+                TableActionDropdown.closeAll();
+
+                // Bu dropdown'ı aç/kapat
+                if (!isOpen) {
+                    dropdown.classList.add('show');
+                }
+            } else {
+                // Dropdown dışına tıklanırsa tümünü kapat
+                TableActionDropdown.closeAll();
+            }
+        });
+
+        // ESC tuşu ile kapat
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                TableActionDropdown.closeAll();
+            }
+        });
+    },
+
+    closeAll: function () {
+        document.querySelectorAll('.action-dropdown.show').forEach(function (dropdown) {
+            dropdown.classList.remove('show');
+        });
+    }
+};
+
+// Initialize table dropdowns when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+        TableActionDropdown.init();
+    });
+} else {
+    TableActionDropdown.init();
+}
+
+window.TableActionDropdown = TableActionDropdown;

@@ -1,0 +1,170 @@
+/* Tablo Tasarımları - Tüm Data Tabloları İçin Ortak Stiller */
+
+.data-table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-collapse: collapse;
+}
+
+.data-table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+    font-weight: 600;
+    padding: 12px;
+    text-align: left;
+}
+
+.data-table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+/* Action Dropdown Menü */
+.table-actions {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.action-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.action-dropdown-toggle {
+    background-color: #6c757d;
+    color: white;
+    padding: 6px 12px;
+    font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.action-dropdown-toggle:hover {
+    background-color: #5a6268;
+}
+
+.action-dropdown-toggle:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5);
+}
+
+.action-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    display: none;
+    min-width: 180px;
+    padding: 0.5rem 0;
+    margin: 0.125rem 0 0;
+    background-color: white;
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 4px;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.175);
+}
+
+.action-dropdown.show .action-dropdown-menu {
+    display: block;
+}
+
+.action-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    color: #212529;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.action-dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #16181b;
+}
+
+.action-dropdown-item i {
+    width: 16px;
+    text-align: center;
+}
+
+/* Farklı action türleri için renkler */
+.action-dropdown-item.action-view:hover {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.action-dropdown-item.action-edit:hover {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.action-dropdown-item.action-roles:hover {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.action-dropdown-item.action-delete:hover {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Dropdown divider */
+.action-dropdown-divider {
+    height: 0;
+    margin: 0.5rem 0;
+    overflow: hidden;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Badge stilleri */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.type-badge {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.type-badge.office365 {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.type-badge.local {
+    background-color: #e2e3e5;
+    color: #383d41;
+}

@@ -9,6 +9,10 @@
     var totalPages = (int)ViewBag.TotalPages;
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/tables.css" />
+}
+
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col-md-8">
@@ -25,7 +29,7 @@
     @if (Model.Any())
     {
         <div class="table-responsive">
-            <table class="table table-striped table-hover">
+            <table class="data-table table-striped table-hover">
                 <thead>
                     <tr>
                         <th>@T("user.userName")</th>
@@ -45,35 +49,50 @@
                             <td>@user.Email</td>
                             <td>@user.FullName</td>
                             <td>
-                                <span class="badge @(user.IsActive ? "bg-success" : "bg-danger")">
+                                <span class="status-badge @(user.IsActive ? "active" : "inactive")">
                                     @(user.IsActive ? T("common.active") : T("common.inactive"))
                                 </span>
                             </td>
                             <td>
                                 @if (user.IsOffice365User)
                                 {
-                                    <span class="badge bg-info">@T("user.office365")</span>
+                                    <span class="type-badge office365">
+                                        <i class="bi bi-microsoft"></i> @T("user.office365")
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary">@T("user.local")</span>
+                                    <span class="type-badge local">
+                                        <i class="bi bi-person"></i> @T("user.local")
+                                    </span>
                                 }
                             </td>
                             <td>@user.CreatedDate.ToString("yyyy-MM-dd")</td>
-                            <td>
-                                <div class="btn-group" role="group">
-                                    <a asp-action="Details" asp-route-id="@user.UserID" class="btn btn-sm btn-info" title="@T("common.details")">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a asp-action="Edit" asp-route-id="@user.UserID" asp-route-returnUrl="@Url.Action("Index")" class="btn btn-sm btn-warning" title="@T("common.edit")">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <a asp-action="ManageRoles" asp-route-id="@user.UserID" class="btn btn-sm btn-primary" title="@T("user.manageRoles")">
-                                        <i class="bi bi-shield-lock"></i>
-                                    </a>
-                                    <a asp-action="Delete" asp-route-id="@user.UserID" class="btn btn-sm btn-danger" title="@T("common.delete")">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
+                            <td class="table-actions">
+                                <div class="action-dropdown">
+                                    <button type="button" class="action-dropdown-toggle">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                        <span>@T("common.actions")</span>
+                                    </button>
+                                    <div class="action-dropdown-menu">
+                                        <a asp-action="Details" asp-route-id="@user.UserID" class="action-dropdown-item action-view">
+                                            <i class="bi bi-eye"></i>
+                                            <span>@T("common.details")</span>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@user.UserID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
+                                            <i class="bi bi-pencil"></i>
+                                            <span>@T("common.edit")</span>
+                                        </a>
+                                        <a asp-action="ManageRoles" asp-route-id="@user.UserID" class="action-dropdown-item action-roles">
+                                            <i class="bi bi-shield-lock"></i>
+                                            <span>@T("user.manageRoles")</span>
+                                        </a>
+                                        <div class="action-dropdown-divider"></div>
+                                        <a asp-action="Delete" asp-route-id="@user.UserID" class="action-dropdown-item action-delete">
+                                            <i class="bi bi-trash"></i>
+                                            <span>@T("common.delete")</span>
+                                        </a>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
