@@ -173,6 +173,7 @@
         "companyCannotChange": "Şirket değiştirilemez",
         "viewPages": "Sayfalar",
         "noDepartments": "Henüz departman bulunamadı.",
+        "createFirstDepartment": "İlk departmanınızı oluşturun.",
         "showAllCompanies": "Tüm Şirketleri Göster",
         "searchPlaceholder": "Departman ara...",
         "selectCompany": "Şirket Seçin...",

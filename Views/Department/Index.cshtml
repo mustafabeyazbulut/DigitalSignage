@@ -5,6 +5,13 @@
     var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
     string T(string key) => lang?.Get(locale, key) ?? key;
     ViewData["Title"] = T("department.title");
+
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var searchTerm = ViewBag.SearchTerm as string ?? "";
+    var sortBy = ViewBag.SortBy as string ?? "";
+    var sortOrder = ViewBag.SortOrder as string ?? "asc";
+    var companyId = ViewBag.CompanyId as int?;
 }
 
 @section Styles {
@@ -24,18 +31,28 @@
         </div>
     </div>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-white py-3">
-            <div class="row align-items-center">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="@T("department.searchPlaceholder")">
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3">
+                <div class="col-md-8">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="@T("common.search")..." value="@searchTerm">
+                    </div>
                 </div>
-                <div class="col-md-8 text-end">
-                    @if(ViewBag.CompanyId != null) {
-                        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">@T("department.showAllCompanies")</a>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">@T("common.search")</button>
+                </div>
+                <div class="col-md-2 text-end">
+                    @if(companyId != null) {
+                        <a asp-action="Index" class="btn btn-outline-secondary w-100">@T("department.showAllCompanies")</a>
                     }
                 </div>
-            </div>
+                @if(companyId != null) {
+                    <input type="hidden" name="companyId" value="@companyId" />
+                }
+            </form>
         </div>
     </div>
 
@@ -46,8 +63,24 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>@T("department.departmentName")</th>
-                            <th>@T("department.code")</th>
+                            <th>
+                                <a href="?search=@searchTerm&sortBy=DepartmentName&sortOrder=@(sortBy == "DepartmentName" && sortOrder == "asc" ? "desc" : "asc")@(companyId != null ? $"&companyId={companyId}" : "")" class="text-white text-decoration-none">
+                                    @T("department.departmentName")
+                                    @if (sortBy == "DepartmentName")
+                                    {
+                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="?search=@searchTerm&sortBy=DepartmentCode&sortOrder=@(sortBy == "DepartmentCode" && sortOrder == "asc" ? "desc" : "asc")@(companyId != null ? $"&companyId={companyId}" : "")" class="text-white text-decoration-none">
+                                    @T("department.code")
+                                    @if (sortBy == "DepartmentCode")
+                                    {
+                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                    }
+                                </a>
+                            </th>
                             <th>@T("department.company")</th>
                             <th>@T("common.status")</th>
                             <th>@T("common.actions")</th>
@@ -104,6 +137,31 @@
                 </table>
             </div>
         </div>
+
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage - 1)@(companyId != null ? $"&companyId={companyId}" : "")">
+                            @T("common.previous")
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@i@(companyId != null ? $"&companyId={companyId}" : "")">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage + 1)@(companyId != null ? $"&companyId={companyId}" : "")">
+                            @T("common.next")
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
     }
     else
     {

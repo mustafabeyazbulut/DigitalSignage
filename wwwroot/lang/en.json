@@ -173,6 +173,7 @@
         "companyCannotChange": "Company cannot be changed",
         "viewPages": "Pages",
         "noDepartments": "No departments found.",
+        "createFirstDepartment": "Create your first department.",
         "showAllCompanies": "Show All Companies",
         "searchPlaceholder": "Search departments...",
         "selectCompany": "Select Company...",

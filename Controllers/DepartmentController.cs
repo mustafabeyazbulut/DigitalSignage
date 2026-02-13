@@ -15,15 +15,65 @@ namespace DigitalSignage.Controllers
             _companyService = companyService;
         }
 
-        public async Task<IActionResult> Index(int? companyId)
+        public async Task<IActionResult> Index(int? companyId, string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
         {
+            const int pageSize = 10;
+
+            // Şirkete göre veya tüm departmanları al
+            IEnumerable<Department> allDepartments;
             if (companyId.HasValue)
             {
-                var departments = await _departmentService.GetByCompanyIdAsync(companyId.Value);
+                allDepartments = await _departmentService.GetByCompanyIdAsync(companyId.Value);
                 ViewBag.CompanyId = companyId;
-                return View(departments);
             }
-            return View(await _departmentService.GetAllAsync());
+            else
+            {
+                allDepartments = await _departmentService.GetAllAsync();
+            }
+
+            IEnumerable<Department> query = allDepartments;
+
+            // Arama filtresi
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                query = query.Where(d =>
+                    (d.DepartmentName != null && d.DepartmentName.ToLower().Contains(search)) ||
+                    (d.DepartmentCode != null && d.DepartmentCode.ToLower().Contains(search)) ||
+                    (d.Company?.CompanyName != null && d.Company.CompanyName.ToLower().Contains(search))
+                );
+            }
+
+            // Sıralama
+            query = sortBy switch
+            {
+                "DepartmentName" => sortOrder == "asc"
+                    ? query.OrderBy(d => d.DepartmentName)
+                    : query.OrderByDescending(d => d.DepartmentName),
+                "DepartmentCode" => sortOrder == "asc"
+                    ? query.OrderBy(d => d.DepartmentCode)
+                    : query.OrderByDescending(d => d.DepartmentCode),
+                _ => query.OrderBy(d => d.DepartmentName)
+            };
+
+            // Toplam sayı ve sayfa hesaplama
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            // Pagination
+            var departments = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // ViewBag
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.SearchTerm = search;
+            ViewBag.SortBy = sortBy;
+            ViewBag.SortOrder = sortOrder;
+
+            return View(departments);
         }
 
         public async Task<IActionResult> Create(int? companyId)
