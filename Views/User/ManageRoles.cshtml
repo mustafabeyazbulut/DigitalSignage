@@ -1,6 +1,10 @@
 @model DigitalSignage.ViewModels.UserRoleManagementViewModel
 @{
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
     ViewData["Title"] = $"Manage Roles - {Model.User.UserName}";
+    var isTargetUserSystemAdmin = ViewBag.IsTargetUserSystemAdmin as bool? ?? false;
 }
 
 <div class="container-fluid">
@@ -8,6 +12,15 @@
         <div class="col-md-12">
             <h2>@ViewData["Title"]</h2>
             <p class="text-muted">User: @Model.User.Email</p>
+
+            @if (isTargetUserSystemAdmin)
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>@T("user.systemAdminDoesNotNeedRoles")</strong>
+                </div>
+            }
+
             <hr />
         </div>
     </div>
@@ -67,36 +80,39 @@
                         <p class="text-muted">No company roles assigned.</p>
                     }
 
-                    <!-- Add Company Role Form -->
-                    <hr />
-                    <h5>Assign Company Role</h5>
-                    <form asp-action="AssignCompanyRole" method="post" class="row g-3">
-                        <input type="hidden" name="UserID" value="@Model.User.UserID" />
+                    @if (!isTargetUserSystemAdmin)
+                    {
+                        <!-- Add Company Role Form -->
+                        <hr />
+                        <h5>Assign Company Role</h5>
+                        <form asp-action="AssignCompanyRole" method="post" class="row g-3">
+                            <input type="hidden" name="UserID" value="@Model.User.UserID" />
 
-                        <div class="col-md-4">
-                            <label class="form-label">Company</label>
-                            <select name="CompanyID" class="form-select" required>
-                                <option value="">-- Select Company --</option>
-                                @foreach (var company in Model.AvailableCompanies)
-                                {
-                                    <option value="@company.CompanyID">@company.CompanyName</option>
-                                }
-                            </select>
-                        </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Company</label>
+                                <select name="CompanyID" class="form-select" required>
+                                    <option value="">-- Select Company --</option>
+                                    @foreach (var company in Model.AvailableCompanies)
+                                    {
+                                        <option value="@company.CompanyID">@company.CompanyName</option>
+                                    }
+                                </select>
+                            </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label">Role</label>
-                            <select name="Role" class="form-select" required>
-                                <option value="CompanyAdmin">Company Admin</option>
-                                <option value="Viewer">Viewer</option>
-                            </select>
-                        </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Role</label>
+                                <select name="Role" class="form-select" required>
+                                    <option value="CompanyAdmin">Company Admin</option>
+                                    <option value="Viewer">Viewer</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="submit" class="btn btn-primary w-100">Assign</button>
-                        </div>
-                    </form>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary w-100">Assign</button>
+                            </div>
+                        </form>
+                    }
                 </div>
             </div>
         </div>
@@ -159,44 +175,47 @@
                         <p class="text-muted">No department roles assigned.</p>
                     }
 
-                    <!-- Add Department Role Form -->
-                    <hr />
-                    <h5>Assign Department Role</h5>
-                    <form asp-action="AssignDepartmentRole" method="post" class="row g-3" id="departmentRoleForm">
-                        <input type="hidden" name="UserID" value="@Model.User.UserID" />
+                    @if (!isTargetUserSystemAdmin)
+                    {
+                        <!-- Add Department Role Form -->
+                        <hr />
+                        <h5>Assign Department Role</h5>
+                        <form asp-action="AssignDepartmentRole" method="post" class="row g-3" id="departmentRoleForm">
+                            <input type="hidden" name="UserID" value="@Model.User.UserID" />
 
-                        <div class="col-md-3">
-                            <label class="form-label">Company</label>
-                            <select id="companySelect" class="form-select" required>
-                                <option value="">-- Select Company --</option>
-                                @foreach (var company in Model.AvailableCompanies)
-                                {
-                                    <option value="@company.CompanyID">@company.CompanyName</option>
-                                }
-                            </select>
-                        </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Company</label>
+                                <select id="companySelect" class="form-select" required>
+                                    <option value="">-- Select Company --</option>
+                                    @foreach (var company in Model.AvailableCompanies)
+                                    {
+                                        <option value="@company.CompanyID">@company.CompanyName</option>
+                                    }
+                                </select>
+                            </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label">Department</label>
-                            <select name="DepartmentID" id="departmentSelect" class="form-select" required disabled>
-                                <option value="">-- Select Department --</option>
-                            </select>
-                        </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Department</label>
+                                <select name="DepartmentID" id="departmentSelect" class="form-select" required disabled>
+                                    <option value="">-- Select Department --</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label">Role</label>
-                            <select name="Role" class="form-select" required>
-                                <option value="DepartmentManager">Department Manager</option>
-                                <option value="Editor">Editor</option>
-                                <option value="Viewer">Viewer</option>
-                            </select>
-                        </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Role</label>
+                                <select name="Role" class="form-select" required>
+                                    <option value="DepartmentManager">Department Manager</option>
+                                    <option value="Editor">Editor</option>
+                                    <option value="Viewer">Viewer</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="submit" class="btn btn-success w-100">Assign</button>
-                        </div>
-                    </form>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-success w-100">Assign</button>
+                            </div>
+                        </form>
+                    }
                 </div>
             </div>
         </div>

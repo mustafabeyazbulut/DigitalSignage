@@ -379,7 +379,8 @@
         "cannotDeleteSelf": "Sie können sich nicht selbst löschen.",
         "cannotDeleteLastSystemAdmin": "Der letzte Systemadministrator kann nicht gelöscht werden.",
         "cannotChangeOwnActiveStatus": "Sie können Ihren eigenen Aktivitätsstatus nicht ändern.",
-        "cannotDeactivateLastSystemAdmin": "Der letzte aktive Systemadministrator kann nicht deaktiviert werden."
+        "cannotDeactivateLastSystemAdmin": "Der letzte aktive Systemadministrator kann nicht deaktiviert werden.",
+        "systemAdminDoesNotNeedRoles": "Systemadministratoren benötigen keine Unternehmens- oder Abteilungsrollenzuweisungen. Sie haben bereits vollen Zugriff."
     },
     "language": {
         "title": "Sprache",

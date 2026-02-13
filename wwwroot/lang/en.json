@@ -380,7 +380,8 @@
         "cannotDeleteSelf": "You cannot delete yourself.",
         "cannotDeleteLastSystemAdmin": "Cannot delete the last System Administrator.",
         "cannotChangeOwnActiveStatus": "You cannot change your own active status.",
-        "cannotDeactivateLastSystemAdmin": "Cannot deactivate the last active System Administrator."
+        "cannotDeactivateLastSystemAdmin": "Cannot deactivate the last active System Administrator.",
+        "systemAdminDoesNotNeedRoles": "System Administrators do not need company or department role assignments. They already have full access."
     },
     "language": {
         "title": "Language",

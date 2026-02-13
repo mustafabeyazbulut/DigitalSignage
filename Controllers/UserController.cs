@@ -565,6 +565,9 @@ namespace DigitalSignage.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
+                // SystemAdmin kullanıcılara rol ataması gerekmez (zaten her şeye erişir)
+                ViewBag.IsTargetUserSystemAdmin = user.IsSystemAdmin;
+
                 var viewModel = new UserRoleManagementViewModel
                 {
                     User = user,
@@ -597,6 +600,14 @@ namespace DigitalSignage.Controllers
                     !await _authService.IsCompanyAdminAsync(currentUserId, dto.CompanyID))
                 {
                     AddErrorMessage(T("error.unauthorized"));
+                    return RedirectToAction(nameof(ManageRoles), new { id = dto.UserID });
+                }
+
+                // SystemAdmin kullanıcılara rol ataması yapılamaz (zaten her şeye erişir)
+                var targetUser = await _userService.GetByIdAsync(dto.UserID);
+                if (targetUser != null && targetUser.IsSystemAdmin)
+                {
+                    AddErrorMessage(T("user.systemAdminDoesNotNeedRoles"));
                     return RedirectToAction(nameof(ManageRoles), new { id = dto.UserID });
                 }
 
@@ -669,6 +680,14 @@ namespace DigitalSignage.Controllers
                     !await _authService.IsCompanyAdminAsync(currentUserId, department.CompanyID))
                 {
                     AddErrorMessage(T("error.unauthorized"));
+                    return RedirectToAction(nameof(ManageRoles), new { id = dto.UserID });
+                }
+
+                // SystemAdmin kullanıcılara rol ataması yapılamaz (zaten her şeye erişir)
+                var targetUser = await _userService.GetByIdAsync(dto.UserID);
+                if (targetUser != null && targetUser.IsSystemAdmin)
+                {
+                    AddErrorMessage(T("user.systemAdminDoesNotNeedRoles"));
                     return RedirectToAction(nameof(ManageRoles), new { id = dto.UserID });
                 }
 

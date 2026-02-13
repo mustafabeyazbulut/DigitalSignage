@@ -379,7 +379,8 @@
         "cannotDeleteSelf": "Kendi kullanıcınızı silemezsiniz.",
         "cannotDeleteLastSystemAdmin": "Son Sistem Yöneticisi kullanıcısı silinemez.",
         "cannotChangeOwnActiveStatus": "Kendi aktiflik durumunuzu değiştiremezsiniz.",
-        "cannotDeactivateLastSystemAdmin": "Son aktif Sistem Yöneticisi pasif yapılamaz."
+        "cannotDeactivateLastSystemAdmin": "Son aktif Sistem Yöneticisi pasif yapılamaz.",
+        "systemAdminDoesNotNeedRoles": "Sistem Yöneticisi kullanıcılara şirket veya departman rolü ataması gerekmez. Zaten tüm yetkilere sahipler."
     },
     "language": {
         "title": "Dil",
