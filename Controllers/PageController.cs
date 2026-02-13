@@ -19,15 +19,65 @@ namespace DigitalSignage.Controllers
             _companyService = companyService;
         }
 
-        public async Task<IActionResult> Index(int? departmentId)
+        public async Task<IActionResult> Index(int? departmentId, string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
         {
+            const int pageSize = 10;
+
+            // Departmana göre veya tüm sayfaları al
+            IEnumerable<Page> allPages;
             if (departmentId.HasValue)
             {
-                var pages = await _pageService.GetByDepartmentIdAsync(departmentId.Value);
+                allPages = await _pageService.GetByDepartmentIdAsync(departmentId.Value);
                 ViewBag.DepartmentId = departmentId;
-                return View(pages);
             }
-            return View(await _pageService.GetAllAsync());
+            else
+            {
+                allPages = await _pageService.GetAllAsync();
+            }
+
+            IEnumerable<Page> query = allPages;
+
+            // Arama filtresi
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                query = query.Where(p =>
+                    (p.PageTitle != null && p.PageTitle.ToLower().Contains(search)) ||
+                    (p.Description != null && p.Description.ToLower().Contains(search)) ||
+                    (p.PageName != null && p.PageName.ToLower().Contains(search))
+                );
+            }
+
+            // Sıralama
+            query = sortBy switch
+            {
+                "PageTitle" => sortOrder == "asc"
+                    ? query.OrderBy(p => p.PageTitle)
+                    : query.OrderByDescending(p => p.PageTitle),
+                "CreatedDate" => sortOrder == "asc"
+                    ? query.OrderBy(p => p.CreatedDate)
+                    : query.OrderByDescending(p => p.CreatedDate),
+                _ => query.OrderBy(p => p.PageTitle)
+            };
+
+            // Toplam sayı ve sayfa hesaplama
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            // Pagination
+            var pages = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // ViewBag
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.SearchTerm = search;
+            ViewBag.SortBy = sortBy;
+            ViewBag.SortOrder = sortOrder;
+
+            return View(pages);
         }
 
         public async Task<IActionResult> Create(int? departmentId)
