@@ -1,7 +1,7 @@
 using DigitalSignage.Services;
+using DigitalSignage.ViewComponents;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-
 using Microsoft.AspNetCore.Authorization;
 
 namespace DigitalSignage.Controllers
@@ -33,6 +33,9 @@ namespace DigitalSignage.Controllers
 
             // Smart back navigation support
             SetupSmartBackNavigation(context);
+
+            // Breadcrumb navigation support
+            SetupBreadcrumbNavigation(context);
         }
 
         /// <summary>
@@ -77,6 +80,140 @@ namespace DigitalSignage.Controllers
             ViewBag.ReturnUrl = referrer;
             ViewBag.DefaultReturnUrl = defaultFallback;
             ViewBag.CurrentUrl = currentUrl;
+        }
+
+        /// <summary>
+        /// Breadcrumb navigation için otomatik breadcrumb item'ları oluşturur.
+        /// Controller ve Action bazlı dinamik breadcrumb desteği sağlar.
+        /// </summary>
+        private void SetupBreadcrumbNavigation(ActionExecutingContext context)
+        {
+            var controllerName = context.RouteData.Values["controller"]?.ToString();
+            var actionName = context.RouteData.Values["action"]?.ToString();
+            var id = context.RouteData.Values["id"]?.ToString();
+
+            var breadcrumbs = new List<BreadcrumbItem>
+            {
+                // Always start with Home
+                new BreadcrumbItem
+                {
+                    Text = T("nav.dashboard"),
+                    Url = "/Home/Index",
+                    Icon = "fas fa-home",
+                    IsActive = false
+                }
+            };
+
+            // Add controller-level breadcrumb
+            if (!string.IsNullOrEmpty(controllerName) && controllerName != "Home")
+            {
+                string controllerText = GetControllerDisplayName(controllerName);
+                string controllerUrl = $"/{controllerName}/Index";
+
+                breadcrumbs.Add(new BreadcrumbItem
+                {
+                    Text = controllerText,
+                    Url = actionName == "Index" ? null : controllerUrl,
+                    Icon = GetControllerIcon(controllerName),
+                    IsActive = actionName == "Index"
+                });
+            }
+
+            // Add action-level breadcrumb
+            if (!string.IsNullOrEmpty(actionName) && actionName != "Index" && controllerName != "Home")
+            {
+                string actionText = GetActionDisplayName(actionName);
+
+                breadcrumbs.Add(new BreadcrumbItem
+                {
+                    Text = actionText,
+                    Url = null,
+                    Icon = GetActionIcon(actionName),
+                    IsActive = true
+                });
+            }
+
+            // If only Home, mark it as active
+            if (controllerName == "Home" && actionName == "Index")
+            {
+                breadcrumbs[0].IsActive = true;
+            }
+
+            ViewBag.BreadcrumbItems = breadcrumbs;
+        }
+
+        /// <summary>
+        /// Controller adını localized display name'e çevirir.
+        /// </summary>
+        private string GetControllerDisplayName(string controllerName)
+        {
+            return controllerName?.ToLower() switch
+            {
+                "company" => T("nav.companies"),
+                "department" => T("nav.departments"),
+                "user" => T("nav.users"),
+                "page" => T("nav.pages"),
+                "layout" => T("nav.layouts"),
+                "content" => T("nav.mediaLibrary"),
+                "schedule" => T("nav.schedules"),
+                "account" => T("nav.profile"),
+                _ => controllerName ?? "Unknown"
+            };
+        }
+
+        /// <summary>
+        /// Action adını localized display name'e çevirir.
+        /// </summary>
+        private string GetActionDisplayName(string actionName)
+        {
+            return actionName?.ToLower() switch
+            {
+                "create" => T("common.create"),
+                "edit" => T("common.edit"),
+                "details" => T("common.details"),
+                "delete" => T("common.delete"),
+                "profile" => T("nav.profile"),
+                "settings" => T("nav.settings"),
+                "changepassword" => T("settings.changePassword"),
+                _ => actionName ?? "Unknown"
+            };
+        }
+
+        /// <summary>
+        /// Controller için uygun icon döner.
+        /// </summary>
+        private string GetControllerIcon(string controllerName)
+        {
+            return controllerName?.ToLower() switch
+            {
+                "company" => "fas fa-building",
+                "department" => "fas fa-sitemap",
+                "user" => "fas fa-users",
+                "page" => "fas fa-desktop",
+                "layout" => "fas fa-th-large",
+                "content" => "fas fa-photo-video",
+                "schedule" => "fas fa-calendar-alt",
+                "account" => "fas fa-user-circle",
+                _ => "fas fa-folder"
+            };
+        }
+
+        /// <summary>
+        /// Action için uygun icon döner.
+        /// </summary>
+        private string GetActionIcon(string actionName)
+        {
+            return actionName?.ToLower() switch
+            {
+                "create" => "fas fa-plus",
+                "edit" => "fas fa-edit",
+                "details" => "fas fa-info-circle",
+                "delete" => "fas fa-trash",
+                "profile" => "fas fa-user-circle",
+                "settings" => "fas fa-cog",
+                "changepassword" => "fas fa-key",
+                _ => "fas fa-file"
+            };
         }
 
         /// <summary>

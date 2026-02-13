@@ -1,0 +1,40 @@
+@model List<DigitalSignage.ViewComponents.BreadcrumbItem>
+@inject DigitalSignage.Services.ILanguageService LangService
+
+@{
+    var locale = Context.Request.Cookies["locale"] ?? "en";
+    string T(string key) => LangService.Get(locale, key);
+}
+
+@if (Model != null && Model.Any())
+{
+    <nav aria-label="breadcrumb" class="breadcrumb-container mb-3">
+        <ol class="breadcrumb bg-light py-2 px-3 rounded">
+            @foreach (var item in Model)
+            {
+                if (item.IsActive)
+                {
+                    <li class="breadcrumb-item active" aria-current="page">
+                        @if (!string.IsNullOrEmpty(item.Icon))
+                        {
+                            <i class="@item.Icon me-1"></i>
+                        }
+                        <span>@item.Text</span>
+                    </li>
+                }
+                else
+                {
+                    <li class="breadcrumb-item">
+                        <a href="@item.Url" class="text-decoration-none">
+                            @if (!string.IsNullOrEmpty(item.Icon))
+                            {
+                                <i class="@item.Icon me-1"></i>
+                            }
+                            <span>@item.Text</span>
+                        </a>
+                    </li>
+                }
+            }
+        </ol>
+    </nav>
+}
