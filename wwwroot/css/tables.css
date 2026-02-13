@@ -5,13 +5,15 @@
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
     margin-bottom: 2rem;
+    overflow: visible;
 }
 
 /* Table Wrapper */
 .table-responsive {
     border-radius: 12px;
+    overflow-x: auto;
+    overflow-y: visible;
 }
 
 /* Data Table */
@@ -51,7 +53,7 @@
 /* Table Body */
 .data-table tbody tr {
     border-bottom: 1px solid #f0f0f0;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .data-table tbody tr:last-child {
@@ -60,8 +62,7 @@
 
 .data-table tbody tr:hover {
     background-color: #f8f9ff;
-    transform: scale(1.01);
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    box-shadow: inset 4px 0 0 0 #667eea;
 }
 
 .data-table tbody td {
@@ -86,12 +87,14 @@
 .table-actions {
     text-align: center;
     white-space: nowrap;
+    position: relative;
 }
 
 /* Action Dropdown */
 .action-dropdown {
     position: relative;
     display: inline-block;
+    z-index: 10;
 }
 
 .action-dropdown-toggle {
@@ -128,14 +131,15 @@
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    z-index: 1000;
+    z-index: 9999;
     display: none;
     min-width: 200px;
     background-color: white;
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     padding: 8px;
     animation: slideDown 0.2s ease;
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 @keyframes slideDown {
@@ -288,10 +292,6 @@
     font-size: 13px;
     font-weight: 600;
     transition: all 0.2s ease;
-}
-
-.type-badge:hover {
-    transform: translateY(-2px);
 }
 
 .type-badge.office365 {
