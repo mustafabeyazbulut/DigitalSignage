@@ -144,6 +144,7 @@
         "activeStatus": "Aktif Durumu",
         "createButton": "Şirketi Oluştur",
         "noCompanies": "Henüz şirket bulunamadı. Oluşturmak için \"Yeni Şirket\" butonuna tıklayın.",
+        "createFirstCompany": "İlk şirketinizi oluşturun.",
         "companyNamePlaceholder": "ör. ACME Teknoloji",
         "companyCodePlaceholder": "ör. ACM",
         "emailDomainPlaceholder": "sirket.com",

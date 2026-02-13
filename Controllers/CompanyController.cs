@@ -13,9 +13,54 @@ namespace DigitalSignage.Controllers
             _companyService = companyService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
         {
-            var companies = await _companyService.GetAllAsync();
+            const int pageSize = 10;
+
+            // Tüm şirketleri al
+            var allCompanies = await _companyService.GetAllAsync();
+            IEnumerable<Company> query = allCompanies;
+
+            // Arama filtresi
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                query = query.Where(c =>
+                    (c.CompanyName != null && c.CompanyName.ToLower().Contains(search)) ||
+                    (c.CompanyCode != null && c.CompanyCode.ToLower().Contains(search)) ||
+                    (c.EmailDomain != null && c.EmailDomain.ToLower().Contains(search))
+                );
+            }
+
+            // Sıralama
+            query = sortBy switch
+            {
+                "CompanyName" => sortOrder == "asc"
+                    ? query.OrderBy(c => c.CompanyName)
+                    : query.OrderByDescending(c => c.CompanyName),
+                "CompanyCode" => sortOrder == "asc"
+                    ? query.OrderBy(c => c.CompanyCode)
+                    : query.OrderByDescending(c => c.CompanyCode),
+                _ => query.OrderBy(c => c.CompanyName)
+            };
+
+            // Toplam sayı ve sayfa hesaplama
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            // Pagination
+            var companies = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // ViewBag
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.SearchTerm = search;
+            ViewBag.SortBy = sortBy;
+            ViewBag.SortOrder = sortOrder;
+
             return View(companies);
         }
 

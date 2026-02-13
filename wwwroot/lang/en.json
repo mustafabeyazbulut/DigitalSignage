@@ -144,6 +144,7 @@
         "activeStatus": "Active Status",
         "createButton": "Create Company",
         "noCompanies": "No companies found. Click \"New Company\" to create one.",
+        "createFirstCompany": "Create your first company.",
         "companyNamePlaceholder": "e.g. ACME Corp",
         "companyCodePlaceholder": "e.g. ACM",
         "emailDomainPlaceholder": "acme.com",

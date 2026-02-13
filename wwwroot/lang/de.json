@@ -144,6 +144,7 @@
         "activeStatus": "Aktiver Status",
         "createButton": "Unternehmen erstellen",
         "noCompanies": "Keine Unternehmen gefunden. Klicken Sie auf \"Neues Unternehmen\" um eines zu erstellen.",
+        "createFirstCompany": "Erstellen Sie Ihr erstes Unternehmen.",
         "companyNamePlaceholder": "z.B. ACME GmbH",
         "companyCodePlaceholder": "z.B. ACM",
         "emailDomainPlaceholder": "firma.de",
