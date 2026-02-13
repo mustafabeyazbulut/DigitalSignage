@@ -19,14 +19,66 @@ namespace DigitalSignage.Controllers
             _pageService = pageService;
         }
 
-        public async Task<IActionResult> Index(int? departmentId)
+        public async Task<IActionResult> Index(int? departmentId, string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
         {
-             if (departmentId.HasValue)
+            const int pageSize = 10;
+
+            // Departmana göre veya tüm zamanlamaları al
+            IEnumerable<Schedule> allSchedules;
+            if (departmentId.HasValue)
             {
+                allSchedules = await _scheduleService.GetByDepartmentIdAsync(departmentId.Value);
                 ViewBag.DepartmentId = departmentId;
-                return View(await _scheduleService.GetByDepartmentIdAsync(departmentId.Value));
             }
-            return View(await _scheduleService.GetAllAsync());
+            else
+            {
+                allSchedules = await _scheduleService.GetAllAsync();
+            }
+
+            IEnumerable<Schedule> query = allSchedules;
+
+            // Arama filtresi
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                query = query.Where(s =>
+                    (s.ScheduleName != null && s.ScheduleName.ToLower().Contains(search))
+                );
+            }
+
+            // Sıralama
+            query = sortBy switch
+            {
+                "ScheduleName" => sortOrder == "asc"
+                    ? query.OrderBy(s => s.ScheduleName)
+                    : query.OrderByDescending(s => s.ScheduleName),
+                "StartDate" => sortOrder == "asc"
+                    ? query.OrderBy(s => s.StartDate)
+                    : query.OrderByDescending(s => s.StartDate),
+                "EndDate" => sortOrder == "asc"
+                    ? query.OrderBy(s => s.EndDate)
+                    : query.OrderByDescending(s => s.EndDate),
+                _ => query.OrderBy(s => s.ScheduleName)
+            };
+
+            // Toplam sayı ve sayfa hesaplama
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            // Pagination
+            var schedules = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // ViewBag
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.SearchTerm = search;
+            ViewBag.SortBy = sortBy;
+            ViewBag.SortOrder = sortOrder;
+
+            return View(schedules);
         }
 
         public async Task<IActionResult> Create(int? departmentId)

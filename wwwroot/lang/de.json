@@ -321,6 +321,7 @@
         "selectDepartment": "Abteilung auswählen...",
         "currentDepartment": "Aktuelle Abteilung",
         "noSchedules": "Keine Zeitpläne gefunden.",
+        "createFirstSchedule": "Erstellen Sie Ihren ersten Zeitplan.",
         "saveSchedule": "Zeitplan speichern",
         "scheduleNamePlaceholder": "z.B. Morgen-Wiedergabeliste",
         "createdSuccess": "Zeitplan erfolgreich erstellt.",

@@ -5,6 +5,13 @@
     var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
     string T(string key) => lang?.Get(locale, key) ?? key;
     ViewData["Title"] = T("schedule.title");
+
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var searchTerm = ViewBag.SearchTerm as string ?? "";
+    var sortBy = ViewBag.SortBy as string ?? "";
+    var sortOrder = ViewBag.SortOrder as string ?? "asc";
+    var departmentId = ViewBag.DepartmentId as int?;
 }
 
 @section Styles {
@@ -18,9 +25,29 @@
             <p class="text-muted mb-0">@T("schedule.subtitle")</p>
         </div>
         <div class="col-md-4 text-end">
-            <a asp-action="Create" class="btn btn-primary" asp-route-departmentId="@ViewBag.DepartmentId">
+            <a asp-action="Create" class="btn btn-primary" asp-route-departmentId="@departmentId">
                 <i class="bi bi-plus-circle"></i> @T("schedule.newSchedule")
             </a>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3">
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="@T("common.search")..." value="@searchTerm">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">@T("common.search")</button>
+                </div>
+                @if(departmentId != null) {
+                    <input type="hidden" name="departmentId" value="@departmentId" />
+                }
+            </form>
         </div>
     </div>
 
@@ -31,9 +58,33 @@
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>@T("schedule.scheduleName")</th>
-                            <th>@T("schedule.startDate")</th>
-                            <th>@T("schedule.endDate")</th>
+                            <th>
+                                <a href="?search=@searchTerm&sortBy=ScheduleName&sortOrder=@(sortBy == "ScheduleName" && sortOrder == "asc" ? "desc" : "asc")@(departmentId != null ? $"&departmentId={departmentId}" : "")" class="text-white text-decoration-none">
+                                    @T("schedule.scheduleName")
+                                    @if (sortBy == "ScheduleName")
+                                    {
+                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="?search=@searchTerm&sortBy=StartDate&sortOrder=@(sortBy == "StartDate" && sortOrder == "asc" ? "desc" : "asc")@(departmentId != null ? $"&departmentId={departmentId}" : "")" class="text-white text-decoration-none">
+                                    @T("schedule.startDate")
+                                    @if (sortBy == "StartDate")
+                                    {
+                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="?search=@searchTerm&sortBy=EndDate&sortOrder=@(sortBy == "EndDate" && sortOrder == "asc" ? "desc" : "asc")@(departmentId != null ? $"&departmentId={departmentId}" : "")" class="text-white text-decoration-none">
+                                    @T("schedule.endDate")
+                                    @if (sortBy == "EndDate")
+                                    {
+                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                    }
+                                </a>
+                            </th>
                             <th>@T("schedule.timeRange")</th>
                             <th>@T("common.status")</th>
                             <th>@T("common.actions")</th>
@@ -84,6 +135,31 @@
                 </table>
             </div>
         </div>
+
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage - 1)@(departmentId != null ? $"&departmentId={departmentId}" : "")">
+                            @T("common.previous")
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@i@(departmentId != null ? $"&departmentId={departmentId}" : "")">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage + 1)@(departmentId != null ? $"&departmentId={departmentId}" : "")">
+                            @T("common.next")
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
     }
     else
     {

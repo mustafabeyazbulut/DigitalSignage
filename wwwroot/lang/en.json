@@ -322,6 +322,7 @@
         "selectDepartment": "Select Department...",
         "currentDepartment": "Current Department",
         "noSchedules": "No schedules found.",
+        "createFirstSchedule": "Create your first schedule.",
         "saveSchedule": "Save Schedule",
         "scheduleNamePlaceholder": "e.g. Morning Playlist",
         "createdSuccess": "Schedule created successfully.",

@@ -321,6 +321,7 @@
         "selectDepartment": "Departman Seçin...",
         "currentDepartment": "Mevcut Departman",
         "noSchedules": "Henüz zamanlama bulunamadı.",
+        "createFirstSchedule": "İlk zamanlamanızı oluşturun.",
         "saveSchedule": "Zamanlamayı Kaydet",
         "scheduleNamePlaceholder": "ör. Sabah Çalma Listesi",
         "createdSuccess": "Zamanlama başarıyla oluşturuldu.",
