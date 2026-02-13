@@ -7,85 +7,107 @@
     ViewData["Title"] = T("layout.title");
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/tables.css" />
+}
+
 <div class="container mt-4">
     <div class="row mb-4">
-        <div class="col-md-6">
-            <h2 class="fw-bold text-dark">@T("layout.title")</h2>
+        <div class="col-md-8">
+            <h1>@T("layout.title")</h1>
             <p class="text-muted mb-0">@T("layout.subtitle")</p>
         </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Create" asp-route-companyId="@ViewBag.SelectedCompanyId" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> @T("layout.newLayout")
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
         <div class="col-md-6">
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="form-group">
-                        <label for="companySelect" class="form-label">@T("common.selectCompany"):</label>
-                        <select id="companySelect" class="form-select" onchange="changeCompany(this.value)">
-                            @if (ViewBag.Companies != null)
-                            {
-                                @foreach (var item in ViewBag.Companies)
-                                {
-                                    <option value="@item.Value" selected="@item.Selected">@item.Text</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <a asp-action="Create" asp-route-companyId="@ViewBag.SelectedCompanyId" class="btn btn-primary w-100">
-                        <i class="bi bi-plus-circle"></i> @T("layout.newLayout")
-                    </a>
-                </div>
+            <div class="form-group">
+                <label for="companySelect" class="form-label">@T("common.selectCompany"):</label>
+                <select id="companySelect" class="form-select" onchange="changeCompany(this.value)">
+                    @if (ViewBag.Companies != null)
+                    {
+                        @foreach (var item in ViewBag.Companies)
+                        {
+                            <option value="@item.Value" selected="@item.Selected">@item.Text</option>
+                        }
+                    }
+                </select>
             </div>
         </div>
     </div>
-</div>
 
-@if (!Model.Any())
-{
-    <div class="alert alert-info">
-        @T("layout.noLayoutsFound")
-    </div>
-}
-
-else
-{
-<div class="container">
-<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
-    @foreach (var item in Model)
+    @if (Model.Any())
     {
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-body text-center p-4">
-                    <div class="mb-3 d-inline-block border rounded p-2 bg-light">
-                        <!-- Simple visual representation of grid -->
-                        <div class="d-grid gap-1" style="grid-template-columns: repeat(@item.GridColumnsX, 1fr); grid-template-rows: repeat(@item.GridRowsY, 1fr); width: 100px; height: 60px;">
-                            @for(int i=0; i < (item.GridColumnsX * item.GridRowsY); i++) {
-                                <div class="bg-secondary opacity-25 rounded-1 w-100 h-100 border"></div>
-                            }
-                        </div>
-                    </div>
-                    <h5 class="fw-bold mb-1">@item.LayoutName</h5>
-                    <span class="badge bg-light text-dark border mb-2">@item.GridColumnsX x @item.GridRowsY Grid</span>
-                    <p class="text-muted small">@(item.Description ?? "No description")</p>
-                </div>
-                <div class="card-footer bg-white border-top-0 pt-0 pb-3">
-                     <div class="btn-group w-100">
-                         <a asp-action="Details" asp-route-id="@item.LayoutID" class="btn btn-outline-info btn-sm">
-                            <i class="bi bi-eye"></i> View
-                        </a>
-                         <a asp-action="Edit" asp-route-id="@item.LayoutID" class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-pencil"></i> Edit
-                        </a>
-                         <a asp-action="Delete" asp-route-id="@item.LayoutID" class="btn btn-outline-danger btn-sm">
-                            <i class="bi bi-trash"></i> Delete
-                        </a>
-                    </div>
-                </div>
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>@T("layout.layoutName")</th>
+                            <th>@T("layout.gridSize")</th>
+                            <th>@T("common.description")</th>
+                            <th>@T("common.createdDate")</th>
+                            <th>@T("common.actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.LayoutName</strong>
+                                </td>
+                                <td>
+                                    <span class="type-badge">
+                                        <i class="bi bi-grid-3x3-gap"></i> @item.GridColumnsX x @item.GridRowsY
+                                    </span>
+                                </td>
+                                <td>@(item.Description ?? "-")</td>
+                                <td>@item.CreatedDate.ToString("yyyy-MM-dd")</td>
+                                <td class="table-actions">
+                                    <div class="action-dropdown">
+                                        <button type="button" class="action-dropdown-toggle" title="@T("common.actions")">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <div class="action-dropdown-menu">
+                                            <a asp-action="Details" asp-route-id="@item.LayoutID" class="action-dropdown-item action-view">
+                                                <i class="bi bi-eye"></i>
+                                                <span>@T("common.details")</span>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.LayoutID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
+                                                <i class="bi bi-pencil"></i>
+                                                <span>@T("common.edit")</span>
+                                            </a>
+                                            <div class="action-dropdown-divider"></div>
+                                            <a asp-action="Delete" asp-route-id="@item.LayoutID" class="action-dropdown-item action-delete">
+                                                <i class="bi bi-trash"></i>
+                                                <span>@T("common.delete")</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     }
-</div>
-</div>
-}
+    else
+    {
+        <div class="table-empty-state">
+            <i class="bi bi-grid-3x3-gap"></i>
+            <h3>@T("layout.noLayoutsFound")</h3>
+            <p>@T("layout.createFirstLayout")</p>
+        </div>
+    }
+
+    </div>
 
 @section Scripts {
     <script>

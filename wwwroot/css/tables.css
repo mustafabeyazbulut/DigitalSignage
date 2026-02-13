@@ -315,6 +315,65 @@
     transition: all 0.2s ease;
 }
 
+/* Company Logo */
+.company-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.company-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.company-logo i {
+    font-size: 20px;
+    color: #94a3b8;
+}
+
+/* Content Preview */
+.content-preview {
+    width: 60px;
+    height: 40px;
+    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.content-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.content-preview i {
+    font-size: 24px;
+    color: #94a3b8;
+}
+
+/* Time Badge */
+.type-badge.time {
+    background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    color: #0369a1;
+    box-shadow: 0 2px 4px rgba(3, 105, 161, 0.15);
+}
+
+.type-badge.time i {
+    color: #0284c7;
+}
+
 .type-badge.office365 {
     background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
     color: #0c5460;

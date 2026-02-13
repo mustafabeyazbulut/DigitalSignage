@@ -7,75 +7,95 @@
     ViewData["Title"] = T("page.title");
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold text-dark">@T("page.title")</h2>
-        <p class="text-muted mb-0">@T("page.subtitle")</p>
+@section Styles {
+    <link rel="stylesheet" href="~/css/tables.css" />
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>@T("page.title")</h1>
+            <p class="text-muted mb-0">@T("page.subtitle")</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Create" class="btn btn-primary" asp-route-departmentId="@ViewBag.DepartmentId">
+                <i class="bi bi-plus-circle"></i> @T("page.newPage")
+            </a>
+        </div>
     </div>
-    <a asp-action="Create" class="btn btn-primary shadow-sm" asp-route-departmentId="@ViewBag.DepartmentId">
-        <i class="fas fa-plus me-2"></i> @T("page.newPage")
-    </a>
-</div>
 
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-    @foreach (var item in Model)
+    @if (Model.Any())
     {
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0 page-card">
-                 <!-- Preview Placeholder -->
-                <div class="card-img-top bg-light d-flex align-items-center justify-content-center border-bottom position-relative placeholder-glow" style="height: 180px;">
-                    <i class="fas fa-desktop fa-3x text-muted opacity-25"></i>
-                    <span class="position-absolute top-0 end-0 badge bg-primary m-2 shadow-sm">
-                        @(item.Layout != null ? $"{item.Layout.GridColumnsX}x{item.Layout.GridRowsY}" : T("page.custom"))
-                    </span>
-                     @if (!item.IsActive)
-                    {
-                         <span class="position-absolute top-0 start-0 badge bg-danger m-2 shadow-sm">@T("common.inactive")</span>
-                    }
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title fw-bold text-truncate mb-1">@item.PageTitle</h5>
-                    <p class="card-text text-muted small mb-2 text-truncate">@item.Description</p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted"><i class="far fa-clock me-1"></i> @item.CreatedDate.ToString("dd MMM yyyy")</small>
-                    </div>
-                </div>
-                <div class="card-footer bg-white border-top-0 pt-0 pb-3">
-                    <div class="d-grid gap-2">
-                        <a asp-action="Design" asp-route-id="@item.PageID" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-magic me-2"></i> @T("page.designLayout")
-                        </a>
-                        <div class="btn-group w-100">
-                             <a asp-action="Edit" asp-route-id="@item.PageID" class="btn btn-outline-secondary btn-sm w-50">
-                                <i class="fas fa-pen"></i> @T("common.edit")
-                            </a>
-                             <a asp-action="Delete" asp-route-id="@item.PageID" class="btn btn-outline-danger btn-sm w-50">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>@T("page.pageTitle")</th>
+                            <th>@T("page.description")</th>
+                            <th>@T("page.layout")</th>
+                            <th>@T("common.status")</th>
+                            <th>@T("common.createdDate")</th>
+                            <th>@T("common.actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.PageTitle</td>
+                                <td>@(item.Description ?? "-")</td>
+                                <td>
+                                    <span class="type-badge layout">
+                                        <i class="bi bi-grid-3x3"></i>
+                                        @(item.Layout != null ? $"{item.Layout.GridColumnsX}x{item.Layout.GridRowsY}" : T("page.custom"))
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge @(item.IsActive ? "active" : "inactive")">
+                                        @(item.IsActive ? T("common.active") : T("common.inactive"))
+                                    </span>
+                                </td>
+                                <td>@item.CreatedDate.ToString("yyyy-MM-dd")</td>
+                                <td class="table-actions">
+                                    <div class="action-dropdown">
+                                        <button type="button" class="action-dropdown-toggle" title="@T("common.actions")">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <div class="action-dropdown-menu">
+                                            <a asp-action="Details" asp-route-id="@item.PageID" class="action-dropdown-item action-view">
+                                                <i class="bi bi-eye"></i>
+                                                <span>@T("common.details")</span>
+                                            </a>
+                                            <a asp-action="Design" asp-route-id="@item.PageID" class="action-dropdown-item action-design">
+                                                <i class="bi bi-palette"></i>
+                                                <span>@T("page.designLayout")</span>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.PageID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
+                                                <i class="bi bi-pencil"></i>
+                                                <span>@T("common.edit")</span>
+                                            </a>
+                                            <div class="action-dropdown-divider"></div>
+                                            <a asp-action="Delete" asp-route-id="@item.PageID" class="action-dropdown-item action-delete">
+                                                <i class="bi bi-trash"></i>
+                                                <span>@T("common.delete")</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     }
-    @if (!Model.Any())
+    else
     {
-        <div class="col-12">
-            <div class="text-center py-5 text-muted bg-white rounded border border-dashed">
-                <i class="fas fa-layer-group fa-3x mb-3 opacity-50"></i>
-                <p class="fs-5">@T("page.noPages")</p>
-                <a asp-action="Create" class="btn btn-sm btn-primary mt-2">@T("page.createFirstPage")</a>
-            </div>
+        <div class="table-empty-state">
+            <i class="bi bi-layers"></i>
+            <h3>@T("page.noPages")</h3>
+            <p>@T("page.createFirstPage")</p>
         </div>
     }
 </div>
-
-<style>
-    .page-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .page-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
-    }
-</style>

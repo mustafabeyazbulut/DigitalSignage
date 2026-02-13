@@ -7,55 +7,111 @@
     ViewData["Title"] = T("content.title");
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="fw-bold text-dark">@T("content.title")</h2>
-        <p class="text-muted mb-0">@T("content.subtitle")</p>
-    </div>
-    <a asp-action="Create" class="btn btn-primary shadow-sm">
-        <i class="fas fa-cloud-upload-alt me-2"></i> @T("content.uploadMedia")
-    </a>
-</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/tables.css" />
+}
 
-<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
-    @foreach (var item in Model)
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>@T("content.title")</h1>
+            <p class="text-muted mb-0">@T("content.subtitle")</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> @T("content.uploadMedia")
+            </a>
+        </div>
+    </div>
+
+    @if (Model.Any())
     {
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0">
-                <div class="card-img-top bg-dark d-flex align-items-center justify-content-center" style="height: 150px; overflow: hidden;">
-                    @if(item.ContentType == "Image") {
-                        <img src="@item.MediaPath" alt="@item.ContentTitle" class="img-fluid" style="object-fit: cover; min-height: 100%;" />
-                    } else if (item.ContentType == "Video") {
-                        <i class="fas fa-play-circle fa-3x text-white"></i>
-                    } else {
-                        <i class="fas fa-code fa-3x text-white opacity-50"></i>
-                    }
-                </div>
-                <div class="card-body">
-                    <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill mb-2">@item.ContentType</span>
-                    <h6 class="card-title fw-bold text-truncate" title="@item.ContentTitle">@item.ContentTitle</h6>
-                </div>
-                <div class="card-footer bg-white border-top-0 pt-0 pb-3 px-3">
-                    <div class="btn-group w-100">
-                        <a asp-action="Edit" asp-route-id="@item.ContentID" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-pen"></i> @T("common.edit")
-                        </a>
-                        <a asp-action="Delete" asp-route-id="@item.ContentID" class="btn btn-outline-danger btn-sm">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </div>
-                </div>
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>@T("content.preview")</th>
+                            <th>@T("content.title")</th>
+                            <th>@T("content.type")</th>
+                            <th>@T("content.path")</th>
+                            <th>@T("common.actions")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="content-preview">
+                                        @if(item.ContentType == "Image")
+                                        {
+                                            <img src="@item.MediaPath" alt="@item.ContentTitle" />
+                                        }
+                                        else if (item.ContentType == "Video")
+                                        {
+                                            <i class="bi bi-play-circle"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-code-square"></i>
+                                        }
+                                    </div>
+                                </td>
+                                <td>@item.ContentTitle</td>
+                                <td>
+                                    <span class="type-badge @item.ContentType.ToLower()">
+                                        @if(item.ContentType == "Image")
+                                        {
+                                            <i class="bi bi-image"></i>
+                                        }
+                                        else if (item.ContentType == "Video")
+                                        {
+                                            <i class="bi bi-play-btn"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-code"></i>
+                                        }
+                                        @item.ContentType
+                                    </span>
+                                </td>
+                                <td><code>@item.MediaPath</code></td>
+                                <td class="table-actions">
+                                    <div class="action-dropdown">
+                                        <button type="button" class="action-dropdown-toggle" title="@T("common.actions")">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <div class="action-dropdown-menu">
+                                            <a asp-action="Details" asp-route-id="@item.ContentID" class="action-dropdown-item action-view">
+                                                <i class="bi bi-eye"></i>
+                                                <span>@T("common.details")</span>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.ContentID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
+                                                <i class="bi bi-pencil"></i>
+                                                <span>@T("common.edit")</span>
+                                            </a>
+                                            <div class="action-dropdown-divider"></div>
+                                            <a asp-action="Delete" asp-route-id="@item.ContentID" class="action-dropdown-item action-delete">
+                                                <i class="bi bi-trash"></i>
+                                                <span>@T("common.delete")</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     }
-    @if (!Model.Any())
+    else
     {
-        <div class="col-12">
-            <div class="text-center py-5 text-muted bg-white rounded border border-dashed">
-                <i class="fas fa-photo-video fa-3x mb-3 opacity-50"></i>
-                <p class="fs-5">@T("content.emptyLibrary")</p>
-                <a asp-action="Create" class="btn btn-sm btn-primary mt-2">@T("content.uploadFirst")</a>
-            </div>
+        <div class="table-empty-state">
+            <i class="bi bi-camera-video"></i>
+            <h3>@T("content.emptyLibrary")</h3>
+            <p>@T("content.uploadFirst")</p>
         </div>
     }
 </div>
