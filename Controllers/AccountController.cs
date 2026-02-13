@@ -339,8 +339,11 @@ namespace DigitalSignage.Controllers
         }
 
         [AllowAnonymous]
-        public IActionResult AccessDenied()
+        public IActionResult AccessDenied(string? returnUrl = null)
         {
+            // Geri dönülecek URL'i belirle
+            // returnUrl varsa onu kullan, yoksa Home'a dön
+            ViewBag.BreadcrumbBackUrl = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/Home/Index";
             return View();
         }
 
