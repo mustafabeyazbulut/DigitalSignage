@@ -71,9 +71,8 @@
                             <td>@user.CreatedDate.ToString("yyyy-MM-dd")</td>
                             <td class="table-actions">
                                 <div class="action-dropdown">
-                                    <button type="button" class="action-dropdown-toggle">
+                                    <button type="button" class="action-dropdown-toggle" title="@T("common.actions")">
                                         <i class="bi bi-three-dots-vertical"></i>
-                                        <span>@T("common.actions")</span>
                                     </button>
                                     <div class="action-dropdown-menu">
                                         <a asp-action="Details" asp-route-id="@user.UserID" class="action-dropdown-item action-view">
