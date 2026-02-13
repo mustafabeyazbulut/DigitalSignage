@@ -38,6 +38,8 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="bg-light">
     <div class="d-flex" id="wrapper">
