@@ -426,7 +426,10 @@
         "incorrectPassword": "Aktuelles Passwort ist falsch",
         "passwordRequirements": "Passwort muss mindestens 6 Zeichen lang sein",
         "changePasswordTitle": "Passwort ändern",
-        "office365PasswordNote": "Office 365-Benutzer können ihr Passwort hier nicht ändern. Bitte verwenden Sie Ihre Microsoft-Kontoeinstellungen."
+        "office365PasswordNote": "Office 365-Benutzer können ihr Passwort hier nicht ändern. Bitte verwenden Sie Ihre Microsoft-Kontoeinstellungen.",
+        "setPasswordDescription": "Lokales Passwort für Ihr Konto einrichten",
+        "firstTimePasswordInfo": "Sie richten zum ersten Mal ein lokales Passwort ein. Damit können Sie sich sowohl mit SSO als auch mit lokalen Anmeldedaten anmelden.",
+        "setPassword": "Passwort festlegen"
     },
     "profile": {
         "systemAdmin": "Systemadministrator",
@@ -436,6 +439,8 @@
         "changePasswordInfo": "Passwort ändern",
         "contactAdmin": "Um Ihr Passwort zu ändern, wenden Sie sich bitte an Ihren Systemadministrator",
         "changePasswordLink": "Passwort ändern",
-        "changePasswordHint": "Sie können Ihr Passwort auf der Einstellungsseite ändern"
+        "changePasswordHint": "Sie können Ihr Passwort auf der Einstellungsseite ändern",
+        "setPasswordLink": "Passwort festlegen",
+        "setPasswordHint": "Lokales Passwort für Anmeldung ohne SSO einrichten"
     }
 }

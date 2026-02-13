@@ -1,3 +1,4 @@
+using DigitalSignage.Helpers;
 using DigitalSignage.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -252,12 +253,6 @@ namespace DigitalSignage.Controllers
                 var user = await _userService.GetByIdAsync(userId);
                 if (user != null)
                 {
-                    // Office 365 users cannot change password here
-                    if (user.IsOffice365User)
-                    {
-                        AddErrorMessage(T("settings.office365PasswordNote"));
-                        return RedirectToAction(nameof(Settings));
-                    }
                     return View(user);
                 }
             }
@@ -285,15 +280,8 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // Office 365 users cannot change password
-            if (user.IsOffice365User)
-            {
-                AddErrorMessage(T("settings.office365PasswordNote"));
-                return RedirectToAction(nameof(Settings));
-            }
-
             // Validate inputs
-            if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(confirmPassword))
+            if (string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(confirmPassword))
             {
                 AddErrorMessage(T("auth.requiredFields"));
                 return View(user);
@@ -310,6 +298,23 @@ namespace DigitalSignage.Controllers
             if (newPassword != confirmPassword)
             {
                 AddErrorMessage(T("settings.passwordMismatch"));
+                return View(user);
+            }
+
+            // If user has no password yet (first time setting password), allow without current password
+            if (string.IsNullOrEmpty(user.PasswordHash))
+            {
+                user.PasswordHash = PasswordHelper.HashPassword(newPassword);
+                user.ModifiedDate = DateTime.UtcNow;
+                await _userService.UpdateAsync(user);
+                AddSuccessMessage(T("settings.passwordChanged"));
+                return RedirectToAction(nameof(Settings));
+            }
+
+            // If user has existing password, require current password verification
+            if (string.IsNullOrEmpty(currentPassword))
+            {
+                AddErrorMessage(T("auth.requiredFields"));
                 return View(user);
             }
 

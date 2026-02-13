@@ -426,7 +426,10 @@
         "incorrectPassword": "Mevcut şifre hatalı",
         "passwordRequirements": "Şifre en az 6 karakter olmalıdır",
         "changePasswordTitle": "Şifre Değiştir",
-        "office365PasswordNote": "Office 365 kullanıcıları şifrelerini buradan değiştiremez. Lütfen Microsoft hesap ayarlarınızı kullanın."
+        "office365PasswordNote": "Office 365 kullanıcıları şifrelerini buradan değiştiremez. Lütfen Microsoft hesap ayarlarınızı kullanın.",
+        "setPasswordDescription": "Hesabınız için lokal şifre oluşturun",
+        "firstTimePasswordInfo": "İlk kez lokal şifre oluşturuyorsunuz. Bu sayede hem SSO hem de lokal şifre ile giriş yapabileceksiniz.",
+        "setPassword": "Şifre Oluştur"
     },
     "profile": {
         "systemAdmin": "Sistem Yöneticisi",
@@ -436,6 +439,8 @@
         "changePasswordInfo": "Şifre Değiştir",
         "contactAdmin": "Şifrenizi değiştirmek için sistem yöneticinizle iletişime geçin",
         "changePasswordLink": "Şifre Değiştir",
-        "changePasswordHint": "Şifrenizi ayarlar sayfasından değiştirebilirsiniz"
+        "changePasswordHint": "Şifrenizi ayarlar sayfasından değiştirebilirsiniz",
+        "setPasswordLink": "Şifre Oluştur",
+        "setPasswordHint": "SSO olmadan giriş için lokal şifre oluşturun"
     }
 }

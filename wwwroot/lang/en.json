@@ -427,7 +427,10 @@
         "incorrectPassword": "Current password is incorrect",
         "passwordRequirements": "Password must be at least 6 characters",
         "changePasswordTitle": "Change Password",
-        "office365PasswordNote": "Office 365 users cannot change their password here. Please use your Microsoft account settings."
+        "office365PasswordNote": "Office 365 users cannot change their password here. Please use your Microsoft account settings.",
+        "setPasswordDescription": "Set up a local password for your account",
+        "firstTimePasswordInfo": "You are setting up a local password for the first time. This will allow you to login with both SSO and local credentials.",
+        "setPassword": "Set Password"
     },
     "profile": {
         "systemAdmin": "System Administrator",
@@ -437,6 +440,8 @@
         "changePasswordInfo": "Change Password",
         "contactAdmin": "To change your password, please contact your system administrator",
         "changePasswordLink": "Change Password",
-        "changePasswordHint": "You can change your password from the settings page"
+        "changePasswordHint": "You can change your password from the settings page",
+        "setPasswordLink": "Set Password",
+        "setPasswordHint": "Set up a local password to login without SSO"
     }
 }

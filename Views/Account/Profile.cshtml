@@ -128,27 +128,32 @@
                         </p>
                     }
 
-                    @if (!Model.IsOffice365User)
-                    {
-                        <hr />
-                        <div class="alert alert-info d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-key me-2"></i>
-                                <strong>@T("profile.changePasswordInfo"):</strong> @T("profile.changePasswordHint")
-                            </div>
-                            <a asp-action="ChangePassword" class="btn btn-sm btn-warning">
-                                <i class="fas fa-key me-1"></i>@T("profile.changePasswordLink")
-                            </a>
+                    <hr />
+                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-key me-2"></i>
+                            <strong>@T("profile.changePasswordInfo"):</strong>
+                            @if (string.IsNullOrEmpty(Model.PasswordHash))
+                            {
+                                <span>@T("profile.setPasswordHint")</span>
+                            }
+                            else
+                            {
+                                <span>@T("profile.changePasswordHint")</span>
+                            }
                         </div>
-                    }
-                    else
-                    {
-                        <hr />
-                        <div class="alert alert-info">
-                            <i class="fab fa-microsoft me-2"></i>
-                            @T("settings.office365PasswordNote")
-                        </div>
-                    }
+                        <a asp-action="ChangePassword" class="btn btn-sm btn-warning">
+                            <i class="fas fa-key me-1"></i>
+                            @if (string.IsNullOrEmpty(Model.PasswordHash))
+                            {
+                                <span>@T("profile.setPasswordLink")</span>
+                            }
+                            else
+                            {
+                                <span>@T("profile.changePasswordLink")</span>
+                            }
+                        </a>
+                    </div>
                 </div>
                 <div class="card-footer text-end">
                     <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">
