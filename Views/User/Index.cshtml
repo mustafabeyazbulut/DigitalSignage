@@ -28,8 +28,9 @@
 
     @if (Model.Any())
     {
-        <div class="table-responsive">
-            <table class="data-table table-striped table-hover">
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="data-table">
                 <thead>
                     <tr>
                         <th>@T("user.userName")</th>
@@ -99,6 +100,7 @@
                     }
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- Pagination -->
