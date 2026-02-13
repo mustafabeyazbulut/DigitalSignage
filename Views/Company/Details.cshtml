@@ -84,7 +84,7 @@
     </div>
 
     <div class="mt-3">
-        <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.DefaultReturnUrl">@T("common.backToList")</button>
+        <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">@T("common.backToList")</button>
         <a asp-controller="Department" asp-action="Index" asp-route-companyId="@Model.CompanyID" class="btn btn-primary">
             @T("department.viewPages")
         </a>

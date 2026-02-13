@@ -104,8 +104,13 @@ namespace DigitalSignage.Controllers
                 }
             };
 
+            // Special handling for Account controller (Profile, Settings, ChangePassword)
+            // These don't have Index action, so breadcrumb should be: Home > Profile/Settings
+            bool isAccountSpecialAction = controllerName == "Account" &&
+                (actionName == "Profile" || actionName == "Settings" || actionName == "ChangePassword");
+
             // Add controller-level breadcrumb
-            if (!string.IsNullOrEmpty(controllerName) && controllerName != "Home")
+            if (!string.IsNullOrEmpty(controllerName) && controllerName != "Home" && !isAccountSpecialAction)
             {
                 string controllerText = GetControllerDisplayName(controllerName);
                 string controllerUrl = $"/{controllerName}/Index";
@@ -123,14 +128,29 @@ namespace DigitalSignage.Controllers
             if (!string.IsNullOrEmpty(actionName) && actionName != "Index" && controllerName != "Home")
             {
                 string actionText = GetActionDisplayName(actionName);
+                string actionIcon = GetActionIcon(actionName);
 
-                breadcrumbs.Add(new BreadcrumbItem
+                // For Account special actions, add directly (no controller breadcrumb)
+                if (isAccountSpecialAction)
                 {
-                    Text = actionText,
-                    Url = null,
-                    Icon = GetActionIcon(actionName),
-                    IsActive = true
-                });
+                    breadcrumbs.Add(new BreadcrumbItem
+                    {
+                        Text = actionText,
+                        Url = null,
+                        Icon = actionIcon,
+                        IsActive = true
+                    });
+                }
+                else
+                {
+                    breadcrumbs.Add(new BreadcrumbItem
+                    {
+                        Text = actionText,
+                        Url = null,
+                        Icon = actionIcon,
+                        IsActive = true
+                    });
+                }
             }
 
             // If only Home, mark it as active
@@ -140,6 +160,17 @@ namespace DigitalSignage.Controllers
             }
 
             ViewBag.BreadcrumbItems = breadcrumbs;
+
+            // Set breadcrumb-aware back URL (parent breadcrumb item)
+            // Geri butonu bu URL'e gitsin (breadcrumb hiyerarşisi)
+            string breadcrumbBackUrl = "/";
+            if (breadcrumbs.Count > 1)
+            {
+                // Son aktif olmayan breadcrumb'ı bul (parent)
+                var parentBreadcrumb = breadcrumbs[breadcrumbs.Count - 2];
+                breadcrumbBackUrl = parentBreadcrumb.Url ?? "/";
+            }
+            ViewBag.BreadcrumbBackUrl = breadcrumbBackUrl;
         }
 
         /// <summary>
