@@ -245,35 +245,76 @@ namespace DigitalSignage.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IActionResult> ChangePassword()
+        public async Task<IActionResult> ChangePassword(int? userId, string? returnUrl = null)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
-            {
-                var user = await _userService.GetByIdAsync(userId);
-                if (user != null)
-                {
-                    return View(user);
-                }
-            }
-
-            AddErrorMessage(T("user.notFound"));
-            return RedirectToAction("Index", "Home");
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize]
-        public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword, string confirmPassword)
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (currentUserIdClaim == null || !int.TryParse(currentUserIdClaim.Value, out var currentUserId))
             {
                 AddErrorMessage(T("user.notFound"));
                 return RedirectToAction("Index", "Home");
             }
 
-            var user = await _userService.GetByIdAsync(userId);
+            // Eğer userId belirtilmemişse veya current user'ın kendi ID'si ise
+            int targetUserId = userId ?? currentUserId;
+
+            // Başka birinin şifresini değiştirmek için SystemAdmin olmalı
+            if (targetUserId != currentUserId)
+            {
+                var isSystemAdmin = User.FindFirst("IsSystemAdmin")?.Value == "True";
+                if (!isSystemAdmin)
+                {
+                    AddErrorMessage(T("error.unauthorized"));
+                    return RedirectToAction("Index", "Home");
+                }
+            }
+
+            var user = await _userService.GetByIdAsync(targetUserId);
+            if (user == null)
+            {
+                AddErrorMessage(T("user.notFound"));
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Office 365 kullanıcıları için şifre değişikliği yapılamaz
+            if (user.IsOffice365User)
+            {
+                AddErrorMessage(T("user.office365CannotChangePassword"));
+                return RedirectToAction("Index", "User");
+            }
+
+            ViewBag.ReturnUrl = returnUrl;
+            ViewBag.IsAdminChangingPassword = targetUserId != currentUserId;
+            return View(user);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(int? userId, string currentPassword, string newPassword, string confirmPassword, string? returnUrl = null)
+        {
+            var currentUserIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (currentUserIdClaim == null || !int.TryParse(currentUserIdClaim.Value, out var currentUserId))
+            {
+                AddErrorMessage(T("user.notFound"));
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Eğer userId belirtilmemişse veya current user'ın kendi ID'si ise
+            int targetUserId = userId ?? currentUserId;
+            bool isAdminChangingPassword = targetUserId != currentUserId;
+
+            // Başka birinin şifresini değiştirmek için SystemAdmin olmalı
+            if (isAdminChangingPassword)
+            {
+                var isSystemAdmin = User.FindFirst("IsSystemAdmin")?.Value == "True";
+                if (!isSystemAdmin)
+                {
+                    AddErrorMessage(T("error.unauthorized"));
+                    return RedirectToAction("Index", "Home");
+                }
+            }
+
+            var user = await _userService.GetByIdAsync(targetUserId);
             if (user == null)
             {
                 AddErrorMessage(T("user.notFound"));
@@ -284,6 +325,8 @@ namespace DigitalSignage.Controllers
             if (string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(confirmPassword))
             {
                 AddErrorMessage(T("auth.requiredFields"));
+                ViewBag.ReturnUrl = returnUrl;
+                ViewBag.IsAdminChangingPassword = isAdminChangingPassword;
                 return View(user);
             }
 
@@ -291,6 +334,8 @@ namespace DigitalSignage.Controllers
             if (newPassword.Length < 6)
             {
                 AddErrorMessage(T("settings.passwordRequirements"));
+                ViewBag.ReturnUrl = returnUrl;
+                ViewBag.IsAdminChangingPassword = isAdminChangingPassword;
                 return View(user);
             }
 
@@ -298,28 +343,43 @@ namespace DigitalSignage.Controllers
             if (newPassword != confirmPassword)
             {
                 AddErrorMessage(T("settings.passwordMismatch"));
+                ViewBag.ReturnUrl = returnUrl;
+                ViewBag.IsAdminChangingPassword = isAdminChangingPassword;
                 return View(user);
             }
 
-            // If user has no password yet (first time setting password), allow without current password
-            if (string.IsNullOrEmpty(user.PasswordHash))
+            // Admin başka birinin şifresini değiştiriyorsa veya kullanıcının şifresi yoksa (ilk kez)
+            if (isAdminChangingPassword || string.IsNullOrEmpty(user.PasswordHash))
             {
                 user.PasswordHash = PasswordHelper.HashPassword(newPassword);
                 user.ModifiedDate = DateTime.UtcNow;
                 await _userService.UpdateAsync(user);
                 AddSuccessMessage(T("settings.passwordChanged"));
+
+                // Admin değiştiriyorsa returnUrl'e veya User Index'e dön
+                if (isAdminChangingPassword)
+                {
+                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    {
+                        return Redirect(returnUrl);
+                    }
+                    return RedirectToAction("Index", "User");
+                }
+
                 return RedirectToAction(nameof(Settings));
             }
 
-            // If user has existing password, require current password verification
+            // Kullanıcı kendi şifresini değiştiriyorsa, mevcut şifre gerekli
             if (string.IsNullOrEmpty(currentPassword))
             {
                 AddErrorMessage(T("auth.requiredFields"));
+                ViewBag.ReturnUrl = returnUrl;
+                ViewBag.IsAdminChangingPassword = isAdminChangingPassword;
                 return View(user);
             }
 
             // Attempt to change password
-            var success = await _userService.ChangePasswordAsync(userId, currentPassword, newPassword);
+            var success = await _userService.ChangePasswordAsync(targetUserId, currentPassword, newPassword);
             if (success)
             {
                 AddSuccessMessage(T("settings.passwordChanged"));
@@ -327,6 +387,8 @@ namespace DigitalSignage.Controllers
             }
 
             AddErrorMessage(T("settings.incorrectPassword"));
+            ViewBag.ReturnUrl = returnUrl;
+            ViewBag.IsAdminChangingPassword = isAdminChangingPassword;
             return View(user);
         }
 
