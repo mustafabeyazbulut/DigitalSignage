@@ -51,7 +51,7 @@
     "auth": {
         "login": "Giriş Yap",
         "logout": "Çıkış Yap",
-        "email": "Kurumsal E-posta / Kullanıcı Adı",
+        "email": "Kurumsal E-posta",
         "password": "Şifre",
         "emailPlaceholder": "kullanici@sirket.com",
         "passwordPlaceholder": "••••••••",

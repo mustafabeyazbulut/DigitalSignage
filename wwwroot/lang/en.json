@@ -51,7 +51,7 @@
     "auth": {
         "login": "Sign In",
         "logout": "Logout",
-        "email": "Corporate Email / Username",
+        "email": "Corporate Email",
         "password": "Password",
         "emailPlaceholder": "user@domain.com",
         "passwordPlaceholder": "••••••••",

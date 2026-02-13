@@ -51,7 +51,7 @@
     "auth": {
         "login": "Anmelden",
         "logout": "Abmelden",
-        "email": "Firmen-E-Mail / Benutzername",
+        "email": "Firmen-E-Mail",
         "password": "Passwort",
         "emailPlaceholder": "benutzer@firma.de",
         "passwordPlaceholder": "••••••••",

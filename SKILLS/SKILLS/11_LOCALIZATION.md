@@ -342,6 +342,25 @@ var langNames = new Dictionary<string, string> {
 
 ## 🔄 Son Güncellemeler
 
+### v2.2.2 (13 Şubat 2026)
+- ✅ **Email-Based Authentication (Multi-Tenant Güvenlik)**
+  - Username yerine email ile kimlik doğrulama
+  - IUserService.AuthenticateAsync metodu email parametresi kullanıyor
+  - AccountController.Login metodu email ile authentication yapıyor
+  - Aynı username'in farklı şirketlerde olması problemi çözüldü
+- ✅ **Login Form Validasyonu**
+  - Input type="email" ile HTML5 native validation
+  - Email formatı zorunlu (@domain.com gerekli)
+  - auth.email ve auth.emailPlaceholder anahtarları kullanılıyor
+- ✅ **CompanySelector Localization**
+  - 3 yeni çeviri anahtarı eklendi (company.*)
+  - selectCompany, switchCompany, noCompaniesAvailable
+  - Dropdown header ve placeholder'lar tamamen localized
+- ✅ **Auth Translations Güncelleme**
+  - invalidCredentials: "username" → "email"
+  - requiredFields: "username" → "email"
+  - Tüm dillerde (EN, TR, DE) güncellemeler yapıldı
+
 ### v2.2.1 (12 Şubat 2026)
 - ✅ **Profil Sayfası Yerelleştirme**: 6 yeni çeviri anahtarı (profile.*)
   - systemAdmin, personalInfo, lastLogin, office365Info, changePasswordInfo, contactAdmin
@@ -360,4 +379,4 @@ var langNames = new Dictionary<string, string> {
 
 ---
 
-**Son Güncelleme**: 12 Şubat 2026
+**Son Güncelleme**: 13 Şubat 2026
