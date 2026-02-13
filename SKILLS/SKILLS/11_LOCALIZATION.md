@@ -342,6 +342,26 @@ var langNames = new Dictionary<string, string> {
 
 ## 🔄 Son Güncellemeler
 
+### v2.2.3 (13 Şubat 2026)
+- ✅ **Şifre Değiştirme Özelliği (Local Users)**
+  - AccountController'a ChangePassword GET/POST action'ları eklendi
+  - Views/Account/ChangePassword.cshtml view'u oluşturuldu
+  - 9 yeni çeviri anahtarı eklendi (settings.*)
+  - currentPassword, newPassword, confirmPassword, passwordChanged, passwordMismatch, incorrectPassword, passwordRequirements, changePasswordTitle, office365PasswordNote
+  - Profile.changePasswordLink, Profile.changePasswordHint anahtarları eklendi
+- ✅ **Settings Sayfası Güncelleme**
+  - "Change Password" butonu aktif hale getirildi
+  - Local user'lar için ChangePassword sayfasına yönlendirme
+  - Office 365 kullanıcıları için bilgilendirme mesajı
+- ✅ **Profile Sayfası Güncelleme**
+  - Local user'lar için "Change Password" butonu eklendi
+  - Office 365 kullanıcıları için Microsoft hesap yönlendirmesi
+- ✅ **Validasyon Kuralları**
+  - Minimum 6 karakter şifre gereksinimi
+  - Yeni şifre eşleşme kontrolü
+  - Mevcut şifre doğrulama
+  - UserService.ChangePasswordAsync metodu kullanılıyor
+
 ### v2.2.2 (13 Şubat 2026)
 - ✅ **Email-Based Authentication (Multi-Tenant Güvenlik)**
   - Username yerine email ile kimlik doğrulama
