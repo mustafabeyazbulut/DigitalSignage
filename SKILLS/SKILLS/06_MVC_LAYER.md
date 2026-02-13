@@ -820,13 +820,28 @@ const NavigationHelper = {
     },
 
     goBack: function (fallbackUrl) {
-        // Browser history varsa ve same-domain ise
+        // 1. returnUrl parametresi (en yüksek öncelik)
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnUrl = urlParams.get('returnUrl');
+        if (returnUrl) {
+            window.location.href = returnUrl;
+            return;
+        }
+
+        // 2. Breadcrumb-aware fallback (ikinci öncelik)
+        if (fallbackUrl && fallbackUrl !== window.location.pathname) {
+            window.location.href = fallbackUrl;
+            return;
+        }
+
+        // 3. Browser history (son çare)
         if (window.history.length > 1 && this.isSameDomain(document.referrer)) {
             window.history.back();
-        } else {
-            // Fallback URL'e yönlendir
-            window.location.href = fallbackUrl || '/';
+            return;
         }
+
+        // 4. Default fallback
+        window.location.href = fallbackUrl || '/';
     }
 };
 ```
@@ -1044,6 +1059,53 @@ isSameDomain: function(url) {
 **Lines of Code Added:** 549 lines
 **Files Modified:** 5 files
 **Commit:** 5d25a68
+
+#### v2.3.1 (13 Şubat 2026) - Breadcrumb Priority Fix ✅
+
+**Problem:** Details-Edit sayfaları arasında sonsuz döngü oluşuyordu. NavigationHelper.goBack() metodu browser history'yi breadcrumb hiyerarşisinden önce kontrol ediyordu, bu da yanlış navigasyon sırasına neden oluyordu.
+
+**Çözüm:** Navigation priority sıralaması yeniden düzenlendi:
+
+1. **returnUrl parametresi** (en yüksek öncelik)
+   - Query string'den gelen returnUrl kullanılır
+   - Details→Edit gibi özel geçişlerde context korunur
+
+2. **Breadcrumb fallback** (ikinci öncelik)
+   - Breadcrumb hiyerarşisinden hesaplanan parent URL
+   - Index→Edit→Back = Index (doğru davranış)
+
+3. **Browser history** (son çare)
+   - Sadece breadcrumb fallback yoksa kullanılır
+   - Same-domain security kontrolü ile
+
+**Değişiklikler:**
+
+- `BaseController.cs`: returnUrl query parametresi kontrolü eklendi
+  ```csharp
+  var returnUrl = request.Query["returnUrl"].ToString();
+  if (!string.IsNullOrEmpty(returnUrl))
+  {
+      breadcrumbBackUrl = returnUrl;
+  }
+  ```
+
+- `NavigationHelper.goBack()`: Priority sıralaması düzeltildi
+  ```javascript
+  // 1. returnUrl (highest priority)
+  // 2. breadcrumb fallback (second priority)
+  // 3. browser history (last resort)
+  ```
+
+- Details view'larda Edit linklerine returnUrl parametresi eklendi
+  ```razor
+  <a asp-action="Edit" asp-route-id="@Model.CompanyID"
+     asp-route-returnUrl="@Url.Action("Details", new { id = Model.CompanyID })">
+  ```
+
+**Sonuç:** Details↔Edit döngüsü çözüldü, breadcrumb-aware navigation tutarlı çalışıyor.
+
+**Files Modified:** 4 files (BaseController.cs, Details.cshtml, Edit.cshtml, site.js)
+**Commit:** 1b6ddb4
 
 ---
 
