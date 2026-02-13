@@ -44,7 +44,17 @@ const NavigationHelper = {
             return;
         }
 
-        // Try to use browser history if available
+        // Use breadcrumb-aware fallback URL (second priority)
+        // This ensures navigation follows the breadcrumb hierarchy
+        if (fallbackUrl && fallbackUrl !== window.location.pathname) {
+            if (typeof NavigationAnalytics !== 'undefined') {
+                NavigationAnalytics.trackSmartBack('breadcrumb');
+            }
+            window.location.href = fallbackUrl;
+            return;
+        }
+
+        // Try to use browser history if available (last resort)
         if (window.history.length > 1 && document.referrer) {
             // Check if referrer is from same domain (security)
             try {
@@ -63,17 +73,11 @@ const NavigationHelper = {
             }
         }
 
-        // If no valid history, use fallback
+        // Default fallback to home
         if (typeof NavigationAnalytics !== 'undefined') {
             NavigationAnalytics.trackSmartBack('fallback');
         }
-
-        if (fallbackUrl) {
-            window.location.href = fallbackUrl;
-        } else {
-            // Default fallback to home
-            window.location.href = '/';
-        }
+        window.location.href = fallbackUrl || '/';
     },
 
     // Get previous page from navigation history

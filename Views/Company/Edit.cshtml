@@ -61,7 +61,9 @@
 
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">@T("common.update")</button>
-                    <a asp-action="Details" asp-route-id="@Model.CompanyID" class="btn btn-secondary">@T("common.cancel")</a>
+                    <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">
+                        <i class="bi bi-arrow-left"></i> @T("common.cancel")
+                    </button>
                 </div>
             </form>
         </div>

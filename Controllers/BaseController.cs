@@ -162,14 +162,25 @@ namespace DigitalSignage.Controllers
             ViewBag.BreadcrumbItems = breadcrumbs;
 
             // Set breadcrumb-aware back URL (parent breadcrumb item)
-            // Geri butonu bu URL'e gitsin (breadcrumb hiyerarşisi)
+            // Öncelikle returnUrl query parametresini kontrol et (deep linking)
+            var request = context.HttpContext.Request;
+            var returnUrl = request.Query["returnUrl"].ToString();
+
             string breadcrumbBackUrl = "/";
-            if (breadcrumbs.Count > 1)
+
+            // returnUrl varsa onu kullan (en yüksek öncelik)
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                breadcrumbBackUrl = returnUrl;
+            }
+            // Yoksa breadcrumb hiyerarşisinden hesapla
+            else if (breadcrumbs.Count > 1)
             {
                 // Son aktif olmayan breadcrumb'ı bul (parent)
                 var parentBreadcrumb = breadcrumbs[breadcrumbs.Count - 2];
                 breadcrumbBackUrl = parentBreadcrumb.Url ?? "/";
             }
+
             ViewBag.BreadcrumbBackUrl = breadcrumbBackUrl;
         }
 

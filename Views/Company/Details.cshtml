@@ -13,7 +13,7 @@
             <h1>@T("company.detailsTitle")</h1>
         </div>
         <div class="col-md-4 text-end">
-            <a asp-action="Edit" asp-route-id="@Model.CompanyID" class="btn btn-warning">
+            <a asp-action="Edit" asp-route-id="@Model.CompanyID" asp-route-returnUrl="@Url.Action("Details", new { id = Model.CompanyID })" class="btn btn-warning">
                 <i class="bi bi-pencil"></i> @T("common.edit")
             </a>
             <a asp-action="Delete" asp-route-id="@Model.CompanyID" class="btn btn-danger">
