@@ -5,6 +5,12 @@
     var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
     string T(string key) => lang?.Get(locale, key) ?? key;
     ViewData["Title"] = T("content.title");
+
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var searchTerm = ViewBag.SearchTerm as string ?? "";
+    var sortBy = ViewBag.SortBy as string ?? "";
+    var sortOrder = ViewBag.SortOrder as string ?? "asc";
 }
 
 @section Styles {
@@ -24,6 +30,23 @@
         </div>
     </div>
 
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3">
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="@T("common.search")..." value="@searchTerm">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">@T("common.search")</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @if (Model.Any())
     {
         <div class="table-container">
@@ -32,8 +55,24 @@
                     <thead>
                         <tr>
                             <th>@T("content.preview")</th>
-                            <th>@T("content.title")</th>
-                            <th>@T("content.type")</th>
+                            <th>
+                                <a href="?search=@searchTerm&sortBy=ContentTitle&sortOrder=@(sortBy == "ContentTitle" && sortOrder == "asc" ? "desc" : "asc")" class="text-white text-decoration-none">
+                                    @T("content.title")
+                                    @if (sortBy == "ContentTitle")
+                                    {
+                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="?search=@searchTerm&sortBy=ContentType&sortOrder=@(sortBy == "ContentType" && sortOrder == "asc" ? "desc" : "asc")" class="text-white text-decoration-none">
+                                    @T("content.type")
+                                    @if (sortBy == "ContentType")
+                                    {
+                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                    }
+                                </a>
+                            </th>
                             <th>@T("content.path")</th>
                             <th>@T("common.actions")</th>
                         </tr>
@@ -105,6 +144,31 @@
                 </table>
             </div>
         </div>
+
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage - 1)">
+                            @T("common.previous")
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@i">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage + 1)">
+                            @T("common.next")
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
     }
     else
     {
