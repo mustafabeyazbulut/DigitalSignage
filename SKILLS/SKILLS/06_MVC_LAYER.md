@@ -1109,6 +1109,330 @@ isSameDomain: function(url) {
 
 ---
 
+## Modern Table Design System (v3.0)
+
+**13 Şubat 2026** - Kurumsal tablo tasarım sistemi uygulandı
+
+### Genel Bakış
+
+Tüm index sayfalarına modern, tutarlı ve profesyonel tablo tasarımı uygulandı. Gradient header, dropdown action menü, modern badge'ler ve responsive tasarım ile kurumsal görünüm sağlandı.
+
+### tables.css - Merkezi Stil Dosyası
+
+**Konum:** `wwwroot/css/tables.css`
+
+Tüm tablo stilleri merkezileştirildi. Inline CSS yasaklandı (DEVELOPMENT_RULES.md Section 9.4).
+
+#### Ana Bileşenler
+
+**1. Table Container**
+```css
+.table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    overflow: visible;
+}
+```
+
+**2. Data Table**
+```css
+.data-table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.data-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.data-table thead th {
+    padding: 18px 20px;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+}
+```
+
+**3. Action Dropdown**
+```css
+.action-dropdown-toggle {
+    background: #f8fafc;
+    color: #475569;
+    padding: 8px;
+    border: 2px solid #cbd5e1;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.action-dropdown-menu {
+    position: fixed;  /* Container'dan bağımsız */
+    z-index: 999999;  /* En üst katman */
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+```
+
+**4. Status Badge**
+```css
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-badge::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+```
+
+### View Yapısı
+
+#### Standart Index View Template
+
+```razor
+@model IEnumerable<Model>
+
+@{
+    ViewData["Title"] = T("title");
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tables.css" />
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>@T("title")</h1>
+            <p class="text-muted mb-0">@T("subtitle")</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> @T("newItem")
+            </a>
+        </div>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="table-container">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Column 1</th>
+                            <th>Column 2</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Name</td>
+                                <td>@item.Code</td>
+                                <td>
+                                    <span class="status-badge @(item.IsActive ? "active" : "inactive")">
+                                        @(item.IsActive ? T("common.active") : T("common.inactive"))
+                                    </span>
+                                </td>
+                                <td class="table-actions">
+                                    <div class="action-dropdown">
+                                        <button type="button" class="action-dropdown-toggle" title="@T("common.actions")">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <div class="action-dropdown-menu">
+                                            <a asp-action="Details" asp-route-id="@item.ID" class="action-dropdown-item action-view">
+                                                <i class="bi bi-eye"></i>
+                                                <span>@T("common.details")</span>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.ID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
+                                                <i class="bi bi-pencil"></i>
+                                                <span>@T("common.edit")</span>
+                                            </a>
+                                            <div class="action-dropdown-divider"></div>
+                                            <a asp-action="Delete" asp-route-id="@item.ID" class="action-dropdown-item action-delete">
+                                                <i class="bi bi-trash"></i>
+                                                <span>@T("common.delete")</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="table-empty-state">
+            <i class="bi bi-inbox"></i>
+            <h3>@T("noItems")</h3>
+            <p>@T("createFirst")</p>
+        </div>
+    }
+</div>
+```
+
+### JavaScript: TableActionDropdown
+
+**Konum:** `wwwroot/js/site.js`
+
+```javascript
+const TableActionDropdown = {
+    init: function () {
+        document.addEventListener('click', function (e) {
+            const toggle = e.target.closest('.action-dropdown-toggle');
+            if (toggle) {
+                e.preventDefault();
+                e.stopPropagation();
+                const dropdown = toggle.closest('.action-dropdown');
+                const isOpen = dropdown.classList.contains('show');
+                TableActionDropdown.closeAll();
+                if (!isOpen) {
+                    dropdown.classList.add('show');
+                    TableActionDropdown.checkPosition(dropdown);
+                }
+            } else {
+                TableActionDropdown.closeAll();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                TableActionDropdown.closeAll();
+            }
+        });
+    },
+
+    checkPosition: function (dropdown) {
+        const menu = dropdown.querySelector('.action-dropdown-menu');
+        const toggle = dropdown.querySelector('.action-dropdown-toggle');
+        const rect = toggle.getBoundingClientRect();
+        const menuHeight = 250;
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+
+        if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+            dropdown.classList.add('dropup');
+            menu.style.top = (rect.top - menuHeight) + 'px';
+            menu.style.left = (rect.right - 200) + 'px';
+        } else {
+            dropdown.classList.remove('dropup');
+            menu.style.top = (rect.bottom + 8) + 'px';
+            menu.style.left = (rect.right - 200) + 'px';
+        }
+    },
+
+    closeAll: function () {
+        document.querySelectorAll('.action-dropdown.show').forEach(function (dropdown) {
+            dropdown.classList.remove('show');
+            dropdown.classList.remove('dropup');
+        });
+    }
+};
+```
+
+### Uygulanan Sayfalar
+
+1. **User/Index.cshtml** ✅
+   - Email, full name, status, type (Office365/Local)
+   - Dropdown: Details, Edit, Manage Roles, Delete
+
+2. **Company/Index.cshtml** ✅
+   - Logo preview, company name, code, domain, status
+   - Dropdown: Details, Edit, Delete
+
+3. **Department/Index.cshtml** ✅
+   - Department name, code, company, status
+   - Dropdown: View Pages, Details, Edit, Delete
+
+4. **Page/Index.cshtml** ✅
+   - Page name, layout info, created date
+   - Dropdown: Details, Design, Edit, Delete
+
+5. **Content/Index.cshtml** ✅
+   - Content preview, name, type (Image/Video/HTML), size
+   - Dropdown: Details, Edit, Delete
+
+6. **Schedule/Index.cshtml** ✅
+   - Schedule name, time range, status
+   - Dropdown: Details, Edit, Delete
+
+7. **Layout/Index.cshtml** ❌ (Card Grid Design Korundu)
+   - Card-based grid layout daha uygun
+   - Grid preview ile görsel önizleme
+
+### Özellikler
+
+✨ **Gradient Purple Header** - Mor tonlarda gradient (667eea → 764ba2)
+✨ **Icon-Only Dropdown Button** - 3 nokta icon, minimal ve modern
+✨ **Fixed Positioning** - Dropdown container'dan bağımsız
+✨ **Dynamic Positioning** - Yukarı/aşağı otomatik açılma
+✨ **Pulse Animation** - Status badge'lerde canlı nokta
+✨ **Modern Badge Pills** - Gradient background, shadow, icons
+✨ **Hover Effects** - Row hover, button hover, icon scale
+✨ **Empty State Design** - Modern boş durum görünümü
+✨ **Z-index Management** - 999999 ile en üst katman
+✨ **Responsive** - Mobile optimize
+
+### CSS Class'ları
+
+| Class | Kullanım | Örnek |
+|-------|---------|-------|
+| `.table-container` | Tablo wrapper | Card style container |
+| `.data-table` | Table element | Gradient header |
+| `.action-dropdown` | Dropdown container | 3 nokta buton |
+| `.action-dropdown-toggle` | Dropdown butonu | Icon-only |
+| `.action-dropdown-menu` | Dropdown menü | Fixed positioned |
+| `.action-dropdown-item` | Menü item | Hover effects |
+| `.status-badge` | Status pill | active/inactive |
+| `.type-badge` | Type pill | office365/local/time |
+| `.company-logo` | Logo container | 40x40px |
+| `.content-preview` | Content önizleme | 60x40px |
+| `.table-empty-state` | Boş durum | Icon + text |
+
+### Commit Geçmişi
+
+- **eed96c2** - User table dropdown redesign
+- **559dbee** - Layout Styles section support
+- **e59a2ed** - Action button prominence
+- **6efa856** - Table overflow fixes
+- **54b1244** - Dropdown z-index fix
+- **e4d514c** - All tables modern design
+- **aba000b** - Department View Pages to dropdown
+- **cfca471** - Layout revert to card grid
+
+### Gelecek İyileştirmeler
+
+- [ ] Tablo sıralama (sortable columns)
+- [ ] Tablo filtreleme (search/filter)
+- [ ] Bulk actions (select multiple rows)
+- [ ] Export (CSV, Excel, PDF)
+- [ ] Column visibility toggle
+- [ ] Saved filters/views
+- [ ] Pagination styles
+
+---
+
 ## Referanslar
 - [ASP.NET Core Controllers](https://docs.microsoft.com/aspnet/core/mvc/controllers/actions)
 - [Routing](https://docs.microsoft.com/aspnet/core/fundamentals/routing)
