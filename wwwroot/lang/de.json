@@ -377,7 +377,9 @@
         "cannotAssignSystemAdmin": "Sie haben keine Berechtigung, die Systemadministratorrolle zuzuweisen.",
         "cannotChangeOwnRole": "Sie können Ihre eigene Rolle nicht ändern.",
         "cannotDeleteSelf": "Sie können sich nicht selbst löschen.",
-        "cannotDeleteLastSystemAdmin": "Der letzte Systemadministrator kann nicht gelöscht werden."
+        "cannotDeleteLastSystemAdmin": "Der letzte Systemadministrator kann nicht gelöscht werden.",
+        "cannotChangeOwnActiveStatus": "Sie können Ihren eigenen Aktivitätsstatus nicht ändern.",
+        "cannotDeactivateLastSystemAdmin": "Der letzte aktive Systemadministrator kann nicht deaktiviert werden."
     },
     "language": {
         "title": "Sprache",

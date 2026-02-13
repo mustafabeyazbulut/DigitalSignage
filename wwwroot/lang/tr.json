@@ -377,7 +377,9 @@
         "cannotAssignSystemAdmin": "Sistem Yöneticisi rolü atama yetkiniz yok.",
         "cannotChangeOwnRole": "Kendi rolünüzü değiştiremezsiniz.",
         "cannotDeleteSelf": "Kendi kullanıcınızı silemezsiniz.",
-        "cannotDeleteLastSystemAdmin": "Son Sistem Yöneticisi kullanıcısı silinemez."
+        "cannotDeleteLastSystemAdmin": "Son Sistem Yöneticisi kullanıcısı silinemez.",
+        "cannotChangeOwnActiveStatus": "Kendi aktiflik durumunuzu değiştiremezsiniz.",
+        "cannotDeactivateLastSystemAdmin": "Son aktif Sistem Yöneticisi pasif yapılamaz."
     },
     "language": {
         "title": "Dil",

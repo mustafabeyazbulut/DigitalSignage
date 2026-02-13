@@ -132,6 +132,12 @@ namespace DigitalSignage.Services
             return users.Count();
         }
 
+        public async Task<int> CountActiveSystemAdminsAsync()
+        {
+            var users = await _unitOfWork.Users.FindAsync(u => u.IsSystemAdmin && u.IsActive);
+            return users.Count();
+        }
+
         public async Task<List<User>> GetUsersByCompanyIdsAsync(List<int> companyIds)
         {
             var allUsers = await _unitOfWork.Users.GetAllAsync();

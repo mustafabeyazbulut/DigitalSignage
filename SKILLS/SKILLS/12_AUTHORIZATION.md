@@ -1807,6 +1807,32 @@ if (!await _authService.IsSystemAdminAsync(currentUserId))
 }
 ```
 
+#### 5. Kendi Aktiflik Durumunu Değiştirememe
+
+```csharp
+// EDIT öncesi kontrol
+if (id == currentUserId && dto.IsActive != user.IsActive)
+{
+    AddErrorMessage(T("user.cannotChangeOwnActiveStatus"));
+    return View(dto);
+}
+```
+
+#### 6. Son Aktif SystemAdmin Pasif Yapılamaz
+
+```csharp
+// EDIT öncesi kontrol - SystemAdmin pasif yapılırken
+if (user.IsSystemAdmin && user.IsActive && !dto.IsActive)
+{
+    var activeSystemAdminCount = await _userService.CountActiveSystemAdminsAsync();
+    if (activeSystemAdminCount <= 1)
+    {
+        AddErrorMessage(T("user.cannotDeactivateLastSystemAdmin"));
+        return View(dto);
+    }
+}
+```
+
 ---
 
 ### Translation Keys
@@ -1820,6 +1846,8 @@ if (!await _authService.IsSystemAdminAsync(currentUserId))
   "user.cannotDeleteSelf": "Kendi kullanıcınızı silemezsiniz",
   "user.cannotDeleteLastSystemAdmin": "Son Sistem Admin kullanıcısı silinemez",
   "user.cannotChangeOwnRole": "Kendi rolünüzü değiştiremezsiniz",
+  "user.cannotChangeOwnActiveStatus": "Kendi aktiflik durumunuzu değiştiremezsiniz",
+  "user.cannotDeactivateLastSystemAdmin": "Son aktif Sistem Yöneticisi pasif yapılamaz",
   "user.companyCannotBeChangedByCompanyAdmin": "Şirket Adminleri kullanıcının şirketini değiştiremez"
 }
 ```

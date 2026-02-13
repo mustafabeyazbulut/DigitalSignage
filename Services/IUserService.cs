@@ -16,6 +16,7 @@ namespace DigitalSignage.Services
 
         // User Management Authorization
         Task<int> CountSystemAdminsAsync();
+        Task<int> CountActiveSystemAdminsAsync();
         Task<List<User>> GetUsersByCompanyIdsAsync(List<int> companyIds);
         Task<List<int>> GetUserCompanyIdsAsync(int userId);
         Task<List<int>> GetAdminCompanyIdsAsync(int userId);

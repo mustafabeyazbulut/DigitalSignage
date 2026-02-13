@@ -351,6 +351,38 @@ namespace DigitalSignage.Controllers
                     }
                 }
 
+                // Genel kısıtlamalar (hem SystemAdmin hem CompanyAdmin için)
+
+                // 1. Kullanıcı kendi aktiflik durumunu değiştiremez
+                if (id == currentUserId && dto.IsActive != user.IsActive)
+                {
+                    AddErrorMessage(T("user.cannotChangeOwnActiveStatus"));
+                    if (!isSystemAdmin)
+                    {
+                        var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+                        ViewBag.IsCompanyAdmin = true;
+                        ViewBag.AdminCompanyIds = adminCompanyIds;
+                    }
+                    return View(dto);
+                }
+
+                // 2. Son aktif SystemAdmin pasif yapılamaz
+                if (user.IsSystemAdmin && user.IsActive && !dto.IsActive)
+                {
+                    var activeSystemAdminCount = await _userService.CountActiveSystemAdminsAsync();
+                    if (activeSystemAdminCount <= 1)
+                    {
+                        AddErrorMessage(T("user.cannotDeactivateLastSystemAdmin"));
+                        if (!isSystemAdmin)
+                        {
+                            var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+                            ViewBag.IsCompanyAdmin = true;
+                            ViewBag.AdminCompanyIds = adminCompanyIds;
+                        }
+                        return View(dto);
+                    }
+                }
+
                 if (!ModelState.IsValid)
                     return View(dto);
 
