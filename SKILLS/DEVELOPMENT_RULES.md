@@ -668,6 +668,212 @@ Kural:
 ✓ Setup instructions güncellenmiş olmalı
 ```
 
+### 9.3 🇹🇷 Kod Açıklama Dili Kuralı (ZORUNLU)
+
+**KURAL: TÜM KOD AÇIKLAMALARI TÜRKÇE OLMALIDIR**
+
+Bu proje Türk geliştirme ekibi için tasarlanmıştır. Kod okunabilirliği ve bakım kolaylığı için:
+
+#### ✅ DOĞRU Kullanım:
+
+```csharp
+// ✓ XML Documentation Comments - TÜRKÇE
+/// <summary>
+/// Kullanıcıyı email adresine göre getirir.
+/// </summary>
+/// <param name="email">Kullanıcının email adresi</param>
+/// <returns>Kullanıcı entity'si veya null</returns>
+public async Task<User?> GetByEmailAsync(string email)
+{
+    // ✓ Inline comments - TÜRKÇE
+    // Email'i küçük harfe çevir (case-insensitive arama)
+    var normalizedEmail = email.ToLower();
+
+    // ✓ Karmaşık mantık açıklaması - TÜRKÇE
+    // Office 365 kullanıcıları için özel işlem:
+    // 1. Önce yerel veritabanında ara
+    // 2. Bulunamazsa Azure AD'den sync et
+    // 3. Cache'e kaydet
+    var user = await _repository.GetByEmailAsync(normalizedEmail);
+
+    return user;
+}
+
+// ✓ Region comments - TÜRKÇE
+#region Şifre Yönetimi
+
+// ✓ TODO comments - TÜRKÇE
+// TODO: Şifre karmaşıklığı kontrolü eklenecek
+// FIXME: Büyük/küçük harf duyarlılığı sorunu var
+
+#endregion
+
+// ✓ Class/Method üstü açıklamalar - TÜRKÇE
+/// <summary>
+/// Kullanıcı kimlik doğrulama servisi.
+/// Email veya username ile giriş yapılmasını sağlar.
+/// </summary>
+public class AuthenticationService
+{
+    // ✓ Private field açıklaması - TÜRKÇE
+    // Şifre hash'leme için kullanılan helper
+    private readonly IPasswordHelper _passwordHelper;
+}
+```
+
+#### ❌ YANLIŞ Kullanım:
+
+```csharp
+// ✗ İngilizce açıklama - YASAKLANDI
+/// <summary>
+/// Gets user by email address.  // ✗ İngilizce
+/// </summary>
+public async Task<User?> GetByEmailAsync(string email)
+{
+    // ✗ Mixed language - YASAKLANDI
+    // Convert email to lowercase  // ✗ İngilizce
+    var normalizedEmail = email.ToLower();
+
+    // ✗ İngilizce inline comment
+    // Search in database  // ✗ İngilizce
+    var user = await _repository.GetByEmailAsync(normalizedEmail);
+
+    return user;
+}
+
+// ✗ İngilizce TODO
+// TODO: Add password complexity check  // ✗ İngilizce
+```
+
+#### 📝 İstisnalar (Türkçe Olmayabilir):
+
+**1. Kod Elemanları (İngilizce Kalmalı):**
+```csharp
+// ✓ DOĞRU - Kod İngilizce, açıklama Türkçe
+public class UserService  // ✓ Class adı İngilizce
+{
+    /// <summary>
+    /// Kullanıcıyı getirir.  // ✓ Açıklama Türkçe
+    /// </summary>
+    public async Task<User> GetUserAsync()  // ✓ Method adı İngilizce
+    {
+        var userName = "test";  // ✓ Variable adı İngilizce
+        // Kullanıcı adını logla  // ✓ Comment Türkçe
+        _logger.LogInformation("User: {UserName}", userName);
+    }
+}
+```
+
+**2. Framework/Library Referansları:**
+```csharp
+// ✓ DOĞRU - Framework terimleri İngilizce kalabilir
+/// <summary>
+/// Entity Framework Core kullanarak veritabanı işlemleri yapar.
+/// </summary>
+// Bu metod IQueryable döner ve lazy loading destekler.
+```
+
+**3. Teknik Terimler:**
+```csharp
+// ✓ DOĞRU - Yaygın teknik terimler İngilizce
+// Cache'i temizle
+// JWT token oluştur
+// Hash değerini kontrol et
+// Repository pattern kullanılıyor
+```
+
+#### 🎯 Türkçe Karakter Kullanımı:
+
+```csharp
+// ✓ DOĞRU - Türkçe karakterler kullanılmalı
+// Şifre doğrulama işlemi yapılıyor
+// Büyük/küçük harf dönüşümü
+// İçerik görüntüleme yetkilendirmesi
+
+// ✗ YANLIŞ - Türkçe karakterler atlanmış
+// Sifre dogrulama islemi yapiliyor  // ✗ Türkçe karakter yok
+```
+
+#### 📋 Checklist - Kod Review Öncesi:
+
+```
+Code Review Checklist:
+□ Tüm XML documentation comments Türkçe mi?
+□ Tüm inline comments (//) Türkçe mi?
+□ Tüm TODO/FIXME notları Türkçe mi?
+□ Region açıklamaları Türkçe mi?
+□ Türkçe karakterler (ş, ğ, ü, ö, ç, ı) doğru kullanılmış mı?
+□ Karmaşık mantık yeterince açıklanmış mı? (Türkçe)
+□ Public method'ların tümünde XML doc var mı? (Türkçe)
+```
+
+#### 🔍 Örnek Kod Review Senaryosu:
+
+**ÖNCE (❌ Hatalı):**
+```csharp
+/// <summary>
+/// Authenticate user with email and password.  // ✗ İngilizce
+/// </summary>
+public async Task<User?> AuthenticateAsync(string email, string password)
+{
+    // Convert to lowercase  // ✗ İngilizce
+    var normalizedEmail = email.ToLower();
+
+    // Find user  // ✗ İngilizce
+    var user = await _userService.GetByEmailAsync(normalizedEmail);
+
+    // Check password  // ✗ İngilizce
+    if (!PasswordHelper.VerifyPassword(password, user.PasswordHash))
+        return null;
+
+    return user;
+}
+```
+
+**SONRA (✅ Doğru):**
+```csharp
+/// <summary>
+/// Kullanıcıyı email ve şifre ile doğrular.  // ✓ Türkçe
+/// </summary>
+/// <param name="email">Kullanıcı email adresi</param>  // ✓ Türkçe
+/// <param name="password">Kullanıcı şifresi</param>  // ✓ Türkçe
+/// <returns>Doğrulama başarılıysa User, değilse null</returns>  // ✓ Türkçe
+public async Task<User?> AuthenticateAsync(string email, string password)
+{
+    // Email'i küçük harfe çevir (case-insensitive karşılaştırma için)  // ✓ Türkçe
+    var normalizedEmail = email.ToLower();
+
+    // Kullanıcıyı veritabanından getir  // ✓ Türkçe
+    var user = await _userService.GetByEmailAsync(normalizedEmail);
+
+    // Şifre kontrolü yap  // ✓ Türkçe
+    if (!PasswordHelper.VerifyPassword(password, user.PasswordHash))
+        return null;
+
+    return user;
+}
+```
+
+#### ⚠️ Bu Kural Neden Önemli?
+
+1. **Ekip İletişimi**: Türk geliştirme ekibi için ana dil Türkçe
+2. **Kod Okunabilirliği**: Karmaşık mantık ana dilde daha iyi anlaşılır
+3. **Bakım Kolaylığı**: Yeni geliştiriciler kodu daha hızlı anlar
+4. **Tutarlılık**: Tüm codebase aynı dil standardını kullanır
+5. **Bilgi Transferi**: Teknik bilgi kaybı minimize edilir
+
+#### 🚨 İhlal Durumunda:
+
+```
+PR Review sürecinde:
+1. İngilizce comment tespit edilirse → PR rejected
+2. Geliştirici tüm commentleri Türkçe'ye çevirir
+3. Review tekrarlanır
+4. Onaylandıktan sonra merge edilir
+```
+
+**SONUÇ: Bu proje için TÜM kod açıklamaları TÜRKÇE yazılmalıdır. İstisna yoktur.**
+
 ---
 
 ## 10. Checklist - PR Gönderme Öncesi
@@ -685,4 +891,4 @@ Kural:
 
 ---
 
-**Son güncelleme:** 12 Şubat 2026
+**Son güncelleme:** 13 Şubat 2026
