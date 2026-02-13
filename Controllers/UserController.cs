@@ -513,7 +513,6 @@ namespace DigitalSignage.Controllers
         // ============== ROLE MANAGEMENT ==============
 
         // GET: User/ManageRoles/5
-        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> ManageRoles(int id)
         {
             try
@@ -554,7 +553,6 @@ namespace DigitalSignage.Controllers
         // POST: User/AssignCompanyRole
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> AssignCompanyRole([FromForm] AssignCompanyRoleDTO dto)
         {
             try
@@ -590,7 +588,6 @@ namespace DigitalSignage.Controllers
         // POST: User/RemoveCompanyRole
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> RemoveCompanyRole(int userId, int companyId)
         {
             try
@@ -620,7 +617,6 @@ namespace DigitalSignage.Controllers
         // POST: User/AssignDepartmentRole
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> AssignDepartmentRole([FromForm] AssignDepartmentRoleDTO dto)
         {
             try
@@ -664,7 +660,6 @@ namespace DigitalSignage.Controllers
         // POST: User/RemoveDepartmentRole
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> RemoveDepartmentRole(int userId, int departmentId)
         {
             try
