@@ -449,6 +449,8 @@ const TableActionDropdown = {
                 // Bu dropdown'ı aç/kapat
                 if (!isOpen) {
                     dropdown.classList.add('show');
+                    // Dropdown pozisyonunu kontrol et (yukarı mı aşağı mı açılacak)
+                    TableActionDropdown.checkPosition(dropdown);
                 }
             } else {
                 // Dropdown dışına tıklanırsa tümünü kapat
@@ -467,7 +469,31 @@ const TableActionDropdown = {
     closeAll: function () {
         document.querySelectorAll('.action-dropdown.show').forEach(function (dropdown) {
             dropdown.classList.remove('show');
+            dropdown.classList.remove('dropup');
         });
+    },
+
+    // Dropdown pozisyonunu kontrol et ve yerleştir (fixed positioning ile)
+    checkPosition: function (dropdown) {
+        const menu = dropdown.querySelector('.action-dropdown-menu');
+        const toggle = dropdown.querySelector('.action-dropdown-toggle');
+        const rect = toggle.getBoundingClientRect();
+        const menuHeight = 250; // Tahmini menü yüksekliği
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+
+        // Aşağıda yeterli yer yoksa yukarı aç
+        if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+            dropdown.classList.add('dropup');
+            // Yukarı açılacak - butonun üstüne yerleştir
+            menu.style.top = (rect.top - menuHeight) + 'px';
+            menu.style.left = (rect.right - 200) + 'px'; // 200px = menü genişliği
+        } else {
+            dropdown.classList.remove('dropup');
+            // Aşağı açılacak - butonun altına yerleştir
+            menu.style.top = (rect.bottom + 8) + 'px';
+            menu.style.left = (rect.right - 200) + 'px';
+        }
     }
 };
 
