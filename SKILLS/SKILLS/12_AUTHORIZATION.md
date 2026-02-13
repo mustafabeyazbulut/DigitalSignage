@@ -1257,6 +1257,628 @@ Expected:
 
 ---
 
+## User Management Authorization
+
+### Genel Bakış
+
+Kullanıcı yönetimi sayfası (`/User/Index`), platformdaki en kritik yetkilendirme gereksinimlerine sahip sayfadır. Kullanıcı CRUD işlemleri, rol atamaları ve şirket/departman değişiklikleri için katı yetkilendirme kuralları uygulanır.
+
+### Rol Bazlı Yetkiler
+
+#### 1. Sistem Admin (System Admin)
+
+**Tam Yetki - Tüm İşlemler İzinli**
+
+```
+✅ Kullanıcı Görüntüleme:
+   - Tüm şirketlerin kullanıcılarını görüntüleyebilir
+   - Filtreleme kısıtlaması yok
+
+✅ Kullanıcı CRUD İşlemleri:
+   - Yeni kullanıcı oluşturabilir (her şirkete)
+   - Kullanıcı bilgilerini düzenleyebilir
+   - Kullanıcı silebilir (kısıtlama: son SystemAdmin silinemez)
+
+✅ Şifre Yönetimi:
+   - Herhangi bir kullanıcının şifresini sıfırlayabilir
+   - Mevcut şifre gerektirmez
+
+✅ Rol Yönetimi:
+   - SystemAdmin rolü atayabilir/kaldırabilir
+   - CompanyAdmin rolü atayabilir/kaldırabilir
+   - DepartmentManager rolü atayabilir/kaldırabilir
+   - Standart kullanıcı yapabilir
+
+✅ Şirket/Departman Değişikliği:
+   - Kullanıcının şirketini değiştirebilir
+   - Kullanıcının departmanını değiştirebilir
+   - UserCompanyRole ve UserDepartmentRole yönetebilir
+```
+
+**Kısıtlamalar:**
+- En az 1 SystemAdmin sistemde kalmalı (son SystemAdmin silinemez veya rolü değiştirilemez)
+
+#### 2. Şirket Admin (Company Admin)
+
+**Sınırlı Yetki - Sadece Kendi Şirketi**
+
+```
+✅ Kullanıcı Görüntüleme:
+   - SADECE kendi şirketinin kullanıcılarını görüntüleyebilir
+   - Başka şirketlerin kullanıcılarını göremez
+
+✅ Kullanıcı CRUD İşlemleri:
+   - Kendi şirketine yeni kullanıcı ekleyebilir
+   - Kendi şirketindeki kullanıcı bilgilerini düzenleyebilir
+   - Kendi şirketindeki kullanıcıları silebilir
+
+✅ Şifre Yönetimi:
+   - Kendi şirketindeki kullanıcıların şifresini sıfırlayabilir
+   - Mevcut şifre gerektirmez
+
+✅ Rol Yönetimi:
+   - CompanyAdmin rolü atayabilir/kaldırabilir (kendi şirketinde)
+   - DepartmentManager rolü atayabilir/kaldırabilir (kendi şirketinde)
+   - Standart kullanıcı yapabilir
+
+✅ Departman Değişikliği:
+   - Kullanıcının departmanını değiştirebilir (kendi şirketi içinde)
+   - UserDepartmentRole yönetebilir (kendi şirketi için)
+```
+
+**Kısıtlamalar:**
+- ❌ Başka şirketlerin kullanıcılarını göremez
+- ❌ SystemAdmin rolü atayamaz
+- ❌ Kullanıcının şirketini değiştiremez (sadece kendi şirketi)
+- ❌ Başka şirketlere kullanıcı ekleyemez
+
+#### 3. Departman Yetkilisi (Department Manager)
+
+**Kullanıcı Yönetimine Erişim YOK**
+
+```
+❌ Kullanıcı yönetimi sayfasına erişim yok (/User/Index)
+❌ Hiçbir kullanıcı CRUD işlemi yapamaz
+❌ Rol atayamaz
+❌ Şifre değiştiremez (kendi şifresi hariç)
+```
+
+**Sadece Kendi Profili:**
+- ✅ Kendi profilini görüntüleyebilir (`/Account/Profile`)
+- ✅ Kendi şifresini değiştirebilir (`/Account/ChangePassword`)
+
+#### 4. Standart Kullanıcı (Standard User / Viewer)
+
+**Kullanıcı Yönetimine Erişim YOK**
+
+```
+❌ Kullanıcı yönetimi sayfasına erişim yok (/User/Index)
+❌ Hiçbir kullanıcı CRUD işlemi yapamaz
+❌ Rol atayamaz
+❌ Şifre değiştiremez (kendi şifresi hariç)
+```
+
+**Sadece Kendi Profili:**
+- ✅ Kendi profilini görüntüleyebilir (`/Account/Profile`)
+- ✅ Kendi şifresini değiştirebilir (`/Account/ChangePassword`)
+
+---
+
+### Yetki Kontrolü Akış Diyagramı
+
+```
+┌─────────────────────────────────────┐
+│  User Management Access Request    │
+│     (/User/Index)                   │
+└──────────────┬──────────────────────┘
+               │
+               ▼
+      ┌────────────────┐
+      │ IsSystemAdmin? │
+      └────────┬───────┘
+          Yes │ No
+    ┌─────────┴──────────┐
+    ▼                    ▼
+┌─────────┐     ┌─────────────────┐
+│  ALLOW  │     │ IsCompanyAdmin? │
+│(All Co) │     └────────┬────────┘
+└─────────┘          Yes │ No
+              ┌──────────┴──────────┐
+              ▼                     ▼
+       ┌─────────────┐        ┌─────────┐
+       │   ALLOW     │        │  DENY   │
+       │(Own Company)│        │(403)    │
+       └─────────────┘        └─────────┘
+```
+
+### Kullanıcı Filtreleme Kuralları
+
+#### SystemAdmin - Tüm Kullanıcılar
+
+```csharp
+public async Task<IActionResult> Index()
+{
+    var currentUserId = GetCurrentUserId();
+
+    if (await _authService.IsSystemAdminAsync(currentUserId))
+    {
+        // Tüm kullanıcıları getir (filtreleme yok)
+        var allUsers = await _userService.GetAllAsync();
+        return View(allUsers);
+    }
+
+    // ...
+}
+```
+
+#### CompanyAdmin - Sadece Kendi Şirketi
+
+```csharp
+public async Task<IActionResult> Index()
+{
+    var currentUserId = GetCurrentUserId();
+
+    // Current user'ın şirketini al
+    var currentUser = await _userService.GetByIdAsync(currentUserId);
+    var userCompanyRoles = await _authService.GetUserCompanyRolesAsync(currentUserId);
+
+    // CompanyAdmin olduğu şirketleri bul
+    var adminCompanyIds = userCompanyRoles
+        .Where(ucr => ucr.Role == "CompanyAdmin")
+        .Select(ucr => ucr.CompanyID)
+        .ToList();
+
+    if (!adminCompanyIds.Any())
+    {
+        // CompanyAdmin değilse erişim reddet
+        return View("~/Views/Shared/AccessDenied.cshtml");
+    }
+
+    // Sadece kendi şirketlerinin kullanıcılarını getir
+    var users = await _userService.GetUsersByCompanyIdsAsync(adminCompanyIds);
+    return View(users);
+}
+```
+
+---
+
+### CRUD İşlem Yetkileri
+
+#### Create User (Yeni Kullanıcı)
+
+```csharp
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Create(UserDTO dto)
+{
+    var currentUserId = GetCurrentUserId();
+
+    // SystemAdmin her şirkete kullanıcı ekleyebilir
+    if (await _authService.IsSystemAdminAsync(currentUserId))
+    {
+        var user = await _userService.CreateAsync(dto);
+        AddSuccessMessage(T("user.created"));
+        return RedirectToAction("Index");
+    }
+
+    // CompanyAdmin sadece kendi şirketine ekleyebilir
+    if (await _authService.IsCompanyAdminAsync(currentUserId, dto.CompanyID))
+    {
+        // SystemAdmin rolü atanamaz
+        if (dto.IsSystemAdmin)
+        {
+            AddErrorMessage(T("user.cannotAssignSystemAdmin"));
+            return View(dto);
+        }
+
+        var user = await _userService.CreateAsync(dto);
+        AddSuccessMessage(T("user.created"));
+        return RedirectToAction("Index");
+    }
+
+    // Yetkisiz
+    AddErrorMessage(T("error.unauthorized"));
+    return RedirectToAction("Index");
+}
+```
+
+#### Edit User (Kullanıcı Düzenle)
+
+```csharp
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Edit(int id, UserDTO dto)
+{
+    var currentUserId = GetCurrentUserId();
+    var targetUser = await _userService.GetByIdAsync(id);
+
+    if (targetUser == null)
+        return NotFound();
+
+    // SystemAdmin her kullanıcıyı düzenleyebilir
+    if (await _authService.IsSystemAdminAsync(currentUserId))
+    {
+        await _userService.UpdateAsync(id, dto);
+        AddSuccessMessage(T("user.updated"));
+        return RedirectToAction("Index");
+    }
+
+    // CompanyAdmin sadece kendi şirketindeki kullanıcıları düzenleyebilir
+    var targetUserCompanies = await _authService.GetUserCompanyIdsAsync(id);
+    var currentUserAdminCompanies = await _authService.GetAdminCompanyIdsAsync(currentUserId);
+
+    // Target user'ın şirketi, current user'ın admin olduğu şirketlerden biri mi?
+    if (targetUserCompanies.Any(c => currentUserAdminCompanies.Contains(c)))
+    {
+        // SystemAdmin rolü atayamaz
+        if (dto.IsSystemAdmin && !targetUser.IsSystemAdmin)
+        {
+            AddErrorMessage(T("user.cannotAssignSystemAdmin"));
+            return View(dto);
+        }
+
+        // Şirket değiştiremez
+        if (dto.CompanyID != targetUser.CompanyID)
+        {
+            AddErrorMessage(T("user.cannotChangeCompany"));
+            return View(dto);
+        }
+
+        await _userService.UpdateAsync(id, dto);
+        AddSuccessMessage(T("user.updated"));
+        return RedirectToAction("Index");
+    }
+
+    // Yetkisiz
+    AddErrorMessage(T("error.unauthorized"));
+    return RedirectToAction("Index");
+}
+```
+
+#### Delete User (Kullanıcı Sil)
+
+```csharp
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Delete(int id)
+{
+    var currentUserId = GetCurrentUserId();
+    var targetUser = await _userService.GetByIdAsync(id);
+
+    if (targetUser == null)
+        return NotFound();
+
+    // Kendini silemez
+    if (id == currentUserId)
+    {
+        AddErrorMessage(T("user.cannotDeleteSelf"));
+        return RedirectToAction("Index");
+    }
+
+    // Son SystemAdmin silinemez
+    if (targetUser.IsSystemAdmin)
+    {
+        var systemAdminCount = await _userService.CountSystemAdminsAsync();
+        if (systemAdminCount <= 1)
+        {
+            AddErrorMessage(T("user.cannotDeleteLastSystemAdmin"));
+            return RedirectToAction("Index");
+        }
+    }
+
+    // SystemAdmin her kullanıcıyı silebilir
+    if (await _authService.IsSystemAdminAsync(currentUserId))
+    {
+        await _userService.DeleteAsync(id);
+        AddSuccessMessage(T("user.deleted"));
+        return RedirectToAction("Index");
+    }
+
+    // CompanyAdmin sadece kendi şirketindeki kullanıcıları silebilir
+    var targetUserCompanies = await _authService.GetUserCompanyIdsAsync(id);
+    var currentUserAdminCompanies = await _authService.GetAdminCompanyIdsAsync(currentUserId);
+
+    if (targetUserCompanies.Any(c => currentUserAdminCompanies.Contains(c)))
+    {
+        await _userService.DeleteAsync(id);
+        AddSuccessMessage(T("user.deleted"));
+        return RedirectToAction("Index");
+    }
+
+    // Yetkisiz
+    AddErrorMessage(T("error.unauthorized"));
+    return RedirectToAction("Index");
+}
+```
+
+---
+
+### View-Level Authorization
+
+#### Index View - Buton Görünürlüğü
+
+```razor
+@{
+    var isSystemAdmin = User.FindFirst("IsSystemAdmin")?.Value == "True";
+    var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+}
+
+<!-- Create Button - Sadece SystemAdmin ve CompanyAdmin -->
+@if (isSystemAdmin || ViewBag.IsCompanyAdmin)
+{
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="fas fa-plus"></i> @T("user.create")
+    </a>
+}
+
+<!-- User List -->
+@foreach (var user in Model)
+{
+    <div class="user-row">
+        <span>@user.UserName</span>
+
+        <!-- Actions Dropdown -->
+        @if (isSystemAdmin || (ViewBag.IsCompanyAdmin && ViewBag.UserCompanyIds.Contains(user.CompanyID)))
+        {
+            <div class="dropdown">
+                <!-- Edit -->
+                <a asp-action="Edit" asp-route-id="@user.UserID">
+                    <i class="fas fa-edit"></i> @T("common.edit")
+                </a>
+
+                <!-- Change Password -->
+                <a asp-controller="Account" asp-action="ChangePassword" asp-route-userId="@user.UserID">
+                    <i class="fas fa-key"></i> @T("user.changePassword")
+                </a>
+
+                <!-- Delete (kendisi değilse) -->
+                @if (user.UserID != currentUserId)
+                {
+                    <a asp-action="Delete" asp-route-id="@user.UserID">
+                        <i class="fas fa-trash"></i> @T("common.delete")
+                    </a>
+                }
+            </div>
+        }
+    </div>
+}
+```
+
+#### Edit View - Rol Seçenekleri
+
+```razor
+@{
+    var isSystemAdmin = User.FindFirst("IsSystemAdmin")?.Value == "True";
+}
+
+<!-- SystemAdmin Checkbox - Sadece SystemAdmin görebilir -->
+@if (isSystemAdmin)
+{
+    <div class="form-check">
+        <input type="checkbox" asp-for="IsSystemAdmin" class="form-check-input" />
+        <label asp-for="IsSystemAdmin" class="form-check-label">
+            @T("user.isSystemAdmin")
+        </label>
+    </div>
+}
+
+<!-- Company Dropdown -->
+<div class="mb-3">
+    <label asp-for="CompanyID" class="form-label">@T("user.company")</label>
+    <select asp-for="CompanyID" class="form-select" @(isSystemAdmin ? "" : "disabled")>
+        @foreach (var company in ViewBag.Companies)
+        {
+            <option value="@company.CompanyID">@company.CompanyName</option>
+        }
+    </select>
+    @if (!isSystemAdmin)
+    {
+        <small class="text-muted">@T("user.companyCannotBeChangedByCompanyAdmin")</small>
+    }
+</div>
+```
+
+---
+
+### Service Layer Methods
+
+#### IUserService - Yeni Metodlar
+
+```csharp
+public interface IUserService
+{
+    // Existing methods...
+
+    // User Management Authorization
+    Task<int> CountSystemAdminsAsync();
+    Task<List<User>> GetUsersByCompanyIdsAsync(List<int> companyIds);
+    Task<List<int>> GetUserCompanyIdsAsync(int userId);
+    Task<List<int>> GetAdminCompanyIdsAsync(int userId);
+}
+```
+
+#### UserService Implementation
+
+```csharp
+public async Task<int> CountSystemAdminsAsync()
+{
+    var users = await _unitOfWork.Users.FindAsync(u => u.IsSystemAdmin && u.IsActive);
+    return users.Count;
+}
+
+public async Task<List<User>> GetUsersByCompanyIdsAsync(List<int> companyIds)
+{
+    var allUsers = await _unitOfWork.Users.GetAllAsync();
+
+    var filteredUsers = new List<User>();
+
+    foreach (var user in allUsers)
+    {
+        var userCompanyRoles = await _unitOfWork.UserCompanyRoles.FindAsync(
+            ucr => ucr.UserID == user.UserID && ucr.IsActive
+        );
+
+        // Kullanıcının şirketlerinden biri, filtre listesinde mi?
+        if (userCompanyRoles.Any(ucr => companyIds.Contains(ucr.CompanyID)))
+        {
+            filteredUsers.Add(user);
+        }
+    }
+
+    return filteredUsers;
+}
+
+public async Task<List<int>> GetUserCompanyIdsAsync(int userId)
+{
+    var companyRoles = await _unitOfWork.UserCompanyRoles.FindAsync(
+        ucr => ucr.UserID == userId && ucr.IsActive
+    );
+
+    return companyRoles.Select(ucr => ucr.CompanyID).Distinct().ToList();
+}
+
+public async Task<List<int>> GetAdminCompanyIdsAsync(int userId)
+{
+    // SystemAdmin ise tüm şirketleri döndür
+    var user = await _unitOfWork.Users.GetByIdAsync(userId);
+    if (user?.IsSystemAdmin == true)
+    {
+        var allCompanies = await _unitOfWork.Companies.GetAllAsync();
+        return allCompanies.Select(c => c.CompanyID).ToList();
+    }
+
+    // CompanyAdmin olduğu şirketleri döndür
+    var companyRoles = await _unitOfWork.UserCompanyRoles.FindAsync(
+        ucr => ucr.UserID == userId && ucr.IsActive && ucr.Role == "CompanyAdmin"
+    );
+
+    return companyRoles.Select(ucr => ucr.CompanyID).Distinct().ToList();
+}
+```
+
+---
+
+### Güvenlik Kontrolleri (Critical)
+
+#### 1. Son SystemAdmin Koruması
+
+```csharp
+// DELETE veya ROLE CHANGE öncesi kontrol
+var systemAdminCount = await _userService.CountSystemAdminsAsync();
+if (targetUser.IsSystemAdmin && systemAdminCount <= 1)
+{
+    throw new InvalidOperationException("Cannot delete or demote the last System Admin");
+}
+```
+
+#### 2. Kendi Rolünü Değiştirememe
+
+```csharp
+// ROLE CHANGE öncesi kontrol
+if (targetUserId == currentUserId && dto.IsSystemAdmin != currentUser.IsSystemAdmin)
+{
+    AddErrorMessage(T("user.cannotChangeOwnRole"));
+    return View(dto);
+}
+```
+
+#### 3. CompanyAdmin - SystemAdmin Atama Engeli
+
+```csharp
+// CREATE/EDIT öncesi kontrol (CompanyAdmin için)
+if (!await _authService.IsSystemAdminAsync(currentUserId) && dto.IsSystemAdmin)
+{
+    AddErrorMessage(T("user.cannotAssignSystemAdmin"));
+    return View(dto);
+}
+```
+
+#### 4. CompanyAdmin - Şirket Değişikliği Engeli
+
+```csharp
+// EDIT öncesi kontrol (CompanyAdmin için)
+if (!await _authService.IsSystemAdminAsync(currentUserId))
+{
+    if (dto.CompanyID != originalUser.CompanyID)
+    {
+        AddErrorMessage(T("user.cannotChangeCompany"));
+        return View(dto);
+    }
+}
+```
+
+---
+
+### Translation Keys
+
+#### Yeni Dil Anahtarları (tr.json, en.json, de.json)
+
+```json
+{
+  "user.cannotAssignSystemAdmin": "Sistem Admin rolü atama yetkiniz yok",
+  "user.cannotChangeCompany": "Kullanıcının şirketini değiştirme yetkiniz yok",
+  "user.cannotDeleteSelf": "Kendi kullanıcınızı silemezsiniz",
+  "user.cannotDeleteLastSystemAdmin": "Son Sistem Admin kullanıcısı silinemez",
+  "user.cannotChangeOwnRole": "Kendi rolünüzü değiştiremezsiniz",
+  "user.companyCannotBeChangedByCompanyAdmin": "Şirket Adminleri kullanıcının şirketini değiştiremez"
+}
+```
+
+---
+
+### Test Scenarios
+
+#### Senaryo 1: SystemAdmin - Tam Yetki
+```
+User: SystemAdmin (IsSystemAdmin = true)
+Action: View /User/Index
+Expected: ✅ Tüm şirketlerin tüm kullanıcılarını görebilir
+Expected: ✅ Create/Edit/Delete butonları görünür
+Expected: ✅ Her kullanıcının şifresini değiştirebilir
+```
+
+#### Senaryo 2: CompanyAdmin - Kendi Şirketi
+```
+User: CompanyAdmin (Company 3)
+Action: View /User/Index
+Expected: ✅ Sadece Company 3'ün kullanıcılarını görebilir
+Expected: ❌ Company 1 ve 2'nin kullanıcılarını göremez
+Expected: ✅ Create/Edit/Delete butonları görünür (Company 3 için)
+Expected: ❌ SystemAdmin rolü atayamaz
+```
+
+#### Senaryo 3: CompanyAdmin - Şirket Değiştirme
+```
+User: CompanyAdmin (Company 3)
+Action: Edit User (Company 3 user) → Change CompanyID to Company 2
+Expected: ❌ İşlem başarısız (CompanyAdmin şirket değiştiremez)
+Error: "user.cannotChangeCompany"
+```
+
+#### Senaryo 4: Son SystemAdmin Silme
+```
+User: SystemAdmin (only 1 SystemAdmin in database)
+Action: Delete self or demote role
+Expected: ❌ İşlem başarısız (Son SystemAdmin koruması)
+Error: "user.cannotDeleteLastSystemAdmin"
+```
+
+#### Senaryo 5: DepartmentManager - Erişim Reddi
+```
+User: DepartmentManager (Dept 5)
+Action: Navigate to /User/Index
+Expected: ❌ 403 Forbidden / AccessDenied view
+```
+
+#### Senaryo 6: Viewer - Erişim Reddi
+```
+User: Viewer (Company 3)
+Action: Navigate to /User/Index
+Expected: ❌ 403 Forbidden / AccessDenied view
+```
+
+---
+
 ## References
 
 - [ASP.NET Core Authorization](https://learn.microsoft.com/en-us/aspnet/core/security/authorization/)
