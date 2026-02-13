@@ -5,8 +5,6 @@
     var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
     string T(string key) => lang?.Get(locale, key) ?? key;
     ViewData["Title"] = T("user.title");
-    var currentPage = (int)ViewBag.CurrentPage;
-    var totalPages = (int)ViewBag.TotalPages;
 }
 
 @section Styles {
@@ -28,106 +26,153 @@
 
     @if (Model.Any())
     {
+        <!-- Toolbar: Search & Filters -->
+        <div class="table-toolbar">
+            <div class="table-search">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="@T("common.search")..." data-table-search="#userTable">
+            </div>
+            <div class="table-filters">
+                <button class="table-filter-btn" onclick="TableFeatures.tables.get('#userTable').filters.clear(); TableFeatures.applyFilters('#userTable'); TableFeatures.render('#userTable');">
+                    <i class="bi bi-funnel"></i>
+                    @T("common.allItems")
+                </button>
+            </div>
+        </div>
+
+        <!-- Bulk Actions Bar -->
+        <div class="bulk-actions-bar" data-bulk-bar="#userTable">
+            <div class="bulk-actions-info">0 öğe seçildi</div>
+            <div class="bulk-actions-buttons">
+                <button class="bulk-action-btn danger" onclick="bulkDelete()">
+                    <i class="bi bi-trash"></i>
+                    @T("common.delete")
+                </button>
+                <button class="bulk-action-btn" onclick="TableFeatures.clearSelection('#userTable')">
+                    <i class="bi bi-x"></i>
+                    @T("common.cancel")
+                </button>
+            </div>
+        </div>
+
         <div class="table-container">
             <div class="table-responsive">
-                <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>@T("user.userName")</th>
-                        <th>@T("user.email")</th>
-                        <th>@T("user.fullName")</th>
-                        <th>@T("common.status")</th>
-                        <th>@T("user.type")</th>
-                        <th>@T("common.createdDate")</th>
-                        <th>@T("common.actions")</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in Model)
-                    {
+                <table class="data-table" id="userTable">
+                    <thead>
                         <tr>
-                            <td>@user.UserName</td>
-                            <td>@user.Email</td>
-                            <td>@user.FullName</td>
-                            <td>
-                                <span class="status-badge @(user.IsActive ? "active" : "inactive")">
-                                    @(user.IsActive ? T("common.active") : T("common.inactive"))
-                                </span>
-                            </td>
-                            <td>
-                                @if (user.IsOffice365User)
-                                {
-                                    <span class="type-badge office365">
-                                        <i class="bi bi-microsoft"></i> @T("user.office365")
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="type-badge local">
-                                        <i class="bi bi-person"></i> @T("user.local")
-                                    </span>
-                                }
-                            </td>
-                            <td>@user.CreatedDate.ToString("yyyy-MM-dd")</td>
-                            <td class="table-actions">
-                                <div class="action-dropdown">
-                                    <button type="button" class="action-dropdown-toggle" title="@T("common.actions")">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <div class="action-dropdown-menu">
-                                        <a asp-action="Details" asp-route-id="@user.UserID" class="action-dropdown-item action-view">
-                                            <i class="bi bi-eye"></i>
-                                            <span>@T("common.details")</span>
-                                        </a>
-                                        <a asp-action="Edit" asp-route-id="@user.UserID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
-                                            <i class="bi bi-pencil"></i>
-                                            <span>@T("common.edit")</span>
-                                        </a>
-                                        <a asp-action="ManageRoles" asp-route-id="@user.UserID" class="action-dropdown-item action-roles">
-                                            <i class="bi bi-shield-lock"></i>
-                                            <span>@T("user.manageRoles")</span>
-                                        </a>
-                                        <div class="action-dropdown-divider"></div>
-                                        <a asp-action="Delete" asp-route-id="@user.UserID" class="action-dropdown-item action-delete">
-                                            <i class="bi bi-trash"></i>
-                                            <span>@T("common.delete")</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </td>
+                            <th style="width: 50px;">
+                                <input type="checkbox" class="table-checkbox" data-select-all="#userTable">
+                            </th>
+                            <th class="sortable">@T("user.userName")</th>
+                            <th class="sortable">@T("user.email")</th>
+                            <th class="sortable">@T("user.fullName")</th>
+                            <th>@T("common.status")</th>
+                            <th>@T("user.type")</th>
+                            <th class="sortable">@T("common.createdDate")</th>
+                            <th>@T("common.actions")</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr data-row-id="@user.UserID">
+                                <td>
+                                    <input type="checkbox" class="table-checkbox" data-id="@user.UserID">
+                                </td>
+                                <td>@user.UserName</td>
+                                <td>@user.Email</td>
+                                <td>@user.FullName</td>
+                                <td>
+                                    <span class="status-badge @(user.IsActive ? "active" : "inactive")">
+                                        @(user.IsActive ? T("common.active") : T("common.inactive"))
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (user.IsOffice365User)
+                                    {
+                                        <span class="type-badge office365">
+                                            <i class="bi bi-microsoft"></i> @T("user.office365")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="type-badge local">
+                                            <i class="bi bi-person"></i> @T("user.local")
+                                        </span>
+                                    }
+                                </td>
+                                <td>@user.CreatedDate.ToString("yyyy-MM-dd")</td>
+                                <td class="table-actions">
+                                    <div class="action-dropdown">
+                                        <button type="button" class="action-dropdown-toggle" title="@T("common.actions")">
+                                            <i class="bi bi-three-dots-vertical"></i>
+                                        </button>
+                                        <div class="action-dropdown-menu">
+                                            <a asp-action="Details" asp-route-id="@user.UserID" class="action-dropdown-item action-view">
+                                                <i class="bi bi-eye"></i>
+                                                <span>@T("common.details")</span>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@user.UserID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
+                                                <i class="bi bi-pencil"></i>
+                                                <span>@T("common.edit")</span>
+                                            </a>
+                                            <a asp-action="ManageRoles" asp-route-id="@user.UserID" class="action-dropdown-item action-roles">
+                                                <i class="bi bi-shield-lock"></i>
+                                                <span>@T("user.manageRoles")</span>
+                                            </a>
+                                            <div class="action-dropdown-divider"></div>
+                                            <a asp-action="Delete" asp-route-id="@user.UserID" class="action-dropdown-item action-delete">
+                                                <i class="bi bi-trash"></i>
+                                                <span>@T("common.delete")</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
 
         <!-- Pagination -->
-        @if (totalPages > 1)
-        {
-            <nav>
-                <ul class="pagination justify-content-center">
-                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)">@T("common.previous")</a>
-                    </li>
-                    @for (int i = 1; i <= totalPages; i++)
-                    {
-                        <li class="page-item @(i == currentPage ? "active" : "")">
-                            <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
-                        </li>
-                    }
-                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                        <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)">@T("common.next")</a>
-                    </li>
-                </ul>
-            </nav>
-        }
+        <div class="table-pagination" data-pagination="#userTable">
+            <div class="pagination-info">0-0 / 0 öğe gösteriliyor</div>
+            <div class="pagination-controls"></div>
+        </div>
     }
     else
     {
-        <div class="alert alert-info">
-            @T("user.noUsers")
+        <div class="table-empty-state">
+            <i class="bi bi-people"></i>
+            <h3>@T("user.noUsers")</h3>
+            <p>@T("user.createFirstUser")</p>
         </div>
     }
 </div>
 
+@section Scripts {
+    <script>
+        // Initialize table features
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.querySelector('#userTable')) {
+                TableFeatures.init('#userTable', {
+                    pageSize: 10
+                });
+            }
+        });
+
+        // Bulk delete function
+        function bulkDelete() {
+            const selected = TableFeatures.getSelectedRows('#userTable');
+            if (selected.length === 0) return;
+
+            if (confirm(`${selected.length} kullanıcıyı silmek istediğinize emin misiniz?`)) {
+                const ids = selected.map(row => row.querySelector('[data-id]').dataset.id);
+                console.log('Silmek için kullanıcı ID\'leri:', ids);
+                // TODO: Server'a bulk delete request gönder
+                alert('Toplu silme işlemi yapılacak: ' + ids.join(', '));
+            }
+        }
+    </script>
+}
