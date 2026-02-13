@@ -31,14 +31,27 @@
                             </div>
                             <a asp-action="Profile" class="btn btn-sm btn-outline-primary">@T("common.view")</a>
                         </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="fas fa-key me-2 text-warning"></i>
-                                <strong>@T("settings.changePassword")</strong>
-                                <p class="mb-0 text-muted small">@T("settings.changePasswordDescription")</p>
-                            </div>
-                            <button class="btn btn-sm btn-outline-warning" disabled>@T("settings.comingSoon")</button>
-                        </li>
+                        @if (!Model.IsOffice365User)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-key me-2 text-warning"></i>
+                                    <strong>@T("settings.changePassword")</strong>
+                                    <p class="mb-0 text-muted small">@T("settings.changePasswordDescription")</p>
+                                </div>
+                                <a asp-action="ChangePassword" class="btn btn-sm btn-outline-warning">
+                                    <i class="fas fa-key me-1"></i>@T("settings.changePassword")
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="list-group-item">
+                                <div class="alert alert-info mb-0">
+                                    <i class="fab fa-microsoft me-2"></i>@T("settings.office365PasswordNote")
+                                </div>
+                            </li>
+                        }
                     </ul>
 
                     <form asp-action="UpdateSettings" method="post" id="settingsForm">

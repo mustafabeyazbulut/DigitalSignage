@@ -242,6 +242,89 @@ namespace DigitalSignage.Controllers
             }
         }
 
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
+            {
+                var user = await _userService.GetByIdAsync(userId);
+                if (user != null)
+                {
+                    // Office 365 users cannot change password here
+                    if (user.IsOffice365User)
+                    {
+                        AddErrorMessage(T("settings.office365PasswordNote"));
+                        return RedirectToAction(nameof(Settings));
+                    }
+                    return View(user);
+                }
+            }
+
+            AddErrorMessage(T("user.notFound"));
+            return RedirectToAction("Index", "Home");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword, string confirmPassword)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
+            {
+                AddErrorMessage(T("user.notFound"));
+                return RedirectToAction("Index", "Home");
+            }
+
+            var user = await _userService.GetByIdAsync(userId);
+            if (user == null)
+            {
+                AddErrorMessage(T("user.notFound"));
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Office 365 users cannot change password
+            if (user.IsOffice365User)
+            {
+                AddErrorMessage(T("settings.office365PasswordNote"));
+                return RedirectToAction(nameof(Settings));
+            }
+
+            // Validate inputs
+            if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(confirmPassword))
+            {
+                AddErrorMessage(T("auth.requiredFields"));
+                return View(user);
+            }
+
+            // Check password length
+            if (newPassword.Length < 6)
+            {
+                AddErrorMessage(T("settings.passwordRequirements"));
+                return View(user);
+            }
+
+            // Check if new passwords match
+            if (newPassword != confirmPassword)
+            {
+                AddErrorMessage(T("settings.passwordMismatch"));
+                return View(user);
+            }
+
+            // Attempt to change password
+            var success = await _userService.ChangePasswordAsync(userId, currentPassword, newPassword);
+            if (success)
+            {
+                AddSuccessMessage(T("settings.passwordChanged"));
+                return RedirectToAction(nameof(Settings));
+            }
+
+            AddErrorMessage(T("settings.incorrectPassword"));
+            return View(user);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Logout()
         {

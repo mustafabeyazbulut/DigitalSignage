@@ -417,7 +417,16 @@
         "currentLanguage": "Mevcut Dil",
         "languageSwitcherHint": "Üst menüdeki dil değiştiricisini kullanın",
         "settingsSaved": "Ayarlar başarıyla kaydedildi",
-        "errorSaving": "Ayarlar kaydedilirken hata oluştu"
+        "errorSaving": "Ayarlar kaydedilirken hata oluştu",
+        "currentPassword": "Mevcut Şifre",
+        "newPassword": "Yeni Şifre",
+        "confirmPassword": "Yeni Şifre (Tekrar)",
+        "passwordChanged": "Şifre başarıyla değiştirildi",
+        "passwordMismatch": "Yeni şifreler eşleşmiyor",
+        "incorrectPassword": "Mevcut şifre hatalı",
+        "passwordRequirements": "Şifre en az 6 karakter olmalıdır",
+        "changePasswordTitle": "Şifre Değiştir",
+        "office365PasswordNote": "Office 365 kullanıcıları şifrelerini buradan değiştiremez. Lütfen Microsoft hesap ayarlarınızı kullanın."
     },
     "profile": {
         "systemAdmin": "Sistem Yöneticisi",
@@ -425,6 +434,8 @@
         "lastLogin": "Son Giriş",
         "office365Info": "Office 365 Bilgileri",
         "changePasswordInfo": "Şifre Değiştir",
-        "contactAdmin": "Şifrenizi değiştirmek için sistem yöneticinizle iletişime geçin"
+        "contactAdmin": "Şifrenizi değiştirmek için sistem yöneticinizle iletişime geçin",
+        "changePasswordLink": "Şifre Değiştir",
+        "changePasswordHint": "Şifrenizi ayarlar sayfasından değiştirebilirsiniz"
     }
 }

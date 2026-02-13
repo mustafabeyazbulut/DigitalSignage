@@ -131,9 +131,22 @@
                     @if (!Model.IsOffice365User)
                     {
                         <hr />
+                        <div class="alert alert-info d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-key me-2"></i>
+                                <strong>@T("profile.changePasswordInfo"):</strong> @T("profile.changePasswordHint")
+                            </div>
+                            <a asp-action="ChangePassword" class="btn btn-sm btn-warning">
+                                <i class="fas fa-key me-1"></i>@T("profile.changePasswordLink")
+                            </a>
+                        </div>
+                    }
+                    else
+                    {
+                        <hr />
                         <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>@T("profile.changePasswordInfo"):</strong> @T("profile.contactAdmin")
+                            <i class="fab fa-microsoft me-2"></i>
+                            @T("settings.office365PasswordNote")
                         </div>
                     }
                 </div>

@@ -418,7 +418,16 @@
         "currentLanguage": "Current Language",
         "languageSwitcherHint": "Use the language switcher in the top menu",
         "settingsSaved": "Settings saved successfully",
-        "errorSaving": "Error saving settings"
+        "errorSaving": "Error saving settings",
+        "currentPassword": "Current Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password",
+        "passwordChanged": "Password changed successfully",
+        "passwordMismatch": "New passwords do not match",
+        "incorrectPassword": "Current password is incorrect",
+        "passwordRequirements": "Password must be at least 6 characters",
+        "changePasswordTitle": "Change Password",
+        "office365PasswordNote": "Office 365 users cannot change their password here. Please use your Microsoft account settings."
     },
     "profile": {
         "systemAdmin": "System Administrator",
@@ -426,6 +435,8 @@
         "lastLogin": "Last Login",
         "office365Info": "Office 365 Information",
         "changePasswordInfo": "Change Password",
-        "contactAdmin": "To change your password, please contact your system administrator"
+        "contactAdmin": "To change your password, please contact your system administrator",
+        "changePasswordLink": "Change Password",
+        "changePasswordHint": "You can change your password from the settings page"
     }
 }
