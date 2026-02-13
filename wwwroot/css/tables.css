@@ -94,7 +94,10 @@
 .action-dropdown {
     position: relative;
     display: inline-block;
-    z-index: 10;
+}
+
+.action-dropdown.show {
+    z-index: 99999;
 }
 
 .action-dropdown-toggle {
@@ -136,12 +139,12 @@
 /* Dropdown Menu */
 .action-dropdown-menu {
     position: fixed;
-    z-index: 9999;
+    z-index: 999999;
     display: none;
     min-width: 200px;
     background-color: white;
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
     padding: 8px;
     animation: slideDown 0.2s ease;
     border: 1px solid rgba(0, 0, 0, 0.1);
