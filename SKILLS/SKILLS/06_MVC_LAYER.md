@@ -1592,12 +1592,12 @@ public async Task<IActionResult> Index(string search = "", string sortBy = "", s
 
 #### Uygulanacak Sayfalar
 
-- [x] **User/Index.cshtml** - İlk implementasyon ✅
-- [ ] **Company/Index.cshtml** - Planlı
-- [ ] **Department/Index.cshtml** - Planlı
-- [ ] **Page/Index.cshtml** - Planlı
-- [ ] **Content/Index.cshtml** - Planlı
-- [ ] **Schedule/Index.cshtml** - Planlı
+- [x] **User/Index.cshtml** - ✅ Tamamlandı (ab0985d)
+- [x] **Company/Index.cshtml** - ✅ Tamamlandı (6f2470f)
+- [x] **Department/Index.cshtml** - ✅ Tamamlandı (d376451)
+- [x] **Page/Index.cshtml** - ✅ Tamamlandı (1b579f9)
+- [x] **Content/Index.cshtml** - ✅ Tamamlandı (2b94c2f)
+- [x] **Schedule/Index.cshtml** - ✅ Tamamlandı (a1ecbea)
 
 ### Gelecek İyileştirmeler
 
