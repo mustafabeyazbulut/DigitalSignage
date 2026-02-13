@@ -358,6 +358,7 @@
         "passwordChanged": "Password changed successfully",
         "noUsers": "No users found.",
         "createFirstUser": "Create your first user.",
+        "manageRoles": "Manage Roles",
         "errorLoading": "Error loading users",
         "errorLoadingDetails": "Error loading user details",
         "errorCreating": "Error creating user",

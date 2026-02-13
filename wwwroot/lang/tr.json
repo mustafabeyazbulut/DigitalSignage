@@ -357,6 +357,7 @@
         "passwordChanged": "Şifre başarıyla değiştirildi",
         "noUsers": "Kullanıcı bulunamadı.",
         "createFirstUser": "İlk kullanıcınızı oluşturun.",
+        "manageRoles": "Rolleri Yönet",
         "errorLoading": "Kullanıcılar yüklenirken hata",
         "errorLoadingDetails": "Kullanıcı detayları yüklenirken hata",
         "errorCreating": "Kullanıcı oluşturulurken hata",
