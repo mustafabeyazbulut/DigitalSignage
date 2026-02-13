@@ -30,6 +30,53 @@ namespace DigitalSignage.Controllers
             ViewBag.CurrentLocale = CurrentLocale;
             ViewBag.Lang = _languageService;
             ViewBag.SupportedLanguages = _languageService?.GetSupportedLanguages();
+
+            // Smart back navigation support
+            SetupSmartBackNavigation(context);
+        }
+
+        /// <summary>
+        /// Smart back navigation için returnUrl mantığını ayarlar.
+        /// Her sayfada akıllı geri dönüş desteği sağlar.
+        /// </summary>
+        private void SetupSmartBackNavigation(ActionExecutingContext context)
+        {
+            var request = HttpContext.Request;
+            var currentUrl = $"{request.Path}{request.QueryString}";
+
+            // Get referrer (previous page)
+            var referrer = request.Headers["Referer"].ToString();
+
+            // Default fallback URL based on controller
+            var controllerName = context.RouteData.Values["controller"]?.ToString();
+            var actionName = context.RouteData.Values["action"]?.ToString();
+
+            string defaultFallback = "/";
+
+            // Set intelligent fallback based on current location
+            if (!string.IsNullOrEmpty(controllerName))
+            {
+                // For Create/Edit/Details pages, fallback to Index
+                if (actionName == "Create" || actionName == "Edit" || actionName == "Details")
+                {
+                    defaultFallback = $"/{controllerName}/Index";
+                }
+                // For Profile/Settings, fallback to Home
+                else if (controllerName == "Account" && (actionName == "Profile" || actionName == "Settings" || actionName == "ChangePassword"))
+                {
+                    defaultFallback = "/Home/Index";
+                }
+                // For other pages, fallback to controller index
+                else if (actionName != "Index")
+                {
+                    defaultFallback = $"/{controllerName}/Index";
+                }
+            }
+
+            // Set ViewBag values for views to use
+            ViewBag.ReturnUrl = referrer;
+            ViewBag.DefaultReturnUrl = defaultFallback;
+            ViewBag.CurrentUrl = currentUrl;
         }
 
         /// <summary>

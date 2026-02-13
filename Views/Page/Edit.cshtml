@@ -77,7 +77,7 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle"></i> @T("common.update")
                             </button>
-                            <a asp-action="Index" class="btn btn-secondary">@T("common.cancel")</a>
+                            <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.DefaultReturnUrl">@T("common.cancel")</button>
                         </div>
                     </form>
                 </div>
