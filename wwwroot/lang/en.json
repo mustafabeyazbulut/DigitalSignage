@@ -357,6 +357,7 @@
         "passwordIncorrect": "Current password is incorrect",
         "passwordChanged": "Password changed successfully",
         "noUsers": "No users found.",
+        "createFirstUser": "Create your first user.",
         "errorLoading": "Error loading users",
         "errorLoadingDetails": "Error loading user details",
         "errorCreating": "Error creating user",
