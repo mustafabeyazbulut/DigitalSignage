@@ -72,14 +72,16 @@
                                     </span>
                                 </td>
                                 <td class="table-actions">
-                                    <a asp-controller="Page" asp-action="Index" asp-route-departmentId="@item.DepartmentID" class="btn btn-sm btn-outline-primary" title="@T("department.viewPages")">
-                                        <i class="bi bi-display"></i> @T("department.viewPages")
-                                    </a>
                                     <div class="action-dropdown">
                                         <button type="button" class="action-dropdown-toggle" title="@T("common.actions")">
                                             <i class="bi bi-three-dots-vertical"></i>
                                         </button>
                                         <div class="action-dropdown-menu">
+                                            <a asp-controller="Page" asp-action="Index" asp-route-departmentId="@item.DepartmentID" class="action-dropdown-item action-view">
+                                                <i class="bi bi-display"></i>
+                                                <span>@T("department.viewPages")</span>
+                                            </a>
+                                            <div class="action-dropdown-divider"></div>
                                             <a asp-action="Details" asp-route-id="@item.DepartmentID" class="action-dropdown-item action-view">
                                                 <i class="bi bi-eye"></i>
                                                 <span>@T("common.details")</span>
