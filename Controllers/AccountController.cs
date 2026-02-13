@@ -356,16 +356,19 @@ namespace DigitalSignage.Controllers
                 await _userService.UpdateAsync(user);
                 AddSuccessMessage(T("settings.passwordChanged"));
 
-                // Admin değiştiriyorsa returnUrl'e veya User Index'e dön
+                // returnUrl varsa oraya dön (User/Index sayfasından gelinmişse)
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
+                // Admin başka birinin şifresini değiştiriyorsa User Index'e dön
                 if (isAdminChangingPassword)
                 {
-                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                    {
-                        return Redirect(returnUrl);
-                    }
                     return RedirectToAction("Index", "User");
                 }
 
+                // İlk kez şifre belirleme durumunda Settings'e git
                 return RedirectToAction(nameof(Settings));
             }
 
@@ -383,6 +386,13 @@ namespace DigitalSignage.Controllers
             if (success)
             {
                 AddSuccessMessage(T("settings.passwordChanged"));
+
+                // returnUrl varsa oraya dön (User/Index sayfasından gelinmişse)
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
                 return RedirectToAction(nameof(Settings));
             }
 
