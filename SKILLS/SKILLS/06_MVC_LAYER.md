@@ -758,7 +758,266 @@ public class PageController : BaseController
 
 ---
 
+## Smart Back Navigation Sistemi
+
+### Genel Bakış
+
+Digital Signage projesi, kullanıcı deneyimini iyileştirmek için profesyonel bir **Smart Back Navigation** sistemi kullanır. Bu sistem, sayfalar arası geri dönüş işlemlerini akıllıca yöneterek alakasız sayfalara yönlendirme problemini çözer.
+
+### Mimari
+
+Smart Back Navigation sistemi 3 katmandan oluşur:
+
+1. **JavaScript NavigationHelper** (`wwwroot/js/site.js`)
+2. **BaseController Smart Logic** (`Controllers/BaseController.cs`)
+3. **View Integration** (26+ view dosyası)
+
+---
+
+### 1. NavigationHelper (JavaScript)
+
+**Konum:** `wwwroot/js/site.js`
+
+#### Özellikler:
+- **Session-based tracking**: Son 10 sayfayı `sessionStorage`'da takip eder
+- **Browser history integration**: `history.back()` API'sini güvenli kullanır
+- **Same-domain security**: XSS koruması için aynı domain kontrolü
+- **Intelligent fallback**: History yoksa context-aware URL'lere yönlendirir
+
+#### Kullanım:
+
+```javascript
+// Otomatik initialization (DOM ready)
+NavigationHelper.init();
+
+// Manuel kullanım
+NavigationHelper.goBack('/fallback-url');
+
+// Geçmiş kontrolü
+if (NavigationHelper.canGoBack()) {
+    NavigationHelper.goBack();
+}
+```
+
+#### Örnek Kod:
+
+```javascript
+const NavigationHelper = {
+    init: function () {
+        this.trackPageVisit();
+        this.attachEventListeners();
+    },
+
+    trackPageVisit: function () {
+        let navHistory = JSON.parse(sessionStorage.getItem('navHistory') || '[]');
+        navHistory.push({
+            url: window.location.href,
+            path: window.location.pathname,
+            timestamp: Date.now()
+        });
+        navHistory = navHistory.slice(-10); // Son 10 sayfa
+        sessionStorage.setItem('navHistory', JSON.stringify(navHistory));
+    },
+
+    goBack: function (fallbackUrl) {
+        // Browser history varsa ve same-domain ise
+        if (window.history.length > 1 && this.isSameDomain(document.referrer)) {
+            window.history.back();
+        } else {
+            // Fallback URL'e yönlendir
+            window.location.href = fallbackUrl || '/';
+        }
+    }
+};
+```
+
+---
+
+### 2. BaseController Smart Logic
+
+**Konum:** `Controllers/BaseController.cs`
+
+#### SetupSmartBackNavigation Metodu
+
+Her action execute edilmeden önce `OnActionExecuting` içinde çağrılır:
+
+```csharp
+private void SetupSmartBackNavigation(ActionExecutingContext context)
+{
+    var controllerName = context.RouteData.Values["controller"]?.ToString();
+    var actionName = context.RouteData.Values["action"]?.ToString();
+
+    string defaultFallback = "/";
+
+    // Context-aware fallback URL belirleme
+    if (actionName == "Create" || actionName == "Edit" || actionName == "Details")
+    {
+        defaultFallback = $"/{controllerName}/Index";
+    }
+    else if (controllerName == "Account" &&
+            (actionName == "Profile" || actionName == "Settings" || actionName == "ChangePassword"))
+    {
+        defaultFallback = "/Home/Index";
+    }
+    else if (actionName != "Index")
+    {
+        defaultFallback = $"/{controllerName}/Index";
+    }
+
+    // ViewBag'e aktar
+    ViewBag.ReturnUrl = Request.Headers["Referer"].ToString();
+    ViewBag.DefaultReturnUrl = defaultFallback;
+    ViewBag.CurrentUrl = $"{Request.Path}{Request.QueryString}";
+}
+```
+
+#### Fallback URL Mantığı
+
+| Sayfa Tipi | Fallback Hedefi | Örnek |
+|------------|----------------|-------|
+| Create | Controller Index | `/Company/Create` → `/Company/Index` |
+| Edit | Controller Index | `/User/Edit/5` → `/User/Index` |
+| Details | Controller Index | `/Department/Details/3` → `/Department/Index` |
+| Profile | Home | `/Account/Profile` → `/Home/Index` |
+| Settings | Home | `/Account/Settings` → `/Home/Index` |
+| ChangePassword | Home | `/Account/ChangePassword` → `/Home/Index` |
+| Diğer | Controller Index | `/Page/Custom` → `/Page/Index` |
+
+---
+
+### 3. View Integration
+
+#### Smart Back Button Kullanımı
+
+**Yeni Format:**
+```html
+<button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.DefaultReturnUrl">
+    <i class="fas fa-arrow-left me-1"></i>@T("common.back")
+</button>
+```
+
+**Eski Format (Kullanılmamalı):**
+```html
+<a asp-action="Index" class="btn btn-secondary">
+    <i class="fas fa-arrow-left me-1"></i>@T("common.back")
+</a>
+```
+
+#### Güncellenen View'lar (26 Dosya)
+
+**Account Views:**
+- Profile.cshtml
+- Settings.cshtml
+- ChangePassword.cshtml
+- AccessDenied.cshtml
+
+**CRUD Views (Her controller için Create/Edit/Details):**
+- Company (Create, Edit, Details)
+- Department (Create, Edit, Details)
+- User (Create, Edit, Details)
+- Page (Create, Edit, Details)
+- Layout (Create, Edit, Details)
+- Content (Create, Edit, Details)
+- Schedule (Create, Edit, Details)
+
+---
+
+### 4. Çalışma Akışı
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Kullanıcı "Geri" Butonuna Tıklar                             │
+│    <button data-smart-back="/Company/Index">                     │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. JavaScript Event Listener (site.js)                          │
+│    NavigationHelper.goBack('/Company/Index')                     │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. Browser History Kontrolü                                     │
+│    • history.length > 1? ✓                                      │
+│    • document.referrer var? ✓                                   │
+│    • Same domain? ✓                                             │
+└─────────────────────────────────────────────────────────────────┘
+                    │                      │
+            ✓ EVET │                      │ HAYIR
+                    ▼                      ▼
+        ┌──────────────────┐    ┌──────────────────────┐
+        │ history.back()    │    │ Fallback URL'e git   │
+        │ (Browser native)  │    │ window.location.href │
+        └──────────────────┘    └──────────────────────┘
+```
+
+---
+
+### 5. Güvenlik Özellikleri
+
+#### Same-Domain Check
+
+```javascript
+isSameDomain: function(url) {
+    if (!url) return false;
+    try {
+        const referrerDomain = new URL(url).hostname;
+        const currentDomain = window.location.hostname;
+        return referrerDomain === currentDomain;
+    } catch {
+        return false;
+    }
+}
+```
+
+**Amaç:** XSS ve phishing saldırılarını önlemek için sadece aynı domain'den gelen referrer'lara güvenilir.
+
+#### Session Storage
+
+- **Kapsam:** Sadece mevcut browser tab
+- **Süre:** Tab kapanana kadar
+- **Boyut:** Maksimum 10 sayfa (circular buffer)
+- **Privacy:** Başka tab'ler göremez
+
+---
+
+### 6. Test Senaryoları
+
+| Senaryo | Beklenen Davranış |
+|---------|-------------------|
+| Company Index → Create → **Back** | Company Index'e döner |
+| User Details → Edit → **Back** | User Details'e döner |
+| Dashboard → Profile → **Back** | Dashboard'a döner |
+| Direct link (örn: bookmark) → **Back** | Fallback URL'e gider (Index) |
+| Yeni sekmede açma → **Back** | Fallback URL'e gider |
+| Browser back button | JavaScript ile aynı mantık çalışır |
+
+---
+
+### 7. Avantajlar
+
+✅ **Kullanıcı Deneyimi:** Sezgisel ve tahmin edilebilir navigasyon
+✅ **Güvenlik:** Same-domain kontrolü ile XSS koruması
+✅ **Performans:** Hafif JavaScript, minimal overhead
+✅ **Bakım:** Merkezi mantık, DRY prensibi
+✅ **Esneklik:** Context-aware fallback'ler
+✅ **Tarayıcı Desteği:** Tüm modern browser'lar
+
+---
+
+### 8. Gelecek İyileştirmeler
+
+- [ ] **Breadcrumb integration**: Navigation path görselleştirme
+- [ ] **Analytics**: Kullanıcı navigasyon pattern'lerini tracking
+- [ ] **Deep linking**: URL state management ile enhanced back
+- [ ] **Mobile optimization**: Swipe gesture desteği
+
+---
+
 ## Referanslar
 - [ASP.NET Core Controllers](https://docs.microsoft.com/aspnet/core/mvc/controllers/actions)
 - [Routing](https://docs.microsoft.com/aspnet/core/fundamentals/routing)
 - [Views and Razor](https://docs.microsoft.com/aspnet/core/mvc/views/overview)
+- [History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API)
+- [SessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage)
