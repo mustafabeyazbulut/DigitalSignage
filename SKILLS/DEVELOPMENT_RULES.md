@@ -876,6 +876,240 @@ PR Review sürecinde:
 
 ---
 
+### 9.4 🎨 CSS Merkezileştirme ve Inline Style Yasaklama (ZORUNLU)
+
+**KURAL: INLINE CSS KULLANIMI YASAKTIR. HER ZAMAN .CSS DOSYASI KULLANILMALIDIR.**
+
+#### ❌ YANLIŞ - Inline Style Kullanımı
+
+```html
+<!-- YASAKLANDI - Inline style attribute -->
+<div style="color: red; font-size: 14px;">Hata mesajı</div>
+
+<!-- YASAKLANDI - <style> tag içinde -->
+<style>
+    .custom-button {
+        background-color: #007bff;
+        padding: 10px;
+    }
+</style>
+
+<!-- YASAKLANDI - Tekrar eden inline styles -->
+<span style="display: inline-block; width: 30px; height: 30px; background-color: #ff0000;"></span>
+<span style="display: inline-block; width: 30px; height: 30px; background-color: #00ff00;"></span>
+```
+
+#### ✅ DOĞRU - CSS Dosyası Kullanımı
+
+```css
+/* wwwroot/css/site.css veya component-specific.css */
+.error-message {
+    color: red;
+    font-size: 14px;
+}
+
+.custom-button {
+    background-color: #007bff;
+    padding: 10px;
+}
+
+.color-preview {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+```
+
+```html
+<!-- HTML - Sadece class kullanımı -->
+<div class="error-message">Hata mesajı</div>
+<button class="custom-button">Gönder</button>
+<span class="color-preview" style="background-color: #ff0000;"></span>  <!-- Sadece dinamik değerler için style kullanılabilir -->
+```
+
+#### 📋 CSS Merkezileştirme Standartları
+
+**1. Tablo Tasarımları (Her Tablo Aynı Görünüm)**
+
+```css
+/* wwwroot/css/tables.css */
+.data-table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-collapse: collapse;
+}
+
+.data-table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+    font-weight: 600;
+    padding: 12px;
+}
+
+.data-table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Action buttons group */
+.table-actions .btn-group {
+    display: flex;
+    gap: 4px;
+}
+
+.table-actions .btn-sm {
+    padding: 4px 8px;
+    font-size: 0.875rem;
+}
+```
+
+**2. Card Tasarımları (Tutarlı Card Layout)**
+
+```css
+/* wwwroot/css/cards.css */
+.detail-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.detail-card .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+}
+
+.detail-card .card-body {
+    padding: 1.25rem;
+}
+
+.detail-card dl.row dt {
+    font-weight: 600;
+    color: #495057;
+}
+
+.detail-card dl.row dd {
+    color: #212529;
+}
+```
+
+**3. Form Tasarımları (Standart Form Layout)**
+
+```css
+/* wwwroot/css/forms.css */
+.form-standard .form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-standard .form-control {
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    padding: 0.5rem 0.75rem;
+}
+
+.form-standard .form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.form-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}
+```
+
+#### 🎯 İstisnalar (Sadece Bu Durumlarda Inline Style İzinli)
+
+**1. Dinamik Renkler (Veritabanından gelen)**
+
+```html
+<!-- ✓ İzinli - Renk değeri runtime'da belirleniyor -->
+<span class="color-preview" style="background-color: @Model.PrimaryColor;"></span>
+```
+
+**2. Dinamik Pozisyonlama (Grid sistemi)**
+
+```html
+<!-- ✓ İzinli - X/Y koordinatları dinamik -->
+<div class="grid-item" style="left: @item.PositionX px; top: @item.PositionY px;">
+```
+
+**3. Inline SVG Stilleri (SVG içi)**
+
+```html
+<!-- ✓ İzinli - SVG element stilleri -->
+<svg>
+    <rect style="fill: currentColor;" />
+</svg>
+```
+
+#### 📁 CSS Dosya Organizasyonu
+
+```
+wwwroot/css/
+├── site.css              ← Global styles
+├── tables.css            ← Tüm tablolar için ortak stiller
+├── cards.css             ← Tüm card'lar için ortak stiller
+├── forms.css             ← Tüm formlar için ortak stiller
+├── buttons.css           ← Button stilleri
+├── badges.css            ← Badge ve status stilleri
+├── navigation.css        ← Navigation ve breadcrumb
+└── components/
+    ├── user-card.css     ← User-specific component
+    ├── company-card.css  ← Company-specific component
+    └── ...
+```
+
+#### ✅ Checklist: CSS Kullanımı
+
+**Her View Oluştururken:**
+- [ ] Hiçbir `style=""` attribute kullanılmadı mı?
+- [ ] `<style>` tag'i kullanılmadı mı?
+- [ ] Tüm stiller .css dosyasında tanımlandı mı?
+- [ ] Tablolar `data-table` class'ını kullanıyor mu?
+- [ ] Card'lar `detail-card` class'ını kullanıyor mu?
+- [ ] Formlar `form-standard` class'ını kullanıyor mu?
+- [ ] Action buttonlar `btn-group` içinde mi?
+- [ ] Dinamik değerler dışında inline style yok mu?
+
+#### ⚠️ Bu Kural Neden Önemli?
+
+1. **Tutarlılık**: Tüm sayfalar aynı görsel standartlara sahip
+2. **Bakım Kolaylığı**: Tek bir CSS değişikliği tüm siteyi etkiler
+3. **Performans**: CSS dosyaları cache'lenebilir, inline styles cache'lenemez
+4. **Responsive Design**: Media query'ler sadece CSS dosyalarında çalışır
+5. **Temiz HTML**: HTML sadece yapı için kullanılır, stil ayrılır
+6. **Debugging**: Chrome DevTools ile CSS debugging kolay
+7. **Merkezileştirme**: Tüm tablolar, formlar, card'lar aynı tasarıma sahip
+
+#### 🚨 İhlal Durumunda:
+
+```
+PR Review sürecinde:
+1. Inline style tespit edilirse → PR rejected
+2. Stiller .css dosyasına taşınır
+3. Ortak component'ler varsa merkezileştirilir
+4. Review tekrarlanır
+5. Onaylandıktan sonra merge edilir
+```
+
+**SONUÇ: Inline CSS kullanımı yasaktır. Tüm stiller .css dosyalarında merkezileştirilmelidir.**
+
+---
+
 ## 10. Checklist - PR Gönderme Öncesi
 
 - [ ] `.csproj` güncellenmiş mi? (yeni dosyalar)

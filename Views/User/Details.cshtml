@@ -13,7 +13,7 @@
             <h1>@T("user.detailsTitle")</h1>
         </div>
         <div class="col-md-4 text-end">
-            <a asp-action="Edit" asp-route-id="@Model.UserID" class="btn btn-warning">
+            <a asp-action="Edit" asp-route-id="@Model.UserID" asp-route-returnUrl="@Url.Action("Details", new { id = Model.UserID })" class="btn btn-warning">
                 <i class="bi bi-pencil"></i> @T("common.edit")
             </a>
             <a asp-action="Delete" asp-route-id="@Model.UserID" class="btn btn-danger">
@@ -76,29 +76,6 @@
             </dl>
         </div>
     </div>
-
-    @if (!Model.IsOffice365User)
-    {
-        <div class="card mt-3">
-            <div class="card-header">
-                <h5>@T("user.changePassword")</h5>
-            </div>
-            <div class="card-body">
-                <form asp-action="ChangePassword" method="post">
-                    <input type="hidden" name="id" value="@Model.UserID" />
-                    <div class="mb-3">
-                        <label for="currentPassword" class="form-label">@T("user.currentPassword")</label>
-                        <input type="password" class="form-control" id="currentPassword" name="currentPassword" required />
-                    </div>
-                    <div class="mb-3">
-                        <label for="newPassword" class="form-label">@T("user.newPassword")</label>
-                        <input type="password" class="form-control" id="newPassword" name="newPassword" required minlength="6" />
-                    </div>
-                    <button type="submit" class="btn btn-primary">@T("user.changePassword")</button>
-                </form>
-            </div>
-        </div>
-    }
 
     <div class="mt-3">
         <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">@T("common.backToList")</button>
