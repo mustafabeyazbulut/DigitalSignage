@@ -1421,6 +1421,230 @@ const TableActionDropdown = {
 - **aba000b** - Department View Pages to dropdown
 - **cfca471** - Layout revert to card grid
 
+---
+
+## User Management Authorization & Security
+
+**13 Şubat 2026** - Kullanıcı yönetimi için kapsamlı yetkilendirme ve güvenlik kontrolleri eklendi.
+
+### Rol Bazlı Erişim Kontrolü
+
+#### 1. Index (Liste) Sayfası
+
+**SystemAdmin:**
+- ✅ Tüm şirketlerin tüm kullanıcılarını görür
+- ✅ Filtreleme kısıtlaması yok
+
+**CompanyAdmin:**
+- ✅ Sadece kendi şirketinin kullanıcılarını görür
+- ❌ Başka şirketlerin kullanıcılarını göremez
+
+**DepartmentManager / Viewer:**
+- ❌ User/Index sayfasına erişim yok
+- → AccessDenied page
+
+```csharp
+// Index action - Role-based filtering
+var isSystemAdmin = await _authService.IsSystemAdminAsync(currentUserId);
+
+if (!isSystemAdmin)
+{
+    var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+    if (!adminCompanyIds.Any())
+    {
+        return View("~/Views/Shared/AccessDenied.cshtml");
+    }
+    var users = await _userService.GetUsersByCompanyIdsAsync(adminCompanyIds);
+}
+else
+{
+    var users = await _userService.GetAllAsync();
+}
+```
+
+#### 2. Create (Oluştur) Sayfası
+
+**SystemAdmin:**
+- ✅ Her şirkete kullanıcı ekleyebilir
+- ✅ SystemAdmin rolü atayabilir
+
+**CompanyAdmin:**
+- ✅ Kendi şirketine kullanıcı ekleyebilir
+- ❌ SystemAdmin rolü atayamaz
+- ❌ Başka şirketlere kullanıcı ekleyemez
+
+```csharp
+// Create POST - CompanyAdmin restrictions
+if (!isSystemAdmin && dto.IsSystemAdmin)
+{
+    AddErrorMessage(T("user.cannotAssignSystemAdmin"));
+    return View(dto);
+}
+```
+
+#### 3. Edit (Düzenle) Sayfası
+
+**SystemAdmin:**
+- ✅ Tüm kullanıcıları düzenleyebilir
+- ❌ Kendi rolünü değiştiremez
+- ❌ Kendi aktiflik durumunu değiştiremez
+
+**CompanyAdmin:**
+- ✅ Kendi şirketindeki kullanıcıları düzenleyebilir
+- ❌ SystemAdmin rolü atayamaz
+- ❌ Kullanıcının şirketini değiştiremez
+- ❌ Kendi rolünü değiştiremez
+- ❌ Kendi aktiflik durumunu değiştiremez
+
+```csharp
+// Edit POST - Authorization checks
+var targetUserCompanyIds = await _userService.GetUserCompanyIdsAsync(id);
+var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+
+if (!targetUserCompanyIds.Any(c => adminCompanyIds.Contains(c)))
+{
+    AddErrorMessage(T("error.unauthorized"));
+    return RedirectToAction(nameof(Index));
+}
+```
+
+#### 4. Delete (Sil) Sayfası
+
+**SystemAdmin:**
+- ✅ Tüm kullanıcıları silebilir
+- ❌ Kendini silemez
+- ❌ Son SystemAdmin'i silemez
+
+**CompanyAdmin:**
+- ✅ Kendi şirketindeki kullanıcıları silebilir
+- ❌ Kendini silemez
+
+```csharp
+// Delete - Self-deletion check
+if (id == currentUserId)
+{
+    AddErrorMessage(T("user.cannotDeleteSelf"));
+    return RedirectToAction(nameof(Index));
+}
+
+// Delete - Last SystemAdmin check
+if (user.IsSystemAdmin)
+{
+    var systemAdminCount = await _userService.CountSystemAdminsAsync();
+    if (systemAdminCount <= 1)
+    {
+        AddErrorMessage(T("user.cannotDeleteLastSystemAdmin"));
+        return RedirectToAction(nameof(Index));
+    }
+}
+```
+
+### Kritik Güvenlik Kontrolleri
+
+#### 1. Son SystemAdmin Koruması (Delete)
+
+```csharp
+var systemAdminCount = await _userService.CountSystemAdminsAsync();
+if (targetUser.IsSystemAdmin && systemAdminCount <= 1)
+{
+    throw new InvalidOperationException("Cannot delete the last System Admin");
+}
+```
+
+**Amaç:** Sistemde en az 1 SystemAdmin kalmalı.
+
+#### 2. Son Aktif SystemAdmin Koruması (Edit)
+
+```csharp
+if (user.IsSystemAdmin && user.IsActive && !dto.IsActive)
+{
+    var activeSystemAdminCount = await _userService.CountActiveSystemAdminsAsync();
+    if (activeSystemAdminCount <= 1)
+    {
+        AddErrorMessage(T("user.cannotDeactivateLastSystemAdmin"));
+        return View(dto);
+    }
+}
+```
+
+**Amaç:** Son aktif SystemAdmin pasif yapılamaz.
+
+#### 3. Kendi Rolünü Değiştirememe (Edit)
+
+```csharp
+if (id == currentUserId && dto.IsSystemAdmin != user.IsSystemAdmin)
+{
+    AddErrorMessage(T("user.cannotChangeOwnRole"));
+    return View(dto);
+}
+```
+
+**Amaç:** Kullanıcı kendi yetkilerini değiştiremez (self-promotion/demotion).
+
+#### 4. Kendi Aktiflik Durumunu Değiştirememe (Edit)
+
+```csharp
+if (id == currentUserId && dto.IsActive != user.IsActive)
+{
+    AddErrorMessage(T("user.cannotChangeOwnActiveStatus"));
+    return View(dto);
+}
+```
+
+**Amaç:** Kullanıcı kendini pasif yapamaz (self-disable protection).
+
+#### 5. CompanyAdmin Kısıtlamaları (Edit)
+
+```csharp
+// SystemAdmin rolü atayamaz
+if (!isSystemAdmin && dto.IsSystemAdmin && !user.IsSystemAdmin)
+{
+    AddErrorMessage(T("user.cannotAssignSystemAdmin"));
+    return View(dto);
+}
+```
+
+**Amaç:** CompanyAdmin, privilege escalation yapamaz.
+
+### Service Layer Methods
+
+```csharp
+public interface IUserService
+{
+    // Authorization helpers
+    Task<int> CountSystemAdminsAsync();
+    Task<int> CountActiveSystemAdminsAsync();
+    Task<List<User>> GetUsersByCompanyIdsAsync(List<int> companyIds);
+    Task<List<int>> GetUserCompanyIdsAsync(int userId);
+    Task<List<int>> GetAdminCompanyIdsAsync(int userId);
+}
+```
+
+### Translation Keys
+
+Yeni eklenen dil anahtarları:
+
+```json
+{
+  "user.cannotAssignSystemAdmin": "Sistem Yöneticisi rolü atama yetkiniz yok",
+  "user.cannotChangeOwnRole": "Kendi rolünüzü değiştiremezsiniz",
+  "user.cannotDeleteSelf": "Kendi kullanıcınızı silemezsiniz",
+  "user.cannotDeleteLastSystemAdmin": "Son Sistem Yöneticisi kullanıcısı silinemez",
+  "user.cannotChangeOwnActiveStatus": "Kendi aktiflik durumunuzu değiştiremezsiniz",
+  "user.cannotDeactivateLastSystemAdmin": "Son aktif Sistem Yöneticisi pasif yapılamaz"
+}
+```
+
+### Commit Geçmişi
+
+- **f5da3e6** - Add User Management Authorization documentation to SKILLS
+- **8a75163** - Implement User Management Authorization
+- **7834ab9** - Fix authorization attribute issue in UserController
+- **4e008f3** - Fix password change redirect to respect returnUrl
+- **bf2bd23** - Add active status protection and last active SystemAdmin guard
+
+---
+
 ### Server-Side Arama, Sıralama ve Sayfalama ✅
 
 **13 Şubat 2026** - Server-side veri işleme uygulandı (User/Index)
