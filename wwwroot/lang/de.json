@@ -61,8 +61,8 @@
         "loginTitle": "Anmelden",
         "rememberMe": "Angemeldet bleiben",
         "forgotPassword": "Passwort vergessen?",
-        "invalidCredentials": "Ungültiger Benutzername oder Passwort.",
-        "requiredFields": "Benutzername und Passwort sind erforderlich.",
+        "invalidCredentials": "Ungültige E-Mail oder Passwort.",
+        "requiredFields": "E-Mail und Passwort sind erforderlich.",
         "welcomeBack": "Willkommen zurück, {0}!",
         "accessDenied": "Zugang verweigert",
         "accessDeniedMessage": "Sie haben keine Berechtigung, auf diese Ressource zuzugreifen.",
@@ -150,7 +150,10 @@
         "createdSuccess": "Unternehmen erfolgreich erstellt.",
         "updatedSuccess": "Unternehmen erfolgreich aktualisiert.",
         "deletedSuccess": "Unternehmen erfolgreich gelöscht.",
-        "notFound": "Unternehmen nicht gefunden."
+        "notFound": "Unternehmen nicht gefunden.",
+        "selectCompany": "Unternehmen auswählen",
+        "switchCompany": "Unternehmen wechseln",
+        "noCompaniesAvailable": "Keine Unternehmen verfügbar"
     },
     "department": {
         "title": "Abteilungen",

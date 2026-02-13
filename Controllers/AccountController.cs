@@ -34,17 +34,17 @@ namespace DigitalSignage.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(string userName, string password, string? returnUrl = null)
+        public async Task<IActionResult> Login(string email, string password, string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
 
-            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
             {
                 AddErrorMessage(T("auth.requiredFields"));
                 return View();
             }
 
-            var user = await _userService.AuthenticateAsync(userName, password);
+            var user = await _userService.AuthenticateAsync(email, password);
             if (user != null)
             {
                 var claims = new List<Claim>

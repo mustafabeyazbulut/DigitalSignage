@@ -61,8 +61,8 @@
         "loginTitle": "Sign In",
         "rememberMe": "Remember me",
         "forgotPassword": "Forgot password?",
-        "invalidCredentials": "Invalid username or password.",
-        "requiredFields": "Username and password are required.",
+        "invalidCredentials": "Invalid email or password.",
+        "requiredFields": "Email and password are required.",
         "welcomeBack": "Welcome back, {0}!",
         "accessDenied": "Access Denied",
         "accessDeniedMessage": "You do not have permission to access this resource.",
@@ -150,7 +150,10 @@
         "createdSuccess": "Company created successfully.",
         "updatedSuccess": "Company updated successfully.",
         "deletedSuccess": "Company deleted successfully.",
-        "notFound": "Company not found."
+        "notFound": "Company not found.",
+        "selectCompany": "Select Company",
+        "switchCompany": "Switch Company",
+        "noCompaniesAvailable": "No companies available"
     },
     "department": {
         "title": "Departments",

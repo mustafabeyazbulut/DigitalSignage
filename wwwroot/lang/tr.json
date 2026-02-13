@@ -61,8 +61,8 @@
         "loginTitle": "Giriş Yap",
         "rememberMe": "Beni hatırla",
         "forgotPassword": "Şifremi unuttum",
-        "invalidCredentials": "Geçersiz kullanıcı adı veya şifre.",
-        "requiredFields": "Kullanıcı adı ve şifre gereklidir.",
+        "invalidCredentials": "Geçersiz e-posta veya şifre.",
+        "requiredFields": "E-posta ve şifre gereklidir.",
         "welcomeBack": "Tekrar hoş geldiniz, {0}!",
         "accessDenied": "Erişim Reddedildi",
         "accessDeniedMessage": "Bu kaynağa erişim izniniz bulunmamaktadır.",
@@ -150,7 +150,10 @@
         "createdSuccess": "Şirket başarıyla oluşturuldu.",
         "updatedSuccess": "Şirket başarıyla güncellendi.",
         "deletedSuccess": "Şirket başarıyla silindi.",
-        "notFound": "Şirket bulunamadı."
+        "notFound": "Şirket bulunamadı.",
+        "selectCompany": "Şirket Seçin",
+        "switchCompany": "Şirket Değiştir",
+        "noCompaniesAvailable": "Kullanılabilir şirket yok"
     },
     "department": {
         "title": "Departmanlar",

@@ -65,9 +65,9 @@ namespace DigitalSignage.Services
             return await _unitOfWork.Users.GetByEmailAsync(email);
         }
 
-        public async Task<User?> AuthenticateAsync(string userName, string password)
+        public async Task<User?> AuthenticateAsync(string email, string password)
         {
-            var user = await _unitOfWork.Users.GetByUserNameAsync(userName);
+            var user = await _unitOfWork.Users.GetByEmailAsync(email);
             if (user == null || !user.IsActive)
                 return null;
 
@@ -81,7 +81,7 @@ namespace DigitalSignage.Services
             await _unitOfWork.Users.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("User authenticated: {UserName}", userName);
+            _logger.LogInformation("User authenticated: {Email}", email);
             return user;
         }
 

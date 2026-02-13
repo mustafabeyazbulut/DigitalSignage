@@ -1,8 +1,11 @@
 @model DigitalSignage.Models.Company
+@inject DigitalSignage.Services.ILanguageService LangService
 
 @{
     var companies = ViewBag.Companies as List<DigitalSignage.Models.Company>;
     var selectedCompany = ViewBag.SelectedCompany as DigitalSignage.Models.Company;
+    var locale = Context.Request.Cookies["locale"] ?? "en";
+    string T(string key) => LangService.Get(locale, key);
 }
 
 <li class="nav-item dropdown me-3">
@@ -13,11 +16,11 @@
         }
         else
         {
-            <span class="badge bg-secondary me-2">Select Company</span>
+            <span class="badge bg-secondary me-2">@T("company.selectCompany")</span>
         }
     </a>
     <div class="dropdown-menu dropdown-menu-end" aria-labelledby="tenantDropdown">
-        <h6 class="dropdown-header">Switch Company</h6>
+        <h6 class="dropdown-header">@T("company.switchCompany")</h6>
         <div class="dropdown-divider"></div>
         @if (companies != null && companies.Any())
         {
@@ -32,7 +35,7 @@
         }
         else
         {
-            <span class="dropdown-item text-muted">No companies available</span>
+            <span class="dropdown-item text-muted">@T("company.noCompaniesAvailable")</span>
         }
     </div>
 </li>
