@@ -18,5 +18,6 @@ namespace DigitalSignage.DTOs
         public string LastName { get; set; } = string.Empty;
         public bool IsOffice365User { get; set; }
         public string? AzureADObjectId { get; set; }
+        public bool IsSystemAdmin { get; set; }
     }
 }

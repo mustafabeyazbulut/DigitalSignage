@@ -13,5 +13,11 @@ namespace DigitalSignage.Services
         Task<User?> GetUserWithRolesAsync(int userId);
         Task<IEnumerable<User>> GetUsersByCompanyAsync(int companyId);
         Task<PagedResult<User>> GetUsersPagedAsync(int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null);
+
+        // User Management Authorization
+        Task<int> CountSystemAdminsAsync();
+        Task<List<User>> GetUsersByCompanyIdsAsync(List<int> companyIds);
+        Task<List<int>> GetUserCompanyIdsAsync(int userId);
+        Task<List<int>> GetAdminCompanyIdsAsync(int userId);
     }
 }

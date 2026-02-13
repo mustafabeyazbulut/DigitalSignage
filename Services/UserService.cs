@@ -123,5 +123,61 @@ namespace DigitalSignage.Services
         {
             return await _unitOfWork.Users.GetUsersPagedAsync(pageNumber, pageSize, searchTerm, isActive);
         }
+
+        // ============== USER MANAGEMENT AUTHORIZATION ==============
+
+        public async Task<int> CountSystemAdminsAsync()
+        {
+            var users = await _unitOfWork.Users.FindAsync(u => u.IsSystemAdmin && u.IsActive);
+            return users.Count();
+        }
+
+        public async Task<List<User>> GetUsersByCompanyIdsAsync(List<int> companyIds)
+        {
+            var allUsers = await _unitOfWork.Users.GetAllAsync();
+            var filteredUsers = new List<User>();
+
+            foreach (var user in allUsers)
+            {
+                var userCompanyRoles = await _unitOfWork.UserCompanyRoles.FindAsync(
+                    ucr => ucr.UserID == user.UserID && ucr.IsActive
+                );
+
+                // Kullanıcının şirketlerinden biri, filtre listesinde mi?
+                if (userCompanyRoles.Any(ucr => companyIds.Contains(ucr.CompanyID)))
+                {
+                    filteredUsers.Add(user);
+                }
+            }
+
+            return filteredUsers;
+        }
+
+        public async Task<List<int>> GetUserCompanyIdsAsync(int userId)
+        {
+            var companyRoles = await _unitOfWork.UserCompanyRoles.FindAsync(
+                ucr => ucr.UserID == userId && ucr.IsActive
+            );
+
+            return companyRoles.Select(ucr => ucr.CompanyID).Distinct().ToList();
+        }
+
+        public async Task<List<int>> GetAdminCompanyIdsAsync(int userId)
+        {
+            // SystemAdmin ise tüm şirketleri döndür
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user?.IsSystemAdmin == true)
+            {
+                var allCompanies = await _unitOfWork.Companies.GetAllAsync();
+                return allCompanies.Select(c => c.CompanyID).ToList();
+            }
+
+            // CompanyAdmin olduğu şirketleri döndür
+            var companyRoles = await _unitOfWork.UserCompanyRoles.FindAsync(
+                ucr => ucr.UserID == userId && ucr.IsActive && ucr.Role == "CompanyAdmin"
+            );
+
+            return companyRoles.Select(ucr => ucr.CompanyID).Distinct().ToList();
+        }
     }
 }

@@ -38,64 +38,104 @@ namespace DigitalSignage.Controllers
             try
             {
                 const int pageSize = 10;
+                var currentUserId = GetCurrentUserId();
 
-                // Tüm kullanıcıları al
-                var allUsers = await _userService.GetAllAsync();
-                IEnumerable<Models.User> query = allUsers;
+                // Yetkilendirme kontrolü: SystemAdmin veya CompanyAdmin olmalı
+                var isSystemAdmin = await _authService.IsSystemAdminAsync(currentUserId);
 
-                // Arama filtresi
-                if (!string.IsNullOrEmpty(search))
+                if (!isSystemAdmin)
                 {
-                    search = search.ToLower();
-                    query = query.Where(u =>
-                        (u.UserName != null && u.UserName.ToLower().Contains(search)) ||
-                        (u.Email != null && u.Email.ToLower().Contains(search)) ||
-                        (u.FirstName != null && u.FirstName.ToLower().Contains(search)) ||
-                        (u.LastName != null && u.LastName.ToLower().Contains(search))
-                    );
+                    // CompanyAdmin mi kontrol et
+                    var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+
+                    if (!adminCompanyIds.Any())
+                    {
+                        // Ne SystemAdmin ne de CompanyAdmin ise erişim reddet
+                        return View("~/Views/Shared/AccessDenied.cshtml");
+                    }
+
+                    // CompanyAdmin ise sadece kendi şirketlerinin kullanıcılarını göster
+                    var allUsers = await _userService.GetUsersByCompanyIdsAsync(adminCompanyIds);
+                    IEnumerable<Models.User> query = allUsers;
+
+                    // ViewBag'e CompanyAdmin bilgisini ekle (view'da butonları göstermek için)
+                    ViewBag.IsCompanyAdmin = true;
+                    ViewBag.AdminCompanyIds = adminCompanyIds;
+
+                    return await ProcessUserListAsync(query, search, sortBy, sortOrder, page, pageSize);
                 }
 
-                // Sıralama
-                query = sortBy switch
-                {
-                    "UserName" => sortOrder == "asc"
-                        ? query.OrderBy(u => u.UserName)
-                        : query.OrderByDescending(u => u.UserName),
-                    "Email" => sortOrder == "asc"
-                        ? query.OrderBy(u => u.Email)
-                        : query.OrderByDescending(u => u.Email),
-                    "CreatedDate" => sortOrder == "asc"
-                        ? query.OrderBy(u => u.CreatedDate)
-                        : query.OrderByDescending(u => u.CreatedDate),
-                    _ => query.OrderBy(u => u.UserName)
-                };
+                // SystemAdmin ise tüm kullanıcıları göster
+                ViewBag.IsCompanyAdmin = false;
+                var allUsersForSystemAdmin = await _userService.GetAllAsync();
 
-                // Toplam sayı
-                var totalCount = query.Count();
-                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-                // Pagination
-                var users = query
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
-
-                var viewModels = _mapper.Map<List<UserViewModel>>(users);
-
-                // ViewBag
-                ViewBag.CurrentPage = page;
-                ViewBag.TotalPages = totalPages;
-                ViewBag.SearchTerm = search;
-                ViewBag.SortBy = sortBy;
-                ViewBag.SortOrder = sortOrder;
-
-                return View(viewModels);
+                return await ProcessUserListAsync(allUsersForSystemAdmin, search, sortBy, sortOrder, page, pageSize);
             }
             catch (Exception)
             {
                 AddErrorMessage(T("user.errorLoading"));
                 return View(new List<UserViewModel>());
             }
+        }
+
+        // Helper method: Kullanıcı listesini işle (arama, sıralama, pagination)
+        private async Task<IActionResult> ProcessUserListAsync(
+            IEnumerable<Models.User> users,
+            string search,
+            string sortBy,
+            string sortOrder,
+            int page,
+            int pageSize)
+        {
+            IEnumerable<Models.User> query = users;
+
+            // Arama filtresi
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                query = query.Where(u =>
+                    (u.UserName != null && u.UserName.ToLower().Contains(search)) ||
+                    (u.Email != null && u.Email.ToLower().Contains(search)) ||
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(search)) ||
+                    (u.LastName != null && u.LastName.ToLower().Contains(search))
+                );
+            }
+
+            // Sıralama
+            query = sortBy switch
+            {
+                "UserName" => sortOrder == "asc"
+                    ? query.OrderBy(u => u.UserName)
+                    : query.OrderByDescending(u => u.UserName),
+                "Email" => sortOrder == "asc"
+                    ? query.OrderBy(u => u.Email)
+                    : query.OrderByDescending(u => u.Email),
+                "CreatedDate" => sortOrder == "asc"
+                    ? query.OrderBy(u => u.CreatedDate)
+                    : query.OrderByDescending(u => u.CreatedDate),
+                _ => query.OrderBy(u => u.UserName)
+            };
+
+            // Toplam sayı
+            var totalCount = query.Count();
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            // Pagination
+            var userList = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var viewModels = _mapper.Map<List<UserViewModel>>(userList);
+
+            // ViewBag
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.SearchTerm = search;
+            ViewBag.SortBy = sortBy;
+            ViewBag.SortOrder = sortOrder;
+
+            return View(viewModels);
         }
 
         // GET: User/Details/5
@@ -121,20 +161,71 @@ namespace DigitalSignage.Controllers
         }
 
         // GET: User/Create
-        [Authorize(Roles = "SystemAdmin")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var currentUserId = GetCurrentUserId();
+
+            // Yetki kontrolü: SystemAdmin veya CompanyAdmin olmalı
+            var isSystemAdmin = await _authService.IsSystemAdminAsync(currentUserId);
+
+            if (!isSystemAdmin)
+            {
+                var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+                if (!adminCompanyIds.Any())
+                {
+                    AddErrorMessage(T("error.unauthorized"));
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // CompanyAdmin ise şirketlerini ViewBag'e ekle
+                ViewBag.IsCompanyAdmin = true;
+                ViewBag.AdminCompanyIds = adminCompanyIds;
+            }
+            else
+            {
+                ViewBag.IsCompanyAdmin = false;
+            }
+
             return View();
         }
 
         // POST: User/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> Create(CreateUserDTO dto)
         {
             try
             {
+                var currentUserId = GetCurrentUserId();
+                var isSystemAdmin = await _authService.IsSystemAdminAsync(currentUserId);
+
+                // Yetki kontrolü
+                if (!isSystemAdmin)
+                {
+                    var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+                    if (!adminCompanyIds.Any())
+                    {
+                        AddErrorMessage(T("error.unauthorized"));
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    // CompanyAdmin kısıtlamaları
+                    // 1. SystemAdmin rolü atayamaz
+                    if (dto.IsSystemAdmin)
+                    {
+                        AddErrorMessage(T("user.cannotAssignSystemAdmin"));
+                        ViewBag.IsCompanyAdmin = true;
+                        ViewBag.AdminCompanyIds = adminCompanyIds;
+                        return View(dto);
+                    }
+
+                    // 2. Sadece kendi şirketlerine kullanıcı ekleyebilir
+                    // (Bu kontrol DTO'da CompanyID varsa yapılmalı, şu an DTO'da CompanyID yoksa bir sonraki adımda eklenebilir)
+
+                    ViewBag.IsCompanyAdmin = true;
+                    ViewBag.AdminCompanyIds = adminCompanyIds;
+                }
+
                 if (!ModelState.IsValid)
                     return View(dto);
 
@@ -151,16 +242,40 @@ namespace DigitalSignage.Controllers
         }
 
         // GET: User/Edit/5
-        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> Edit(int id)
         {
             try
             {
+                var currentUserId = GetCurrentUserId();
+                var isSystemAdmin = await _authService.IsSystemAdminAsync(currentUserId);
+
                 var user = await _userService.GetByIdAsync(id);
                 if (user == null)
                 {
                     AddErrorMessage(T("user.notFound"));
                     return RedirectToAction(nameof(Index));
+                }
+
+                // Yetki kontrolü
+                if (!isSystemAdmin)
+                {
+                    // CompanyAdmin'in yetki kontrolü
+                    var targetUserCompanyIds = await _userService.GetUserCompanyIdsAsync(id);
+                    var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+
+                    // Target user'ın şirketi, current user'ın admin olduğu şirketlerden biri mi?
+                    if (!targetUserCompanyIds.Any(c => adminCompanyIds.Contains(c)))
+                    {
+                        AddErrorMessage(T("error.unauthorized"));
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    ViewBag.IsCompanyAdmin = true;
+                    ViewBag.AdminCompanyIds = adminCompanyIds;
+                }
+                else
+                {
+                    ViewBag.IsCompanyAdmin = false;
                 }
 
                 var dto = _mapper.Map<UpdateUserDTO>(user);
@@ -176,13 +291,12 @@ namespace DigitalSignage.Controllers
         // POST: User/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> Edit(int id, UpdateUserDTO dto)
         {
             try
             {
-                if (!ModelState.IsValid)
-                    return View(dto);
+                var currentUserId = GetCurrentUserId();
+                var isSystemAdmin = await _authService.IsSystemAdminAsync(currentUserId);
 
                 var user = await _userService.GetByIdAsync(id);
                 if (user == null)
@@ -190,6 +304,55 @@ namespace DigitalSignage.Controllers
                     AddErrorMessage(T("user.notFound"));
                     return RedirectToAction(nameof(Index));
                 }
+
+                // Yetki kontrolü
+                if (!isSystemAdmin)
+                {
+                    var targetUserCompanyIds = await _userService.GetUserCompanyIdsAsync(id);
+                    var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+
+                    // Target user'ın şirketi, current user'ın admin olduğu şirketlerden biri mi?
+                    if (!targetUserCompanyIds.Any(c => adminCompanyIds.Contains(c)))
+                    {
+                        AddErrorMessage(T("error.unauthorized"));
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    // CompanyAdmin kısıtlamaları
+                    // 1. SystemAdmin rolü atayamaz
+                    if (dto.IsSystemAdmin && !user.IsSystemAdmin)
+                    {
+                        AddErrorMessage(T("user.cannotAssignSystemAdmin"));
+                        ViewBag.IsCompanyAdmin = true;
+                        ViewBag.AdminCompanyIds = adminCompanyIds;
+                        return View(dto);
+                    }
+
+                    // 2. Kendi rolünü değiştiremez
+                    if (id == currentUserId && dto.IsSystemAdmin != user.IsSystemAdmin)
+                    {
+                        AddErrorMessage(T("user.cannotChangeOwnRole"));
+                        ViewBag.IsCompanyAdmin = true;
+                        ViewBag.AdminCompanyIds = adminCompanyIds;
+                        return View(dto);
+                    }
+
+                    ViewBag.IsCompanyAdmin = true;
+                    ViewBag.AdminCompanyIds = adminCompanyIds;
+                }
+                else
+                {
+                    // SystemAdmin kısıtlamaları
+                    // Kendi rolünü değiştiremez
+                    if (id == currentUserId && dto.IsSystemAdmin != user.IsSystemAdmin)
+                    {
+                        AddErrorMessage(T("user.cannotChangeOwnRole"));
+                        return View(dto);
+                    }
+                }
+
+                if (!ModelState.IsValid)
+                    return View(dto);
 
                 _mapper.Map(dto, user);
                 await _userService.UpdateAsync(user);
@@ -205,16 +368,51 @@ namespace DigitalSignage.Controllers
         }
 
         // GET: User/Delete/5
-        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
+                var currentUserId = GetCurrentUserId();
+                var isSystemAdmin = await _authService.IsSystemAdminAsync(currentUserId);
+
+                // Kendini silemez
+                if (id == currentUserId)
+                {
+                    AddErrorMessage(T("user.cannotDeleteSelf"));
+                    return RedirectToAction(nameof(Index));
+                }
+
                 var user = await _userService.GetByIdAsync(id);
                 if (user == null)
                 {
                     AddErrorMessage(T("user.notFound"));
                     return RedirectToAction(nameof(Index));
+                }
+
+                // Son SystemAdmin silinemez kontrolü
+                if (user.IsSystemAdmin)
+                {
+                    var systemAdminCount = await _userService.CountSystemAdminsAsync();
+                    if (systemAdminCount <= 1)
+                    {
+                        AddErrorMessage(T("user.cannotDeleteLastSystemAdmin"));
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
+
+                // Yetki kontrolü
+                if (!isSystemAdmin)
+                {
+                    // CompanyAdmin'in yetki kontrolü
+                    var targetUserCompanyIds = await _userService.GetUserCompanyIdsAsync(id);
+                    var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+
+                    // Target user'ın şirketi, current user'ın admin olduğu şirketlerden biri mi?
+                    if (!targetUserCompanyIds.Any(c => adminCompanyIds.Contains(c)))
+                    {
+                        AddErrorMessage(T("error.unauthorized"));
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
 
                 var viewModel = _mapper.Map<UserViewModel>(user);
@@ -230,11 +428,52 @@ namespace DigitalSignage.Controllers
         // POST: User/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SystemAdmin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try
             {
+                var currentUserId = GetCurrentUserId();
+                var isSystemAdmin = await _authService.IsSystemAdminAsync(currentUserId);
+
+                // Kendini silemez
+                if (id == currentUserId)
+                {
+                    AddErrorMessage(T("user.cannotDeleteSelf"));
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var user = await _userService.GetByIdAsync(id);
+                if (user == null)
+                {
+                    AddErrorMessage(T("user.notFound"));
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Son SystemAdmin silinemez kontrolü
+                if (user.IsSystemAdmin)
+                {
+                    var systemAdminCount = await _userService.CountSystemAdminsAsync();
+                    if (systemAdminCount <= 1)
+                    {
+                        AddErrorMessage(T("user.cannotDeleteLastSystemAdmin"));
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
+
+                // Yetki kontrolü
+                if (!isSystemAdmin)
+                {
+                    var targetUserCompanyIds = await _userService.GetUserCompanyIdsAsync(id);
+                    var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+
+                    // Target user'ın şirketi, current user'ın admin olduğu şirketlerden biri mi?
+                    if (!targetUserCompanyIds.Any(c => adminCompanyIds.Contains(c)))
+                    {
+                        AddErrorMessage(T("error.unauthorized"));
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
+
                 await _userService.DeleteAsync(id);
                 AddSuccessMessage(T("user.deletedSuccess"));
                 return RedirectToAction(nameof(Index));

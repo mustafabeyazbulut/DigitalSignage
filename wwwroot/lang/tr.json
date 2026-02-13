@@ -373,7 +373,11 @@
         "createdSuccess": "Kullanıcı başarıyla oluşturuldu.",
         "updatedSuccess": "Kullanıcı başarıyla güncellendi.",
         "deletedSuccess": "Kullanıcı başarıyla silindi.",
-        "notFound": "Kullanıcı bulunamadı."
+        "notFound": "Kullanıcı bulunamadı.",
+        "cannotAssignSystemAdmin": "Sistem Yöneticisi rolü atama yetkiniz yok.",
+        "cannotChangeOwnRole": "Kendi rolünüzü değiştiremezsiniz.",
+        "cannotDeleteSelf": "Kendi kullanıcınızı silemezsiniz.",
+        "cannotDeleteLastSystemAdmin": "Son Sistem Yöneticisi kullanıcısı silinemez."
     },
     "language": {
         "title": "Dil",

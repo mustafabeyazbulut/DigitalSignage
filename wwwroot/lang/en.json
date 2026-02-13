@@ -374,7 +374,11 @@
         "createdSuccess": "User created successfully.",
         "updatedSuccess": "User updated successfully.",
         "deletedSuccess": "User deleted successfully.",
-        "notFound": "User not found."
+        "notFound": "User not found.",
+        "cannotAssignSystemAdmin": "You do not have permission to assign System Administrator role.",
+        "cannotChangeOwnRole": "You cannot change your own role.",
+        "cannotDeleteSelf": "You cannot delete yourself.",
+        "cannotDeleteLastSystemAdmin": "Cannot delete the last System Administrator."
     },
     "language": {
         "title": "Language",

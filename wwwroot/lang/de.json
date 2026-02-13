@@ -373,7 +373,11 @@
         "createdSuccess": "Benutzer erfolgreich erstellt.",
         "updatedSuccess": "Benutzer erfolgreich aktualisiert.",
         "deletedSuccess": "Benutzer erfolgreich gelöscht.",
-        "notFound": "Benutzer nicht gefunden."
+        "notFound": "Benutzer nicht gefunden.",
+        "cannotAssignSystemAdmin": "Sie haben keine Berechtigung, die Systemadministratorrolle zuzuweisen.",
+        "cannotChangeOwnRole": "Sie können Ihre eigene Rolle nicht ändern.",
+        "cannotDeleteSelf": "Sie können sich nicht selbst löschen.",
+        "cannotDeleteLastSystemAdmin": "Der letzte Systemadministrator kann nicht gelöscht werden."
     },
     "language": {
         "title": "Sprache",
