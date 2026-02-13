@@ -64,8 +64,10 @@ namespace DigitalSignage.Controllers
                 {
                     defaultFallback = $"/{controllerName}/Index";
                 }
-                // For Profile/Settings, fallback to Home
-                else if (controllerName == "Account" && (actionName == "Profile" || actionName == "Settings" || actionName == "ChangePassword"))
+                // For Profile/Settings/AccessDenied/Login, fallback to Home
+                else if (controllerName == "Account" &&
+                        (actionName == "Profile" || actionName == "Settings" || actionName == "ChangePassword" ||
+                         actionName == "AccessDenied" || actionName == "Login"))
                 {
                     defaultFallback = "/Home/Index";
                 }
@@ -104,10 +106,11 @@ namespace DigitalSignage.Controllers
                 }
             };
 
-            // Special handling for Account controller (Profile, Settings, ChangePassword)
-            // These don't have Index action, so breadcrumb should be: Home > Profile/Settings
+            // Special handling for Account controller (Profile, Settings, ChangePassword, AccessDenied, Login)
+            // These don't have Index action, so breadcrumb should be: Home > Profile/Settings/AccessDenied
             bool isAccountSpecialAction = controllerName == "Account" &&
-                (actionName == "Profile" || actionName == "Settings" || actionName == "ChangePassword");
+                (actionName == "Profile" || actionName == "Settings" || actionName == "ChangePassword" ||
+                 actionName == "AccessDenied" || actionName == "Login");
 
             // Add controller-level breadcrumb
             if (!string.IsNullOrEmpty(controllerName) && controllerName != "Home" && !isAccountSpecialAction)
