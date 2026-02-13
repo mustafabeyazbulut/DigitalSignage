@@ -5,6 +5,12 @@
     var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
     string T(string key) => lang?.Get(locale, key) ?? key;
     ViewData["Title"] = T("user.title");
+
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var searchTerm = ViewBag.SearchTerm as string ?? "";
+    var sortBy = ViewBag.SortBy as string ?? "";
+    var sortOrder = ViewBag.SortOrder as string ?? "asc";
 }
 
 @section Styles {
@@ -24,61 +30,67 @@
         </div>
     </div>
 
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="row g-3">
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="form-control" placeholder="@T("common.search")..." value="@searchTerm">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">@T("common.search")</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @if (Model.Any())
     {
-        <!-- Toolbar: Search & Filters -->
-        <div class="table-toolbar">
-            <div class="table-search">
-                <i class="bi bi-search"></i>
-                <input type="text" placeholder="@T("common.search")..." data-table-search="#userTable">
-            </div>
-            <div class="table-filters">
-                <button class="table-filter-btn" onclick="TableFeatures.tables.get('#userTable').filters.clear(); TableFeatures.applyFilters('#userTable'); TableFeatures.render('#userTable');">
-                    <i class="bi bi-funnel"></i>
-                    @T("common.allItems")
-                </button>
-            </div>
-        </div>
-
-        <!-- Bulk Actions Bar -->
-        <div class="bulk-actions-bar" data-bulk-bar="#userTable">
-            <div class="bulk-actions-info">0 öğe seçildi</div>
-            <div class="bulk-actions-buttons">
-                <button class="bulk-action-btn danger" onclick="bulkDelete()">
-                    <i class="bi bi-trash"></i>
-                    @T("common.delete")
-                </button>
-                <button class="bulk-action-btn" onclick="TableFeatures.clearSelection('#userTable')">
-                    <i class="bi bi-x"></i>
-                    @T("common.cancel")
-                </button>
-            </div>
-        </div>
-
         <div class="table-container">
             <div class="table-responsive">
-                <table class="data-table" id="userTable">
+                <table class="data-table">
                     <thead>
                         <tr>
-                            <th style="width: 50px;">
-                                <input type="checkbox" class="table-checkbox" data-select-all="#userTable">
+                            <th>
+                                <a href="?search=@searchTerm&sortBy=UserName&sortOrder=@(sortBy == "UserName" && sortOrder == "asc" ? "desc" : "asc")" class="text-white text-decoration-none">
+                                    @T("user.userName")
+                                    @if (sortBy == "UserName")
+                                    {
+                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                    }
+                                </a>
                             </th>
-                            <th class="sortable">@T("user.userName")</th>
-                            <th class="sortable">@T("user.email")</th>
-                            <th class="sortable">@T("user.fullName")</th>
+                            <th>
+                                <a href="?search=@searchTerm&sortBy=Email&sortOrder=@(sortBy == "Email" && sortOrder == "asc" ? "desc" : "asc")" class="text-white text-decoration-none">
+                                    @T("user.email")
+                                    @if (sortBy == "Email")
+                                    {
+                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                    }
+                                </a>
+                            </th>
+                            <th>@T("user.fullName")</th>
                             <th>@T("common.status")</th>
                             <th>@T("user.type")</th>
-                            <th class="sortable">@T("common.createdDate")</th>
+                            <th>
+                                <a href="?search=@searchTerm&sortBy=CreatedDate&sortOrder=@(sortBy == "CreatedDate" && sortOrder == "asc" ? "desc" : "asc")" class="text-white text-decoration-none">
+                                    @T("common.createdDate")
+                                    @if (sortBy == "CreatedDate")
+                                    {
+                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                    }
+                                </a>
+                            </th>
                             <th>@T("common.actions")</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var user in Model)
                         {
-                            <tr data-row-id="@user.UserID">
-                                <td>
-                                    <input type="checkbox" class="table-checkbox" data-id="@user.UserID">
-                                </td>
+                            <tr>
                                 <td>@user.UserName</td>
                                 <td>@user.Email</td>
                                 <td>@user.FullName</td>
@@ -112,7 +124,7 @@
                                                 <i class="bi bi-eye"></i>
                                                 <span>@T("common.details")</span>
                                             </a>
-                                            <a asp-action="Edit" asp-route-id="@user.UserID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
+                                            <a asp-action="Edit" asp-route-id="@user.UserID" asp-route-returnUrl="@Url.Action("Index", new { search = searchTerm, sortBy = sortBy, sortOrder = sortOrder, page = currentPage })" class="action-dropdown-item action-edit">
                                                 <i class="bi bi-pencil"></i>
                                                 <span>@T("common.edit")</span>
                                             </a>
@@ -136,10 +148,29 @@
         </div>
 
         <!-- Pagination -->
-        <div class="table-pagination" data-pagination="#userTable">
-            <div class="pagination-info">0-0 / 0 öğe gösteriliyor</div>
-            <div class="pagination-controls"></div>
-        </div>
+        @if (totalPages > 1)
+        {
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage - 1)">
+                            @T("common.previous")
+                        </a>
+                    </li>
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@i">@i</a>
+                        </li>
+                    }
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage + 1)">
+                            @T("common.next")
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
     }
     else
     {
@@ -150,29 +181,3 @@
         </div>
     }
 </div>
-
-@section Scripts {
-    <script>
-        // Initialize table features
-        document.addEventListener('DOMContentLoaded', function() {
-            if (document.querySelector('#userTable')) {
-                TableFeatures.init('#userTable', {
-                    pageSize: 10
-                });
-            }
-        });
-
-        // Bulk delete function
-        function bulkDelete() {
-            const selected = TableFeatures.getSelectedRows('#userTable');
-            if (selected.length === 0) return;
-
-            if (confirm(`${selected.length} kullanıcıyı silmek istediğinize emin misiniz?`)) {
-                const ids = selected.map(row => row.querySelector('[data-id]').dataset.id);
-                console.log('Silmek için kullanıcı ID\'leri:', ids);
-                // TODO: Server'a bulk delete request gönder
-                alert('Toplu silme işlemi yapılacak: ' + ids.join(', '));
-            }
-        }
-    </script>
-}

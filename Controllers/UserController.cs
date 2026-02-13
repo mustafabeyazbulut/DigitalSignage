@@ -33,17 +33,61 @@ namespace DigitalSignage.Controllers
         }
 
         // GET: User
-        public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Index(string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
         {
             try
             {
-                var pagedResult = await _userService.GetUsersPagedAsync(page, pageSize);
-                var viewModels = _mapper.Map<List<UserViewModel>>(pagedResult.Items);
+                const int pageSize = 10;
 
-                ViewBag.TotalCount = pagedResult.TotalCount;
+                // Tüm kullanıcıları al
+                var allUsers = await _userService.GetAllAsync();
+                IEnumerable<Models.User> query = allUsers;
+
+                // Arama filtresi
+                if (!string.IsNullOrEmpty(search))
+                {
+                    search = search.ToLower();
+                    query = query.Where(u =>
+                        (u.UserName != null && u.UserName.ToLower().Contains(search)) ||
+                        (u.Email != null && u.Email.ToLower().Contains(search)) ||
+                        (u.FirstName != null && u.FirstName.ToLower().Contains(search)) ||
+                        (u.LastName != null && u.LastName.ToLower().Contains(search))
+                    );
+                }
+
+                // Sıralama
+                query = sortBy switch
+                {
+                    "UserName" => sortOrder == "asc"
+                        ? query.OrderBy(u => u.UserName)
+                        : query.OrderByDescending(u => u.UserName),
+                    "Email" => sortOrder == "asc"
+                        ? query.OrderBy(u => u.Email)
+                        : query.OrderByDescending(u => u.Email),
+                    "CreatedDate" => sortOrder == "asc"
+                        ? query.OrderBy(u => u.CreatedDate)
+                        : query.OrderByDescending(u => u.CreatedDate),
+                    _ => query.OrderBy(u => u.UserName)
+                };
+
+                // Toplam sayı
+                var totalCount = query.Count();
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+                // Pagination
+                var users = query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                var viewModels = _mapper.Map<List<UserViewModel>>(users);
+
+                // ViewBag
                 ViewBag.CurrentPage = page;
-                ViewBag.PageSize = pageSize;
-                ViewBag.TotalPages = pagedResult.TotalPages;
+                ViewBag.TotalPages = totalPages;
+                ViewBag.SearchTerm = search;
+                ViewBag.SortBy = sortBy;
+                ViewBag.SortOrder = sortOrder;
 
                 return View(viewModels);
             }

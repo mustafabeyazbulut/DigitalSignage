@@ -1421,15 +1421,191 @@ const TableActionDropdown = {
 - **aba000b** - Department View Pages to dropdown
 - **cfca471** - Layout revert to card grid
 
+### Server-Side Arama, Sıralama ve Sayfalama ✅
+
+**13 Şubat 2026** - Server-side veri işleme uygulandı (User/Index)
+
+Tüm filtreleme, sıralama ve sayfalama işlemleri sunucu tarafında yapılmaktadır. Client-side yaklaşım tüm verileri yükler ve bu performans sorunu yaratır.
+
+#### Controller Implementasyonu
+
+```csharp
+public async Task<IActionResult> Index(string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
+{
+    const int pageSize = 10;
+
+    // Tüm kullanıcıları al
+    var allUsers = await _userService.GetAllAsync();
+    IEnumerable<User> query = allUsers;
+
+    // ✓ Server-side arama
+    if (!string.IsNullOrEmpty(search))
+    {
+        search = search.ToLower();
+        query = query.Where(u =>
+            (u.UserName != null && u.UserName.ToLower().Contains(search)) ||
+            (u.Email != null && u.Email.ToLower().Contains(search)) ||
+            (u.FullName != null && u.FullName.ToLower().Contains(search))
+        );
+    }
+
+    // ✓ Server-side sıralama
+    query = sortBy switch
+    {
+        "UserName" => sortOrder == "asc"
+            ? query.OrderBy(u => u.UserName)
+            : query.OrderByDescending(u => u.UserName),
+        "Email" => sortOrder == "asc"
+            ? query.OrderBy(u => u.Email)
+            : query.OrderByDescending(u => u.Email),
+        "CreatedDate" => sortOrder == "asc"
+            ? query.OrderBy(u => u.CreatedDate)
+            : query.OrderByDescending(u => u.CreatedDate),
+        _ => query.OrderBy(u => u.UserName)
+    };
+
+    // Toplam sayı ve sayfa hesaplama
+    var totalCount = query.Count();
+    var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+    // ✓ Server-side pagination
+    var users = query
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToList();
+
+    var viewModels = _mapper.Map<List<UserViewModel>>(users);
+
+    // ViewBag ile parametreleri view'a gönder
+    ViewBag.CurrentPage = page;
+    ViewBag.TotalPages = totalPages;
+    ViewBag.SearchTerm = search;
+    ViewBag.SortBy = sortBy;
+    ViewBag.SortOrder = sortOrder;
+
+    return View(viewModels);
+}
+```
+
+#### View: Arama Formu
+
+```razor
+<!-- Search Form - GET method ile server-side -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-3">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" class="form-control"
+                           placeholder="@T("common.search")..." value="@searchTerm">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">@T("common.search")</button>
+            </div>
+        </form>
+    </div>
+</div>
+```
+
+#### View: Sıralanabilir Başlıklar
+
+```razor
+<thead>
+    <tr>
+        <th>
+            <a href="?search=@searchTerm&sortBy=UserName&sortOrder=@(sortBy == "UserName" && sortOrder == "asc" ? "desc" : "asc")"
+               class="text-white text-decoration-none">
+                @T("user.userName")
+                @if (sortBy == "UserName")
+                {
+                    <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                }
+            </a>
+        </th>
+        <th>
+            <a href="?search=@searchTerm&sortBy=Email&sortOrder=@(sortBy == "Email" && sortOrder == "asc" ? "desc" : "asc")"
+               class="text-white text-decoration-none">
+                @T("user.email")
+                @if (sortBy == "Email")
+                {
+                    <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                }
+            </a>
+        </th>
+        <th>@T("user.fullName")</th>
+        <th>@T("common.status")</th>
+        <th>@T("user.type")</th>
+        <th>
+            <a href="?search=@searchTerm&sortBy=CreatedDate&sortOrder=@(sortBy == "CreatedDate" && sortOrder == "asc" ? "desc" : "asc")"
+               class="text-white text-decoration-none">
+                @T("common.createdDate")
+                @if (sortBy == "CreatedDate")
+                {
+                    <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                }
+            </a>
+        </th>
+        <th>@T("common.actions")</th>
+    </tr>
+</thead>
+```
+
+#### View: Pagination
+
+```razor
+<!-- Pagination -->
+@if (totalPages > 1)
+{
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage - 1)">
+                    @T("common.previous")
+                </a>
+            </li>
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@i">@i</a>
+                </li>
+            }
+            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage + 1)">
+                    @T("common.next")
+                </a>
+            </li>
+        </ul>
+    </nav>
+}
+```
+
+#### Avantajlar
+
+✅ **Performans**: Sadece gerekli veri yüklenir (10 kayıt), tümü değil (10,000 kayıt)
+✅ **Network**: Daha az veri transfer edilir
+✅ **Memory**: Browser'da tüm veri tutulmaz
+✅ **Scalability**: Büyük veri setleriyle çalışır
+✅ **SEO**: URL paylaşılabilir (`?search=test&page=2`)
+✅ **Mobile Friendly**: Düşük bandwidth'de çalışır
+
+#### Uygulanacak Sayfalar
+
+- [x] **User/Index.cshtml** - İlk implementasyon ✅
+- [ ] **Company/Index.cshtml** - Planlı
+- [ ] **Department/Index.cshtml** - Planlı
+- [ ] **Page/Index.cshtml** - Planlı
+- [ ] **Content/Index.cshtml** - Planlı
+- [ ] **Schedule/Index.cshtml** - Planlı
+
 ### Gelecek İyileştirmeler
 
-- [ ] Tablo sıralama (sortable columns)
-- [ ] Tablo filtreleme (search/filter)
 - [ ] Bulk actions (select multiple rows)
 - [ ] Export (CSV, Excel, PDF)
 - [ ] Column visibility toggle
 - [ ] Saved filters/views
-- [ ] Pagination styles
+- [ ] Advanced filters (date range, multi-select)
 
 ---
 

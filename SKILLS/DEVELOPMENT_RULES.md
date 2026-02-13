@@ -612,26 +612,193 @@ public async Task<CompanyConfiguration> GetConfigAsync(int companyId)
 _cache.Set(cacheKey, data);  // ✗ Hiç expire etmiyor
 ```
 
-### 8.2 Pagination
+### 8.2 Server-Side Filtreleme, Sıralama ve Sayfalama (ZORUNLU)
+
+**KURAL: FİLTRELEME, SIRALAMA VE SAYFALAMA SUNUCU TARAFINDA YAPILMALIDIR**
+
+Tüm liste sayfaları (Index view'ları) için filtreleme, sıralama ve sayfalama işlemleri server-side yapılmalıdır. Client-side yaklaşım tüm verileri yükler ve bu performans sorunu yaratır.
+
+#### ✅ DOĞRU - Server-Side Yaklaşım
 
 ```csharp
-// ✓ DOĞRU - Pagination kullan
+// Controller - Server-side işlemler
 [HttpGet]
-public async Task<IActionResult> GetPages(
-    [FromQuery] int pageNumber = 1,
-    [FromQuery] int pageSize = 10)
+public async Task<IActionResult> Index(string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
 {
-    const int maxPageSize = 100;
-    if (pageSize > maxPageSize)
-        pageSize = maxPageSize;
+    const int pageSize = 10;
 
-    var pages = await _pageService.GetPagedAsync(pageNumber, pageSize);
-    return Ok(pages);
+    // Tüm kullanıcıları al
+    var allUsers = await _userService.GetAllAsync();
+    IEnumerable<User> query = allUsers;
+
+    // ✓ Server-side arama filtresi
+    if (!string.IsNullOrEmpty(search))
+    {
+        search = search.ToLower();
+        query = query.Where(u =>
+            (u.UserName != null && u.UserName.ToLower().Contains(search)) ||
+            (u.Email != null && u.Email.ToLower().Contains(search))
+        );
+    }
+
+    // ✓ Server-side sıralama
+    query = sortBy switch
+    {
+        "UserName" => sortOrder == "asc"
+            ? query.OrderBy(u => u.UserName)
+            : query.OrderByDescending(u => u.UserName),
+        "Email" => sortOrder == "asc"
+            ? query.OrderBy(u => u.Email)
+            : query.OrderByDescending(u => u.Email),
+        _ => query.OrderBy(u => u.UserName)
+    };
+
+    // ✓ Server-side pagination
+    var totalCount = query.Count();
+    var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+    var users = query
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToList();
+
+    // ViewBag ile view'a parametre gönder
+    ViewBag.CurrentPage = page;
+    ViewBag.TotalPages = totalPages;
+    ViewBag.SearchTerm = search;
+    ViewBag.SortBy = sortBy;
+    ViewBag.SortOrder = sortOrder;
+
+    return View(users);
 }
-
-// ✗ YASAKLANDI - Tüm records'ı fetch etme
-var pages = await _pageService.GetAllAsync();  // ✗ Büyük veri = crash
 ```
+
+```html
+<!-- View - GET form ile arama -->
+<form method="get" asp-action="Index" class="row g-3">
+    <div class="col-md-10">
+        <input type="text" name="search" class="form-control"
+               placeholder="Ara..." value="@ViewBag.SearchTerm">
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Ara</button>
+    </div>
+</form>
+
+<!-- Sıralanabilir tablo başlığı -->
+<th>
+    <a href="?search=@ViewBag.SearchTerm&sortBy=UserName&sortOrder=@(ViewBag.SortBy == "UserName" && ViewBag.SortOrder == "asc" ? "desc" : "asc")">
+        Kullanıcı Adı
+        @if (ViewBag.SortBy == "UserName")
+        {
+            <i class="bi bi-arrow-@(ViewBag.SortOrder == "asc" ? "up" : "down")"></i>
+        }
+    </a>
+</th>
+
+<!-- Pagination -->
+<nav>
+    <ul class="pagination">
+        <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+            <a class="page-link" href="?search=@ViewBag.SearchTerm&sortBy=@ViewBag.SortBy&sortOrder=@ViewBag.SortOrder&page=@(ViewBag.CurrentPage - 1)">
+                Önceki
+            </a>
+        </li>
+        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+        {
+            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                <a class="page-link" href="?search=@ViewBag.SearchTerm&sortBy=@ViewBag.SortBy&sortOrder=@ViewBag.SortOrder&page=@i">@i</a>
+            </li>
+        }
+        <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+            <a class="page-link" href="?search=@ViewBag.SearchTerm&sortBy=@ViewBag.SortBy&sortOrder=@ViewBag.SortOrder&page=@(ViewBag.CurrentPage + 1)">
+                Sonraki
+            </a>
+        </li>
+    </ul>
+</nav>
+```
+
+#### ❌ YASAKLANDI - Client-Side Yaklaşım
+
+```javascript
+// ✗ JavaScript ile client-side filtreleme - YASAKLANDI
+const TableFeatures = {
+    init: function(tableId) {
+        // ✗ Tüm veriler yükleniyor - performans sorunu
+        const allRows = table.querySelectorAll('tbody tr');
+
+        // ✗ JavaScript ile filtreleme
+        searchInput.addEventListener('input', (e) => {
+            allRows.forEach(row => {
+                if (row.textContent.includes(e.target.value)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    }
+};
+```
+
+```html
+<!-- ✗ YASAKLANDI - Client-side için tüm veriler HTML'de -->
+<table id="users-table">
+    <tbody>
+        @foreach (var user in Model)  <!-- ✗ Tüm 10,000 kullanıcı yükleniyor -->
+        {
+            <tr>
+                <td>@user.UserName</td>
+                <td>@user.Email</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    // ✗ YASAKLANDI - Client-side table features
+    TableFeatures.init('#users-table');
+</script>
+```
+
+#### 📋 Server-Side Avantajları
+
+1. **Performans**: Sadece gerekli veri yüklenir (örn: 10 kayıt), tümü değil (10,000 kayıt)
+2. **Network**: Daha az veri transfer edilir
+3. **Memory**: Browser memory'sinde tüm veri tutulmaz
+4. **Scalability**: Büyük veri setleriyle çalışabilir
+5. **SEO**: Query string ile URL paylaşılabilir (`?search=test&page=2`)
+
+#### ⚠️ Bu Kural Neden Önemli?
+
+```
+Client-Side Yaklaşım:
+❌ Tüm 10,000 kullanıcı → HTML (5MB) → Browser
+❌ JavaScript filtreleme → Tüm 10,000 kayıt memory'de
+❌ Sayfa yüklenirken 5MB transfer
+❌ Mobile'da crash riski yüksek
+
+Server-Side Yaklaşım:
+✅ Sadece 10 kullanıcı → HTML (50KB) → Browser
+✅ Database filtreleme → Optimize edilmiş query
+✅ Sayfa yüklenirken 50KB transfer
+✅ Mobile'da sorunsuz çalışır
+```
+
+#### 🚨 İhlal Durumında
+
+```
+PR Review sürecinde:
+1. Client-side filtreleme/pagination tespit edilirse → PR rejected
+2. Kod server-side yaklaşıma dönüştürülür
+3. JavaScript table features kaldırılır
+4. GET form ve query string parametreleri eklenir
+5. Review tekrarlanır
+6. Onaylandıktan sonra merge edilir
+```
+
+**SONUÇ: Tüm filtreleme, sıralama ve sayfalama işlemleri server-side yapılmalıdır. Client-side yaklaşım yasaklanmıştır.**
 
 ---
 
