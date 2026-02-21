@@ -1,23 +1,23 @@
-# Digital Signage Platform v2.2 Professional Edition
+# Digital Signage Platform v2.3 Professional Edition
 
 Enterprise-grade multi-tenant digital signage management system with advanced role-based authorization built with ASP.NET Core 9.
 
-## 🌟 Features
+## Features
 
-- **Multi-Tenant Architecture**: Company → Department → Page hierarchy
+- **Multi-Tenant Architecture**: Company > Department > Page hierarchy
 - **Advanced Authorization System**:
-  - Multi-level role management (SystemAdmin → CompanyAdmin → DepartmentManager → Viewer)
+  - Multi-level role management (SystemAdmin > CompanyAdmin > DepartmentManager > Editor > Viewer)
   - Company-level and Department-level permissions
   - Hierarchical access control with automatic inheritance
   - Cache-optimized permission checks
 - **Office 365 Integration**: Azure AD authentication with SSO
-- **Dynamic Grid Layouts**: 1-12x1-12 customizable grid system
+- **Dynamic Grid Layouts**: 1-12x1-12 customizable grid system with Design page
+- **Auto-Generated Page Codes**: Sequential PG-00001 pattern
 - **Multi-Language Support**: English, Turkish, German
-- **CRUD Operations**: Complete management for all entities
 - **Repository Pattern**: Unit of Work implementation
 - **JSON-based Localization**: Easy translation management
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -29,32 +29,32 @@ Enterprise-grade multi-tenant digital signage management system with advanced ro
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/DigitalSignage.git
+git clone https://github.com/mustafabeyazbulut/DigitalSignage.git
 cd DigitalSignage
 
 # Restore dependencies
 dotnet restore
 ```
 
-### ⚠️ Database Configuration
+### Database Configuration
 
-**appsettings.json dosyası boş connection string içerir (Git'e gider).**
+**appsettings.json contains an empty connection string (committed to Git).**
 
-Kendi local ayarlarınızı yapın:
+Configure your local settings:
 
-#### Seçenek A: appsettings.Development.json (Önerilen)
+#### Option A: appsettings.Development.json (Recommended)
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost,1433;Database=DigitalSignageDb;User Id=sa;Password=SENIN_SIFREN;TrustServerCertificate=True;MultipleActiveResultSets=true;Encrypt=false;Connection Timeout=30"
+    "DefaultConnection": "Server=localhost,1433;Database=DigitalSignageDb;User Id=sa;Password=YOUR_PASSWORD;TrustServerCertificate=True;MultipleActiveResultSets=true;Encrypt=false;Connection Timeout=30"
   }
 }
 ```
-**NOT:** Bu dosya `.gitignore`'da - Git'e GİTMEZ ✅
+**NOTE:** This file is in `.gitignore` - it will NOT be pushed to Git.
 
-#### Seçenek B: User Secrets (En Güvenli)
+#### Option B: User Secrets (Most Secure)
 ```bash
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=DigitalSignageDb;User Id=sa;Password=SENIN_SIFREN;..."
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=DigitalSignageDb;User Id=sa;Password=YOUR_PASSWORD;..."
 ```
 
 ### Database Update & Run
@@ -67,100 +67,93 @@ dotnet ef database update
 dotnet run
 ```
 
-**İlk çalıştırmada:**
-- Admin kullanıcısı otomatik oluşturulur
-- **Rastgele şifre** konsola yazılır (kaydedin!)
-- Örnek şirket ve departmanlar oluşturulur
+**On first run:**
+- Admin user is automatically created
+- **Random password** is printed to console (save it!)
+- Sample company and departments are created
 
 Access at: `http://localhost:5259`
 
-## 📚 Documentation
-
-See [.SKILLS](./.SKILLS/) folder for detailed documentation:
-
-- [Architecture](./.SKILLS/SKILLS/01_ARCHITECTURE.md)
-- [Database Schema](./.SKILLS/SKILLS/02_DATABASE_SCHEMA.md)
-- [Multi-Tenant](./.SKILLS/SKILLS/08_MULTI_TENANT.md)
-- [Localization](./.SKILLS/SKILLS/11_LOCALIZATION.md)
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend**: ASP.NET Core 9 MVC
 - **ORM**: Entity Framework Core 9
 - **Database**: SQL Server 2022+
 - **Authentication**: Cookie + OpenID Connect (Office 365)
+- **Validation**: FluentValidation
 - **Mapping**: AutoMapper
 - **Localization**: JSON-based (wwwroot/lang/)
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 DigitalSignage/
-├── Controllers/         # MVC Controllers
-├── Views/              # Razor Views
-├── Models/             # Entity Models
-├── ViewModels/         # View Models
-├── DTOs/               # Data Transfer Objects
-├── Services/           # Business Logic
+├── Controllers/         # MVC Controllers (BaseController inherited)
+├── Views/               # Razor Views
+├── Models/              # Entity Models
+├── ViewModels/          # View Models
+├── DTOs/                # Data Transfer Objects
+├── Validators/          # FluentValidation validators
+├── Services/            # Business Logic
 ├── Data/
-│   ├── Repositories/   # Data Access Layer
-│   └── Migrations/     # EF Migrations
-├── Mappings/           # AutoMapper Profiles
+│   ├── Repositories/    # Data Access Layer
+│   └── AppDbContext.cs  # EF Core DbContext
+├── Migrations/          # EF Migrations
+├── Mappings/            # AutoMapper Profiles
+├── Middleware/           # TenantResolver etc.
+├── ViewComponents/      # CompanySelector etc.
 ├── wwwroot/
-│   └── lang/          # Localization files (en, tr, de)
-└── .SKILLS/           # Documentation
+│   └── lang/            # Localization files (en, tr, de)
+└── Helpers/             # PasswordHelper etc.
 ```
 
-## 🌐 Multi-Language Support
+## Multi-Language Support
 
 The application supports 3 languages:
-- 🇬🇧 English (en)
-- 🇹🇷 Türkçe (tr)
-- 🇩🇪 Deutsch (de)
+- English (en)
+- Turkish (tr)
+- German (de)
 
 Translation files: `wwwroot/lang/{locale}.json`
 
-## 🔐 Security
+## Security
 
-- Role-based authorization (SystemAdmin, CompanyAdmin, DepartmentManager)
-- Multi-tenant data isolation
-- Input validation with DTOs
-- SQL injection prevention
+- Role-based authorization (SystemAdmin, CompanyAdmin, DepartmentManager, Editor, Viewer)
+- Multi-tenant data isolation at service/controller level
+- Input validation with FluentValidation DTOs
+- CSRF protection with ValidateAntiForgeryToken
+- Security headers (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, CSP)
+- Password hashing with BCrypt
+- Last SystemAdmin protection (cannot delete/deactivate)
 
-## 📝 Recent Updates
+## Recent Updates
+
+### v2.3.0 (2026-02-22)
+- Page creation flow redesigned: auto-generated PageCode (PG-00001), layout selection moved to Design page
+- LayoutID made nullable - pages can exist without a layout initially
+- Unique indexes added for PageCode and PageName
+- Layout selector partial view with grid previews
+- UserName field removed from entire codebase - Email is the unique identifier
+- CompanySelectorViewComponent fixed to filter by user authorization
+- Company selector and language switcher positions swapped in navbar
+- Obsolete SKILLS documentation files cleaned up
 
 ### v2.2.1 (2026-02-12)
-- ✅ **Email Notification Settings** - Users can enable/disable email notifications
-- ✅ Profile page fully localized (EN, TR, DE)
-- ✅ Settings page fully localized with functional email toggle
-- ✅ User model extended with EmailNotificationsEnabled field
-- ✅ 25+ new translations for profile and settings pages
+- Email Notification Settings - Users can enable/disable email notifications
+- Profile and Settings pages fully localized (EN, TR, DE)
 
 ### v2.2.0 (2026-02-12)
-- ✅ **Multi-Level Authorization System** implemented
-- ✅ UserDepartmentRole model + repository + service layer
-- ✅ Role management UI with AJAX-based department loading
-- ✅ AuthorizationService with hierarchical permission checks
-- ✅ 51 new translations for role management (EN, TR, DE)
-- ✅ Comprehensive authorization documentation (12_AUTHORIZATION.md)
-- ✅ Cache-optimized permission checks (10-15 min TTL)
+- Multi-Level Authorization System implemented
+- UserDepartmentRole model + repository + service layer
+- Role management UI with AJAX-based department loading
+- AuthorizationService with hierarchical permission checks
+- Cache-optimized permission checks (10-15 min TTL)
 
-### v2.1.1 (2025-02-12)
-- ✅ User module fully localized (EN, TR, DE)
-- ✅ UpdateUserDTO added for proper update operations
-- ✅ Error.cshtml & AccessDenied.cshtml localized
-- ✅ 93 new translations added
-- ✅ All views converted to multi-language support
-
-## 🤝 Contributing
-
-See [CONTRIBUTING.md](./.SKILLS/CONTRIBUTING.md) for development guidelines.
-
-## 📄 License
+## License
 
 Proprietary - All rights reserved
 
 ---
 
-**Version:** 2.2.1
-**Last Updated:** February 12, 2026
+**Version:** 2.3.0
+**Last Updated:** February 22, 2026
