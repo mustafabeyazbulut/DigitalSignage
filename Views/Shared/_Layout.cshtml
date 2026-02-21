@@ -141,10 +141,17 @@
                         </li>
 
                         <!-- User Profile -->
+                        @{
+                            var firstName = User.FindFirst("FirstName")?.Value ?? "";
+                            var lastName = User.FindFirst("LastName")?.Value ?? "";
+                            var displayName = !string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName)
+                                ? $"{firstName} {lastName}".Trim()
+                                : User.Identity?.Name ?? "User";
+                        }
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-user-circle fs-4 me-2 text-secondary"></i>
-                                <span>@(User.Identity?.Name ?? "User")</span>
+                                <span>@displayName</span>
                                 @if (User.FindFirst("IsSystemAdmin")?.Value == "True")
                                 {
                                     <span class="badge bg-danger ms-2 small">Admin</span>
@@ -152,7 +159,7 @@
                             </a>
                             <div class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdown">
                                 <h6 class="dropdown-header">
-                                    <i class="fas fa-user me-1"></i> @(User.Identity?.Name ?? "User")
+                                    <i class="fas fa-user me-1"></i> @displayName
                                 </h6>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" asp-controller="Account" asp-action="Profile">

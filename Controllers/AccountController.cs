@@ -59,6 +59,8 @@ namespace DigitalSignage.Controllers
                     new Claim(ClaimTypes.Name, user.Email),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim("UserId", user.UserID.ToString()),
+                    new Claim("FirstName", user.FirstName ?? ""),
+                    new Claim("LastName", user.LastName ?? ""),
                     new Claim("IsSystemAdmin", user.IsSystemAdmin.ToString()),
                     new Claim("AuthMethod", "Local")
                 };
@@ -153,6 +155,8 @@ namespace DigitalSignage.Controllers
                 new Claim(ClaimTypes.Name, existingUser.Email),
                 new Claim(ClaimTypes.Email, existingUser.Email),
                 new Claim("UserId", existingUser.UserID.ToString()),
+                new Claim("FirstName", existingUser.FirstName ?? ""),
+                new Claim("LastName", existingUser.LastName ?? ""),
                 new Claim("IsSystemAdmin", existingUser.IsSystemAdmin.ToString()),
                 new Claim("AzureAdObjectId", objectId),
                 new Claim("AuthMethod", "AzureAD")
