@@ -84,8 +84,28 @@ namespace DigitalSignage.Controllers
                     allPages = pageList;
                 }
 
-                ViewBag.CanEdit = isSystemAdmin || await _authService.HasAnyCompanyAdminRoleAsync(userId);
-                ViewBag.CanDelete = ViewBag.CanEdit;
+                // Kullanıcının herhangi bir departmanda edit yetkisi var mı kontrol et
+                var canEdit = isSystemAdmin || await _authService.HasAnyCompanyAdminRoleAsync(userId);
+                if (!canEdit)
+                {
+                    // DepartmentManager/Editor rolü olan kullanıcılar da sayfa oluşturabilir
+                    var userCompanies = await _authService.GetUserCompaniesAsync(userId);
+                    foreach (var company in userCompanies)
+                    {
+                        var depts = await _authService.GetUserDepartmentsAsync(userId, company.CompanyID);
+                        foreach (var dept in depts)
+                        {
+                            if (await _authService.CanEditInDepartmentAsync(userId, dept.DepartmentID))
+                            {
+                                canEdit = true;
+                                break;
+                            }
+                        }
+                        if (canEdit) break;
+                    }
+                }
+                ViewBag.CanEdit = canEdit;
+                ViewBag.CanDelete = isSystemAdmin || await _authService.HasAnyCompanyAdminRoleAsync(userId);
             }
 
             IEnumerable<Page> query = allPages;
@@ -143,11 +163,12 @@ namespace DigitalSignage.Controllers
             }
             else
             {
-                if (!await _authService.IsSystemAdminAsync(userId) &&
-                    !await _authService.HasAnyCompanyAdminRoleAsync(userId))
-                    return AccessDenied();
-
                 await LoadAccessibleDepartmentsAsync(userId);
+
+                // Erişilebilir departman yoksa yetki yok demektir
+                var departments = ViewBag.Departments as List<Department>;
+                if (departments == null || !departments.Any())
+                    return AccessDenied();
             }
 
             return View();
