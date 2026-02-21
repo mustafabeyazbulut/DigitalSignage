@@ -183,9 +183,14 @@ namespace DigitalSignage.Controllers
             if (!await _authService.CanEditInDepartmentAsync(userId, page.DepartmentID))
                 return AccessDenied();
 
-            // PageCode ve LayoutID otomatik atanacak, validation'dan çıkar
+            // PageCode ve LayoutID otomatik atanacak, navigation property'ler bind edilmiyor
             ModelState.Remove("PageCode");
             ModelState.Remove("LayoutID");
+            ModelState.Remove("Department");
+            ModelState.Remove("Layout");
+            ModelState.Remove("PageContents");
+            ModelState.Remove("PageSections");
+            ModelState.Remove("SchedulePages");
 
             if (ModelState.IsValid)
             {
@@ -304,9 +309,14 @@ namespace DigitalSignage.Controllers
             if (!await _authService.CanEditPageAsync(userId, id))
                 return AccessDenied();
 
-            // PageCode readonly, LayoutID Design'dan değiştirilecek
+            // PageCode readonly, LayoutID Design'dan değiştirilecek, navigation property'ler bind edilmiyor
             ModelState.Remove("PageCode");
             ModelState.Remove("LayoutID");
+            ModelState.Remove("Department");
+            ModelState.Remove("Layout");
+            ModelState.Remove("PageContents");
+            ModelState.Remove("PageSections");
+            ModelState.Remove("SchedulePages");
 
             if (ModelState.IsValid)
             {
