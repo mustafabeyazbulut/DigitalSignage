@@ -19,7 +19,8 @@
       "Bash(python:*)",
       "Bash(git commit:*)",
       "Bash(dotnet ef database update:*)",
-      "Bash(Select-String -Pattern \"error\" -Context 2,2)"
+      "Bash(Select-String -Pattern \"error\" -Context 2,2)",
+      "Bash(cd:*)"
     ]
   }
 }
