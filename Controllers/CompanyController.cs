@@ -1,27 +1,35 @@
 using DigitalSignage.Models;
 using DigitalSignage.Services;
 using Microsoft.AspNetCore.Mvc;
+using AuthService = DigitalSignage.Services.IAuthorizationService;
 
 namespace DigitalSignage.Controllers
 {
     public class CompanyController : BaseController
     {
         private readonly ICompanyService _companyService;
+        private readonly AuthService _authService;
 
-        public CompanyController(ICompanyService companyService)
+        public CompanyController(ICompanyService companyService, AuthService authService)
         {
             _companyService = companyService;
+            _authService = authService;
         }
 
         public async Task<IActionResult> Index(string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
         {
+            var userId = GetCurrentUserId();
+            var isSystemAdmin = await _authService.IsSystemAdminAsync(userId);
+
+            // Sadece SystemAdmin şirket listesini görebilir
+            if (!isSystemAdmin)
+                return AccessDenied();
+
             const int pageSize = 10;
 
-            // Tüm şirketleri al
             var allCompanies = await _companyService.GetAllAsync();
             IEnumerable<Company> query = allCompanies;
 
-            // Arama filtresi
             if (!string.IsNullOrEmpty(search))
             {
                 search = search.ToLower();
@@ -32,7 +40,6 @@ namespace DigitalSignage.Controllers
                 );
             }
 
-            // Sıralama
             query = sortBy switch
             {
                 "CompanyName" => sortOrder == "asc"
@@ -44,17 +51,14 @@ namespace DigitalSignage.Controllers
                 _ => query.OrderBy(c => c.CompanyName)
             };
 
-            // Toplam sayı ve sayfa hesaplama
             var totalCount = query.Count();
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-            // Pagination
             var companies = query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
 
-            // ViewBag
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.SearchTerm = search;
@@ -66,13 +70,29 @@ namespace DigitalSignage.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
+            var userId = GetCurrentUserId();
+
+            // SystemAdmin veya o şirketin CompanyAdmin'i görebilir
+            if (!await _authService.IsCompanyAdminAsync(userId, id))
+                return AccessDenied();
+
             var company = await _companyService.GetByIdAsync(id);
-            if (company == null) return NotFound();
+            if (company == null)
+            {
+                AddErrorMessage(T("company.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(company);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.IsSystemAdminAsync(userId))
+                return AccessDenied();
+
             return View();
         }
 
@@ -80,6 +100,11 @@ namespace DigitalSignage.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Company company)
         {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.IsSystemAdminAsync(userId))
+                return AccessDenied();
+
             if (ModelState.IsValid)
             {
                 await _companyService.CreateAsync(company);
@@ -91,8 +116,18 @@ namespace DigitalSignage.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.IsSystemAdminAsync(userId))
+                return AccessDenied();
+
             var company = await _companyService.GetByIdAsync(id);
-            if (company == null) return NotFound();
+            if (company == null)
+            {
+                AddErrorMessage(T("company.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(company);
         }
 
@@ -100,7 +135,16 @@ namespace DigitalSignage.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Company company)
         {
-            if (id != company.CompanyID) return NotFound();
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.IsSystemAdminAsync(userId))
+                return AccessDenied();
+
+            if (id != company.CompanyID)
+            {
+                AddErrorMessage(T("company.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
 
             if (ModelState.IsValid)
             {
@@ -113,8 +157,18 @@ namespace DigitalSignage.Controllers
 
         public async Task<IActionResult> Delete(int id)
         {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.IsSystemAdminAsync(userId))
+                return AccessDenied();
+
             var company = await _companyService.GetByIdAsync(id);
-            if (company == null) return NotFound();
+            if (company == null)
+            {
+                AddErrorMessage(T("company.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(company);
         }
 
@@ -122,6 +176,11 @@ namespace DigitalSignage.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.IsSystemAdminAsync(userId))
+                return AccessDenied();
+
             await _companyService.DeleteAsync(id);
             AddSuccessMessage(T("company.deletedSuccess"));
             return RedirectToAction(nameof(Index));

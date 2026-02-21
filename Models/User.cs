@@ -10,10 +10,6 @@ namespace DigitalSignage.Models
         
         [Required]
         [MaxLength(255)]
-        public string UserName { get; set; } = string.Empty;
-        
-        [Required]
-        [MaxLength(255)]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
         

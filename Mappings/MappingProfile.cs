@@ -98,6 +98,8 @@ namespace DigitalSignage.Mappings
             CreateMap<UpdatePageDTO, Page>()
                 .ForMember(dest => dest.PageID, opt => opt.Ignore())
                 .ForMember(dest => dest.DepartmentID, opt => opt.Ignore())
+                .ForMember(dest => dest.PageCode, opt => opt.Ignore())
+                .ForMember(dest => dest.LayoutID, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedDate, opt => opt.Ignore());
 
             // Content Mappings
@@ -130,14 +132,13 @@ namespace DigitalSignage.Mappings
 
             // UserCompanyRole Mappings
             CreateMap<UserCompanyRole, UserCompanyRoleViewModel>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
                 .ForMember(dest => dest.CompanyName, opt => opt.MapFrom(src => src.Company != null ? src.Company.CompanyName : string.Empty))
                 .ForMember(dest => dest.IsOffice365User, opt => opt.MapFrom(src => src.User != null && src.User.IsOffice365User));
 
             // UserDepartmentRole Mappings
             CreateMap<UserDepartmentRole, UserDepartmentRoleDTO>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
                 .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department != null ? src.Department.DepartmentName : string.Empty));
             CreateMap<UserDepartmentRoleDTO, UserDepartmentRole>()
                 .ForMember(dest => dest.User, opt => opt.Ignore())

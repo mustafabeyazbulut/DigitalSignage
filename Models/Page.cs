@@ -21,7 +21,7 @@ namespace DigitalSignage.Models
         [MaxLength(50)]
         public string PageCode { get; set; } = string.Empty;
         
-        public int LayoutID { get; set; }
+        public int? LayoutID { get; set; }
         
         [MaxLength(500)]
         public string? Description { get; set; }
@@ -31,7 +31,7 @@ namespace DigitalSignage.Models
 
         // Navigation Properties
         public Department Department { get; set; } = null!;
-        public Layout Layout { get; set; } = null!;
+        public Layout? Layout { get; set; }
         public ICollection<PageContent> PageContents { get; set; } = new List<PageContent>();
         public ICollection<PageSection> PageSections { get; set; } = new List<PageSection>();
         public ICollection<SchedulePage> SchedulePages { get; set; } = new List<SchedulePage>();

@@ -1,7 +1,7 @@
 using DigitalSignage.Models;
 using DigitalSignage.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+using AuthService = DigitalSignage.Services.IAuthorizationService;
 
 namespace DigitalSignage.Controllers
 {
@@ -9,50 +9,52 @@ namespace DigitalSignage.Controllers
     {
         private readonly ILayoutService _layoutService;
         private readonly ICompanyService _companyService;
+        private readonly IDepartmentService _departmentService;
         private readonly ITenantContext _tenantContext;
+        private readonly AuthService _authService;
 
         public LayoutController(
             ILayoutService layoutService,
             ICompanyService companyService,
-            ITenantContext tenantContext)
+            IDepartmentService departmentService,
+            ITenantContext tenantContext,
+            AuthService authService)
         {
             _layoutService = layoutService;
             _companyService = companyService;
+            _departmentService = departmentService;
             _tenantContext = tenantContext;
+            _authService = authService;
         }
 
-        public async Task<IActionResult> Index(int? companyId)
+        public async Task<IActionResult> Index(int? companyId, int? departmentId)
         {
-            // Eğer companyId belirtilmemişse, session'dan veya ilk şirketi al
-            if (!companyId.HasValue)
+            var userId = GetCurrentUserId();
+            if (!await _authService.HasAnyRoleAsync(userId))
+                return AccessDenied();
+
+            // Departman bağlamı varsa, o departmanın şirketini kullan
+            if (departmentId.HasValue)
+            {
+                var dept = await _departmentService.GetByIdAsync(departmentId.Value);
+                if (dept == null || !await _authService.CanAccessDepartmentAsync(userId, departmentId.Value))
+                    return AccessDenied();
+
+                companyId = dept.CompanyID;
+                ViewBag.DepartmentContext = dept;
+            }
+            else if (!companyId.HasValue)
             {
                 companyId = HttpContext.Session.GetInt32("SelectedCompanyId");
-
-                // Session'da da yoksa, ilk aktif şirketi al
-                if (!companyId.HasValue)
-                {
-                    var companies = await _companyService.GetAllAsync();
-                    var firstCompany = companies.FirstOrDefault(c => c.IsActive);
-                    companyId = firstCompany?.CompanyID ?? 0;
-
-                    if (companyId > 0)
-                    {
-                        HttpContext.Session.SetInt32("SelectedCompanyId", companyId.Value);
-                    }
-                }
             }
-            else
+
+            // Şirket belirlenmiş ise erişim kontrolü yap
+            if (companyId.HasValue && companyId.Value > 0)
             {
-                // Yeni companyId seçilmişse session'a kaydet
-                HttpContext.Session.SetInt32("SelectedCompanyId", companyId.Value);
+                if (!await _authService.CanAccessCompanyAsync(userId, companyId.Value))
+                    return AccessDenied();
             }
 
-            // Şirket listesini ViewBag'e ekle (şirket değiştirici için)
-            var allCompanies = await _companyService.GetAllAsync();
-            ViewBag.Companies = new SelectList(allCompanies.Where(c => c.IsActive), "CompanyID", "CompanyName", companyId);
-            ViewBag.SelectedCompanyId = companyId;
-
-            // Seçili şirketin layout'larını getir
             if (companyId.HasValue && companyId.Value > 0)
             {
                 var layouts = await _layoutService.GetByCompanyIdAsync(companyId.Value);
@@ -64,18 +66,29 @@ namespace DigitalSignage.Controllers
 
         public async Task<IActionResult> Create(int? companyId)
         {
-            // Eğer companyId belirtilmemişse session'dan al
+            var userId = GetCurrentUserId();
+            if (!await _authService.HasAnyRoleAsync(userId))
+                return AccessDenied();
+
             if (!companyId.HasValue)
             {
                 companyId = HttpContext.Session.GetInt32("SelectedCompanyId");
             }
 
-            var companies = await _companyService.GetAllAsync();
-            ViewBag.Companies = new SelectList(companies.Where(c => c.IsActive), "CompanyID", "CompanyName", companyId);
+            // Şirket seçili değilse erişim reddedilir
+            if (!companyId.HasValue || companyId.Value <= 0)
+            {
+                AddErrorMessage(T("common.selectCompanyFirst"));
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Layout oluşturma için CompanyAdmin veya SystemAdmin gerekli
+            if (!await _authService.IsCompanyAdminAsync(userId, companyId.Value))
+                return AccessDenied();
 
             var layout = new Layout
             {
-                CompanyID = companyId ?? 0,
+                CompanyID = companyId.Value,
                 GridColumnsX = 2,
                 GridRowsY = 2,
                 IsActive = true
@@ -88,6 +101,11 @@ namespace DigitalSignage.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Layout layout)
         {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.IsCompanyAdminAsync(userId, layout.CompanyID))
+                return AccessDenied();
+
             if (ModelState.IsValid)
             {
                 layout.CreatedDate = DateTime.UtcNow;
@@ -96,18 +114,22 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index), new { companyId = layout.CompanyID });
             }
 
-            var companies = await _companyService.GetAllAsync();
-            ViewBag.Companies = new SelectList(companies.Where(c => c.IsActive), "CompanyID", "CompanyName", layout.CompanyID);
             return View(layout);
         }
 
         public async Task<IActionResult> Edit(int id)
         {
+            var userId = GetCurrentUserId();
             var layout = await _layoutService.GetByIdAsync(id);
-            if (layout == null) return NotFound();
 
-            var companies = await _companyService.GetAllAsync();
-            ViewBag.Companies = new SelectList(companies.Where(c => c.IsActive), "CompanyID", "CompanyName", layout.CompanyID);
+            if (layout == null)
+            {
+                AddErrorMessage(T("layout.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!await _authService.IsCompanyAdminAsync(userId, layout.CompanyID))
+                return AccessDenied();
 
             return View(layout);
         }
@@ -116,8 +138,16 @@ namespace DigitalSignage.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Layout layout)
         {
+            var userId = GetCurrentUserId();
+
             if (id != layout.LayoutID)
-                return BadRequest();
+            {
+                AddErrorMessage(T("layout.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!await _authService.IsCompanyAdminAsync(userId, layout.CompanyID))
+                return AccessDenied();
 
             if (ModelState.IsValid)
             {
@@ -126,19 +156,23 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index), new { companyId = layout.CompanyID });
             }
 
-            var companies = await _companyService.GetAllAsync();
-            ViewBag.Companies = new SelectList(companies.Where(c => c.IsActive), "CompanyID", "CompanyName", layout.CompanyID);
             return View(layout);
         }
 
         public async Task<IActionResult> Delete(int id)
         {
+            var userId = GetCurrentUserId();
             var layout = await _layoutService.GetByIdAsync(id);
+
             if (layout == null)
             {
                 AddErrorMessage(T("layout.notFound"));
                 return RedirectToAction(nameof(Index));
             }
+
+            if (!await _authService.IsCompanyAdminAsync(userId, layout.CompanyID))
+                return AccessDenied();
+
             return View(layout);
         }
 
@@ -146,15 +180,22 @@ namespace DigitalSignage.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var userId = GetCurrentUserId();
             var layout = await _layoutService.GetByIdAsync(id);
-            if (layout != null)
+
+            if (layout == null)
             {
-                var companyId = layout.CompanyID;
-                await _layoutService.DeleteAsync(id);
-                AddSuccessMessage(T("layout.deletedSuccess"));
-                return RedirectToAction(nameof(Index), new { companyId });
+                AddErrorMessage(T("layout.notFound"));
+                return RedirectToAction(nameof(Index));
             }
-            return RedirectToAction(nameof(Index));
+
+            if (!await _authService.IsCompanyAdminAsync(userId, layout.CompanyID))
+                return AccessDenied();
+
+            var companyId = layout.CompanyID;
+            await _layoutService.DeleteAsync(id);
+            AddSuccessMessage(T("layout.deletedSuccess"));
+            return RedirectToAction(nameof(Index), new { companyId });
         }
     }
 }

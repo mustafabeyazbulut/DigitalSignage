@@ -2,6 +2,7 @@ using DigitalSignage.Models;
 using DigitalSignage.Models.Common;
 using DigitalSignage.Data;
 using DigitalSignage.Helpers;
+using Microsoft.EntityFrameworkCore;
 
 namespace DigitalSignage.Services
 {
@@ -37,7 +38,7 @@ namespace DigitalSignage.Services
             await _unitOfWork.Users.AddAsync(entity);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("User created: {UserName}", entity.UserName);
+            _logger.LogInformation("User created: {Email}", entity.Email);
             return entity;
         }
 
@@ -53,11 +54,6 @@ namespace DigitalSignage.Services
         {
             await _unitOfWork.Users.DeleteAsync(id);
             await _unitOfWork.SaveChangesAsync();
-        }
-
-        public async Task<User?> GetByUserNameAsync(string userName)
-        {
-            return await _unitOfWork.Users.GetByUserNameAsync(userName);
         }
 
         public async Task<User?> GetByEmailAsync(string email)
@@ -140,23 +136,13 @@ namespace DigitalSignage.Services
 
         public async Task<List<User>> GetUsersByCompanyIdsAsync(List<int> companyIds)
         {
-            var allUsers = await _unitOfWork.Users.GetAllAsync();
-            var filteredUsers = new List<User>();
+            // FİX N+1: Tek sorguda tüm kullanıcıları ve rollerini getir
+            var users = await _unitOfWork.Users.Query()
+                .Include(u => u.UserCompanyRoles.Where(ucr => ucr.IsActive && companyIds.Contains(ucr.CompanyID)))
+                .Where(u => u.UserCompanyRoles.Any(ucr => ucr.IsActive && companyIds.Contains(ucr.CompanyID)))
+                .ToListAsync();
 
-            foreach (var user in allUsers)
-            {
-                var userCompanyRoles = await _unitOfWork.UserCompanyRoles.FindAsync(
-                    ucr => ucr.UserID == user.UserID && ucr.IsActive
-                );
-
-                // Kullanıcının şirketlerinden biri, filtre listesinde mi?
-                if (userCompanyRoles.Any(ucr => companyIds.Contains(ucr.CompanyID)))
-                {
-                    filteredUsers.Add(user);
-                }
-            }
-
-            return filteredUsers;
+            return users;
         }
 
         public async Task<List<int>> GetUserCompanyIdsAsync(int userId)

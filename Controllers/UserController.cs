@@ -51,7 +51,7 @@ namespace DigitalSignage.Controllers
                     if (!adminCompanyIds.Any())
                     {
                         // Ne SystemAdmin ne de CompanyAdmin ise erişim reddet
-                        return View("~/Views/Shared/AccessDenied.cshtml");
+                        return RedirectToAction("AccessDenied", "Account");
                     }
 
                     // CompanyAdmin ise sadece kendi şirketlerinin kullanıcılarını göster
@@ -79,7 +79,7 @@ namespace DigitalSignage.Controllers
         }
 
         // Helper method: Kullanıcı listesini işle (arama, sıralama, pagination)
-        private async Task<IActionResult> ProcessUserListAsync(
+        private Task<IActionResult> ProcessUserListAsync(
             IEnumerable<Models.User> users,
             string search,
             string sortBy,
@@ -94,7 +94,6 @@ namespace DigitalSignage.Controllers
             {
                 search = search.ToLower();
                 query = query.Where(u =>
-                    (u.UserName != null && u.UserName.ToLower().Contains(search)) ||
                     (u.Email != null && u.Email.ToLower().Contains(search)) ||
                     (u.FirstName != null && u.FirstName.ToLower().Contains(search)) ||
                     (u.LastName != null && u.LastName.ToLower().Contains(search))
@@ -104,16 +103,16 @@ namespace DigitalSignage.Controllers
             // Sıralama
             query = sortBy switch
             {
-                "UserName" => sortOrder == "asc"
-                    ? query.OrderBy(u => u.UserName)
-                    : query.OrderByDescending(u => u.UserName),
                 "Email" => sortOrder == "asc"
                     ? query.OrderBy(u => u.Email)
                     : query.OrderByDescending(u => u.Email),
+                "FullName" => sortOrder == "asc"
+                    ? query.OrderBy(u => u.FirstName).ThenBy(u => u.LastName)
+                    : query.OrderByDescending(u => u.FirstName).ThenByDescending(u => u.LastName),
                 "CreatedDate" => sortOrder == "asc"
                     ? query.OrderBy(u => u.CreatedDate)
                     : query.OrderByDescending(u => u.CreatedDate),
-                _ => query.OrderBy(u => u.UserName)
+                _ => query.OrderBy(u => u.Email)
             };
 
             // Toplam sayı
@@ -135,7 +134,7 @@ namespace DigitalSignage.Controllers
             ViewBag.SortBy = sortBy;
             ViewBag.SortOrder = sortOrder;
 
-            return View(viewModels);
+            return Task.FromResult<IActionResult>(View(viewModels));
         }
 
         // GET: User/Details/5
@@ -143,6 +142,19 @@ namespace DigitalSignage.Controllers
         {
             try
             {
+                var currentUserId = GetCurrentUserId();
+                var isSystemAdmin = await _authService.IsSystemAdminAsync(currentUserId);
+
+                if (!isSystemAdmin)
+                {
+                    // CompanyAdmin sadece kendi şirketlerindeki kullanıcıları görebilir
+                    var targetUserCompanyIds = await _userService.GetUserCompanyIdsAsync(id);
+                    var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+
+                    if (!targetUserCompanyIds.Any(c => adminCompanyIds.Contains(c)))
+                        return AccessDenied();
+                }
+
                 var user = await _userService.GetUserWithRolesAsync(id);
                 if (user == null)
                 {
@@ -524,6 +536,12 @@ namespace DigitalSignage.Controllers
         {
             try
             {
+                var currentUserId = GetCurrentUserId();
+
+                // Kendi şifresini veya SystemAdmin başkasının şifresini değiştirebilir
+                if (id != currentUserId && !await _authService.IsSystemAdminAsync(currentUserId))
+                    return AccessDenied();
+
                 var success = await _userService.ChangePasswordAsync(id, currentPassword, newPassword);
 
                 if (!success)
@@ -550,12 +568,19 @@ namespace DigitalSignage.Controllers
             try
             {
                 var currentUserId = GetCurrentUserId();
+                var isSystemAdmin = await _authService.IsSystemAdminAsync(currentUserId);
 
-                // Sadece SystemAdmin bu sayfaya erişebilir
-                if (!await _authService.IsSystemAdminAsync(currentUserId))
+                // SystemAdmin veya hedef kullanıcıyla ortak şirkette CompanyAdmin olan erişebilir
+                if (!isSystemAdmin)
                 {
-                    AddErrorMessage(T("error.unauthorized"));
-                    return RedirectToAction(nameof(Index));
+                    var targetUserCompanyIds = await _userService.GetUserCompanyIdsAsync(id);
+                    var adminCompanyIds = await _userService.GetAdminCompanyIdsAsync(currentUserId);
+
+                    if (!targetUserCompanyIds.Any(c => adminCompanyIds.Contains(c)))
+                    {
+                        AddErrorMessage(T("error.unauthorized"));
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
 
                 var user = await _userService.GetByIdAsync(id);
@@ -567,6 +592,8 @@ namespace DigitalSignage.Controllers
 
                 // SystemAdmin kullanıcılara rol ataması gerekmez (zaten her şeye erişir)
                 ViewBag.IsTargetUserSystemAdmin = user.IsSystemAdmin;
+
+                
 
                 var viewModel = new UserRoleManagementViewModel
                 {
@@ -642,6 +669,13 @@ namespace DigitalSignage.Controllers
                     !await _authService.IsCompanyAdminAsync(currentUserId, companyId))
                 {
                     AddErrorMessage(T("error.unauthorized"));
+                    return RedirectToAction(nameof(ManageRoles), new { id = userId });
+                }
+
+                // CompanyAdmin kendi şirket rolünü kaldıramaz
+                if (userId == currentUserId)
+                {
+                    AddErrorMessage(T("role.cannotRemoveOwnCompanyRole"));
                     return RedirectToAction(nameof(ManageRoles), new { id = userId });
                 }
 
@@ -773,6 +807,7 @@ namespace DigitalSignage.Controllers
         // ============== HELPER METHODS ==============
 
         private async Task<List<UserCompanyRoleViewModel>> GetUserCompanyRolesAsync(int userId)
+
         {
             var companies = await _authService.GetUserCompaniesAsync(userId);
             var companyRoles = new List<UserCompanyRoleViewModel>();
@@ -837,10 +872,5 @@ namespace DigitalSignage.Controllers
             return await _authService.GetUserCompaniesAsync(userId);
         }
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-            return userIdClaim != null && int.TryParse(userIdClaim.Value, out var id) ? id : 0;
-        }
     }
 }

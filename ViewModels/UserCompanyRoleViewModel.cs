@@ -4,7 +4,6 @@ namespace DigitalSignage.ViewModels
     {
         public int UserCompanyRoleID { get; set; }
         public int UserID { get; set; }
-        public string UserName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public int CompanyID { get; set; }
         public string CompanyName { get; set; } = string.Empty;

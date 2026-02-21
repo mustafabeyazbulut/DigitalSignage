@@ -8,12 +8,6 @@ namespace DigitalSignage.Data.Repositories
     {
         public UserRepository(AppDbContext context) : base(context) { }
 
-        public async Task<User?> GetByUserNameAsync(string userName)
-        {
-            return await _dbSet.AsNoTracking()
-                .FirstOrDefaultAsync(u => u.UserName == userName);
-        }
-
         public async Task<User?> GetByEmailAsync(string email)
         {
             return await _dbSet.AsNoTracking()
@@ -24,7 +18,7 @@ namespace DigitalSignage.Data.Repositories
         {
             return await _dbSet.AsNoTracking()
                 .Where(u => u.IsActive)
-                .OrderBy(u => u.UserName)
+                .OrderBy(u => u.Email)
                 .ToListAsync();
         }
 
@@ -41,7 +35,7 @@ namespace DigitalSignage.Data.Repositories
             return await _dbSet.AsNoTracking()
                 .Where(u => u.UserCompanyRoles.Any(ucr => ucr.CompanyID == companyId && ucr.IsActive))
                 .Include(u => u.UserCompanyRoles.Where(ucr => ucr.CompanyID == companyId))
-                .OrderBy(u => u.UserName)
+                .OrderBy(u => u.Email)
                 .ToListAsync();
         }
 
@@ -54,7 +48,6 @@ namespace DigitalSignage.Data.Repositories
             {
                 var term = searchTerm.ToLower();
                 query = query.Where(u =>
-                    u.UserName.ToLower().Contains(term) ||
                     u.Email.ToLower().Contains(term) ||
                     (u.FirstName != null && u.FirstName.ToLower().Contains(term)) ||
                     (u.LastName != null && u.LastName.ToLower().Contains(term)));
@@ -66,7 +59,7 @@ namespace DigitalSignage.Data.Repositories
             var totalCount = await query.CountAsync();
 
             var items = await query
-                .OrderBy(u => u.UserName)
+                .OrderBy(u => u.Email)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -78,13 +71,6 @@ namespace DigitalSignage.Data.Repositories
                 PageNumber = pageNumber,
                 PageSize = pageSize
             };
-        }
-
-        public async Task<bool> IsUserNameTakenAsync(string userName, int? excludeUserId = null)
-        {
-            return await _dbSet.AnyAsync(u =>
-                u.UserName == userName &&
-                (!excludeUserId.HasValue || u.UserID != excludeUserId.Value));
         }
 
         public async Task<bool> IsEmailTakenAsync(string email, int? excludeUserId = null)

@@ -48,37 +48,54 @@
             <div class="sidebar-heading border-bottom bg-primary text-white py-4 text-center fw-bold fs-5">
                 <i class="fas fa-tv me-2"></i>@T("common.appName")
             </div>
+            @{
+                var isSystemAdmin = ViewBag.IsSystemAdmin == true;
+                var isCompanyAdmin = ViewBag.IsCompanyAdmin == true;
+                var hasAnyRole = ViewBag.HasAnyRole == true;
+            }
             <div class="list-group list-group-flush">
                 <a asp-controller="Home" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active-link" : "")">
                     <i class="fas fa-tachometer-alt me-2 text-primary"></i>@T("nav.dashboard")
                 </a>
-               
-                <div class="sidebar-subheading text-muted text-uppercase fs-7 px-3 mt-4 mb-2">@T("nav.management")</div>
-                
-                <a asp-controller="Company" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Company" ? "active-link" : "")">
-                    <i class="fas fa-building me-2 text-secondary"></i>@T("nav.companies")
-                </a>
-                <a asp-controller="Department" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Department" ? "active-link" : "")">
-                    <i class="fas fa-sitemap me-2 text-secondary"></i>@T("nav.departments")
-                </a>
-                <a asp-controller="User" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "User" ? "active-link" : "")">
-                   <i class="fas fa-users me-2 text-secondary"></i>@T("nav.users")
-                </a>
 
-                <div class="sidebar-subheading text-muted text-uppercase fs-7 px-3 mt-4 mb-2">@T("nav.contentDesign")</div>
+                @if (hasAnyRole)
+                {
+                    <div class="sidebar-subheading text-muted text-uppercase fs-7 px-3 mt-4 mb-2">@T("nav.management")</div>
 
-                <a asp-controller="Page" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Page" ? "active-link" : "")">
-                    <i class="fas fa-desktop me-2 text-success"></i>@T("nav.pages")
-                </a>
-                <a asp-controller="Layout" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Layout" ? "active-link" : "")">
-                    <i class="fas fa-th-large me-2 text-warning"></i>@T("nav.layouts")
-                </a>
-                <a asp-controller="Content" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Content" ? "active-link" : "")">
-                    <i class="fas fa-photo-video me-2 text-info"></i>@T("nav.mediaLibrary")
-                </a>
-                <a asp-controller="Schedule" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Schedule" ? "active-link" : "")">
-                    <i class="fas fa-calendar-alt me-2 text-danger"></i>@T("nav.schedules")
-                </a>
+                    @if (isSystemAdmin)
+                    {
+                        <a asp-controller="Company" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Company" ? "active-link" : "")">
+                            <i class="fas fa-building me-2 text-secondary"></i>@T("nav.companies")
+                        </a>
+                    }
+                    <a asp-controller="Department" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Department" ? "active-link" : "")">
+                        <i class="fas fa-sitemap me-2 text-secondary"></i>@T("nav.departments")
+                    </a>
+                    @if (isSystemAdmin || isCompanyAdmin)
+                    {
+                        <a asp-controller="User" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "User" ? "active-link" : "")">
+                           <i class="fas fa-users me-2 text-secondary"></i>@T("nav.users")
+                        </a>
+                    }
+
+                    <div class="sidebar-subheading text-muted text-uppercase fs-7 px-3 mt-4 mb-2">@T("nav.contentDesign")</div>
+
+                    <a asp-controller="Page" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Page" ? "active-link" : "")">
+                        <i class="fas fa-desktop me-2 text-success"></i>@T("nav.pages")
+                    </a>
+                    @if (isSystemAdmin || isCompanyAdmin)
+                    {
+                        <a asp-controller="Layout" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Layout" ? "active-link" : "")">
+                            <i class="fas fa-th-large me-2 text-warning"></i>@T("nav.layouts")
+                        </a>
+                    }
+                    <a asp-controller="Content" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Content" ? "active-link" : "")">
+                        <i class="fas fa-photo-video me-2 text-info"></i>@T("nav.mediaLibrary")
+                    </a>
+                    <a asp-controller="Schedule" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Schedule" ? "active-link" : "")">
+                        <i class="fas fa-calendar-alt me-2 text-danger"></i>@T("nav.schedules")
+                    </a>
+                }
             </div>
         </div>
 
@@ -89,6 +106,9 @@
  
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav ms-auto mt-2 mt-lg-0 align-items-center">
+
+                         <!-- Company Selector Dropdown -->
+                        @await Component.InvokeAsync("CompanySelector")
 
                         <!-- Language Switcher -->
                         <li class="nav-item dropdown me-3">
@@ -119,9 +139,6 @@
                                 }
                             </div>
                         </li>
-
-                         <!-- Company Selector Dropdown -->
-                        @await Component.InvokeAsync("CompanySelector")
 
                         <!-- User Profile -->
                         <li class="nav-item dropdown">

@@ -16,7 +16,7 @@ namespace DigitalSignage.DTOs
         public string AssignedBy { get; set; } = string.Empty;
 
         // Display properties
-        public string UserName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
         public string DepartmentName { get; set; } = string.Empty;
     }
 }

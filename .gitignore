@@ -39,6 +39,7 @@ msbuild.err
 .env
 .env.local
 appsettings.Development.json
+appsettings.Production.json
 
 # Rider / JetBrains
 .idea/

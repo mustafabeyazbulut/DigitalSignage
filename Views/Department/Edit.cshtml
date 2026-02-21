@@ -19,13 +19,7 @@
                         <input type="hidden" asp-for="CreatedDate" />
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-                        <div class="mb-3">
-                            <label asp-for="CompanyID" class="form-label fw-bold">@T("department.company")</label>
-                            <select asp-for="CompanyID" class="form-select" asp-items="ViewBag.Companies" disabled>
-                            </select>
-                            <input type="hidden" asp-for="CompanyID" />
-                            <div class="form-text">@T("department.companyCannotChange")</div>
-                        </div>
+                        <input type="hidden" asp-for="CompanyID" />
 
                         <div class="mb-3">
                             <label asp-for="DepartmentName" class="form-label fw-bold">@T("department.departmentName")</label>

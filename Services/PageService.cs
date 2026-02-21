@@ -1,6 +1,7 @@
 using DigitalSignage.Models;
 using DigitalSignage.Models.Common;
 using DigitalSignage.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace DigitalSignage.Services
 {
@@ -26,6 +27,7 @@ namespace DigitalSignage.Services
         public async Task<Page> CreateAsync(Page entity)
         {
             entity.CreatedDate = DateTime.UtcNow;
+            entity.PageCode = await GeneratePageCodeAsync();
             await _unitOfWork.Pages.AddAsync(entity);
             await _unitOfWork.SaveChangesAsync();
             return entity;
@@ -68,6 +70,36 @@ namespace DigitalSignage.Services
             int departmentId, int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null)
         {
             return await _unitOfWork.Pages.GetPagesPagedAsync(departmentId, pageNumber, pageSize, searchTerm, isActive);
+        }
+
+        public async Task<string> GeneratePageCodeAsync()
+        {
+            var lastPage = await _unitOfWork.Pages.QueryAsNoTracking()
+                .Where(p => p.PageCode.StartsWith("PG-"))
+                .OrderByDescending(p => p.PageCode)
+                .FirstOrDefaultAsync();
+
+            int nextNumber = 1;
+            if (lastPage != null && lastPage.PageCode.Length > 3)
+            {
+                var numPart = lastPage.PageCode.Substring(3);
+                if (int.TryParse(numPart, out int parsed))
+                    nextNumber = parsed + 1;
+            }
+
+            return $"PG-{nextNumber:D5}";
+        }
+
+        public async Task<bool> AssignLayoutAsync(int pageId, int layoutId)
+        {
+            var page = await _unitOfWork.Pages.GetByIdAsync(pageId);
+            if (page == null)
+                return false;
+
+            page.LayoutID = layoutId;
+            await _unitOfWork.Pages.UpdateAsync(page);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
         }
     }
 }

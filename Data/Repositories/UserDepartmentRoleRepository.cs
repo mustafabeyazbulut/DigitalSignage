@@ -32,7 +32,7 @@ namespace DigitalSignage.Data.Repositories
                 .Include(udr => udr.User)
                 .Include(udr => udr.Department)
                 .Where(udr => udr.DepartmentID == departmentId && udr.IsActive)
-                .OrderBy(udr => udr.User.UserName)
+                .OrderBy(udr => udr.User.Email)
                 .ToListAsync();
         }
 

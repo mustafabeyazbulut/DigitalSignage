@@ -22,7 +22,7 @@
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
                     <h5 class="text-primary fw-bold mb-3"><i class="fas fa-info-circle me-2"></i> @T("page.pageDetails")</h5>
-                    
+
                     <div class="mb-3">
                          <label asp-for="DepartmentID" class="form-label fw-bold">@T("dashboard.department")</label>
                          @if(ViewBag.Departments != null)
@@ -49,18 +49,6 @@
                             <label asp-for="PageTitle" class="form-label fw-bold">@T("page.displayTitle")</label>
                             <input asp-for="PageTitle" class="form-control" placeholder="@T("page.displayTitlePlaceholder")" />
                             <span asp-validation-for="PageTitle" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="PageCode" class="form-label fw-bold">@T("page.pageCode")</label>
-                            <input asp-for="PageCode" class="form-control text-uppercase" placeholder="@T("page.pageCodePlaceholder")" />
-                            <span asp-validation-for="PageCode" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="LayoutID" class="form-label fw-bold">@T("page.gridLayout")</label>
-                             <select asp-for="LayoutID" class="form-select" asp-items="@(new SelectList(ViewBag.Layouts, "LayoutID", "LayoutName"))">
-                                <option value="">@T("page.selectLayout")</option>
-                            </select>
-                            <span asp-validation-for="LayoutID" class="text-danger small"></span>
                         </div>
                          <div class="col-md-12">
                             <label asp-for="Description" class="form-label">@T("company.description")</label>

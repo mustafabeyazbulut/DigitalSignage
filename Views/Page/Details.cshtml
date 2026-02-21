@@ -1,62 +1,95 @@
 @model DigitalSignage.Models.Page
 
 @{
-    ViewData["Title"] = "Page Details";
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("page.detailsTitle");
+
+    var canEdit = ViewBag.CanEdit as bool? ?? false;
+    var hasLayout = Model.LayoutID.HasValue && Model.Layout != null;
 }
 
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1>@Model.PageTitle</h1>
+            <h1 class="fw-bold">@Model.PageTitle</h1>
+            <p class="text-muted">@T("page.pageCode"): <code>@Model.PageCode</code></p>
         </div>
         <div class="col-md-4 text-end">
             <a asp-action="Design" asp-route-id="@Model.PageID" class="btn btn-info">
-                <i class="bi bi-grid-3x3"></i> Design
+                <i class="bi bi-grid-3x3 me-1"></i>
+                @if (hasLayout)
+                {
+                    @T("page.designLayout")
+                }
+                else
+                {
+                    @T("page.selectGridLayout")
+                }
             </a>
-            <a asp-action="Edit" asp-route-id="@Model.PageID" class="btn btn-warning">
-                <i class="bi bi-pencil"></i> Edit
-            </a>
+            @if (canEdit)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.PageID" class="btn btn-warning">
+                    <i class="bi bi-pencil me-1"></i> @T("common.edit")
+                </a>
+            }
             <a asp-action="Delete" asp-route-id="@Model.PageID" class="btn btn-danger">
-                <i class="bi bi-trash"></i> Delete
+                <i class="bi bi-trash me-1"></i> @T("common.delete")
             </a>
         </div>
     </div>
 
-    <div class="card">
+    <div class="card shadow-sm">
         <div class="card-body">
             <dl class="row">
-                <dt class="col-sm-3">Page Name</dt>
+                <dt class="col-sm-3">@T("page.pageName")</dt>
                 <dd class="col-sm-9">@Model.PageName</dd>
 
-                <dt class="col-sm-3">Page Code</dt>
+                <dt class="col-sm-3">@T("page.pageCode")</dt>
                 <dd class="col-sm-9"><code>@Model.PageCode</code></dd>
 
-                <dt class="col-sm-3">Department</dt>
+                <dt class="col-sm-3">@T("dashboard.department")</dt>
                 <dd class="col-sm-9">@Model.Department?.DepartmentName</dd>
 
-                <dt class="col-sm-3">Layout</dt>
-                <dd class="col-sm-9">@Model.Layout?.LayoutName</dd>
+                <dt class="col-sm-3">@T("page.gridLayout")</dt>
+                <dd class="col-sm-9">
+                    @if (hasLayout)
+                    {
+                        <span class="badge bg-success">@Model.Layout!.LayoutName (@Model.Layout.GridColumnsX x @Model.Layout.GridRowsY)</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">@T("page.noLayoutAssigned")</span>
+                        @if (canEdit)
+                        {
+                            <a asp-action="Design" asp-route-id="@Model.PageID" class="btn btn-sm btn-outline-primary ms-2">
+                                <i class="bi bi-grid-3x3 me-1"></i> @T("page.selectGridLayout")
+                            </a>
+                        }
+                    }
+                </dd>
 
                 @if (!string.IsNullOrEmpty(Model.Description))
                 {
-                    <dt class="col-sm-3">Description</dt>
+                    <dt class="col-sm-3">@T("company.description")</dt>
                     <dd class="col-sm-9">@Model.Description</dd>
                 }
 
-                <dt class="col-sm-3">Status</dt>
+                <dt class="col-sm-3">@T("common.status")</dt>
                 <dd class="col-sm-9">
                     <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
-                        @(Model.IsActive ? "Active" : "Inactive")
+                        @(Model.IsActive ? T("common.active") : T("common.inactive"))
                     </span>
                 </dd>
 
-                <dt class="col-sm-3">Created Date</dt>
+                <dt class="col-sm-3">@T("common.createdDate")</dt>
                 <dd class="col-sm-9">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
             </dl>
         </div>
     </div>
 
     <div class="mt-3">
-        <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">Back to List</button>
+        <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">@T("common.backToList")</button>
     </div>
 </div>

@@ -13,9 +13,6 @@ namespace DigitalSignage.DTOs
         [Required(ErrorMessage = "Page title is required")]
         public string PageTitle { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Layout is required")]
-        public int LayoutID { get; set; }
-
         public string? Description { get; set; }
     }
 }

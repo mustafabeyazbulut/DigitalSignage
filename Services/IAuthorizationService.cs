@@ -21,11 +21,13 @@ namespace DigitalSignage.Services
         // ============== DEPARTMENT LEVEL ==============
         Task<bool> CanAccessDepartmentAsync(int userId, int departmentId);
         Task<bool> IsDepartmentManagerAsync(int userId, int departmentId);
+        Task<bool> CanEditInDepartmentAsync(int userId, int departmentId);
         Task<List<Department>> GetUserDepartmentsAsync(int userId, int companyId);
         Task<UserDepartmentRole?> GetDepartmentRoleAsync(int userId, int departmentId);
 
         // ============== PAGE LEVEL ==============
         Task<bool> CanAccessPageAsync(int userId, int pageId);
+        Task<bool> CanEditPageAsync(int userId, int pageId);
         Task<bool> CanModifyPageAsync(int userId, int pageId);
 
         // ============== ROLE ASSIGNMENT ==============
@@ -33,6 +35,10 @@ namespace DigitalSignage.Services
         Task RemoveCompanyRoleAsync(int userId, int companyId);
         Task AssignDepartmentRoleAsync(int userId, int departmentId, string role, string assignedBy);
         Task RemoveDepartmentRoleAsync(int userId, int departmentId);
+
+        // ============== ROLE QUERIES ==============
+        Task<bool> HasAnyRoleAsync(int userId);
+        Task<bool> HasAnyCompanyAdminRoleAsync(int userId);
 
         // ============== CACHE MANAGEMENT ==============
         void ClearUserCache(int userId);

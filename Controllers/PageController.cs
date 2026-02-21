@@ -1,6 +1,7 @@
 using DigitalSignage.Models;
 using DigitalSignage.Services;
 using Microsoft.AspNetCore.Mvc;
+using AuthService = DigitalSignage.Services.IAuthorizationService;
 
 namespace DigitalSignage.Controllers
 {
@@ -10,34 +11,85 @@ namespace DigitalSignage.Controllers
         private readonly ILayoutService _layoutService;
         private readonly IDepartmentService _departmentService;
         private readonly ICompanyService _companyService;
+        private readonly AuthService _authService;
 
-        public PageController(IPageService pageService, ILayoutService layoutService, IDepartmentService departmentService, ICompanyService companyService)
+        public PageController(
+            IPageService pageService,
+            ILayoutService layoutService,
+            IDepartmentService departmentService,
+            ICompanyService companyService,
+            AuthService authService)
         {
             _pageService = pageService;
             _layoutService = layoutService;
             _departmentService = departmentService;
             _companyService = companyService;
+            _authService = authService;
         }
 
         public async Task<IActionResult> Index(int? departmentId, string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
         {
             const int pageSize = 10;
+            var userId = GetCurrentUserId();
+            if (!await _authService.HasAnyRoleAsync(userId))
+                return AccessDenied();
 
-            // Departmana göre veya tüm sayfaları al
             IEnumerable<Page> allPages;
+
             if (departmentId.HasValue)
             {
+                if (!await _authService.CanAccessDepartmentAsync(userId, departmentId.Value))
+                    return AccessDenied();
+
                 allPages = await _pageService.GetByDepartmentIdAsync(departmentId.Value);
                 ViewBag.DepartmentId = departmentId;
+
+                ViewBag.CanEdit = await _authService.CanEditInDepartmentAsync(userId, departmentId.Value);
+                ViewBag.CanDelete = await _authService.IsDepartmentManagerAsync(userId, departmentId.Value);
             }
             else
             {
-                allPages = await _pageService.GetAllAsync();
+                var sessionCompanyId = HttpContext.Session.GetInt32("SelectedCompanyId");
+                var isSystemAdmin = await _authService.IsSystemAdminAsync(userId);
+
+                if (isSystemAdmin && (!sessionCompanyId.HasValue || sessionCompanyId.Value <= 0))
+                {
+                    allPages = await _pageService.GetAllAsync();
+                }
+                else
+                {
+                    List<Models.Company> companies;
+                    if (sessionCompanyId.HasValue && sessionCompanyId.Value > 0)
+                    {
+                        if (!await _authService.CanAccessCompanyAsync(userId, sessionCompanyId.Value))
+                            return AccessDenied();
+                        var company = await _companyService.GetByIdAsync(sessionCompanyId.Value);
+                        companies = company != null ? new List<Models.Company> { company } : new List<Models.Company>();
+                    }
+                    else
+                    {
+                        companies = await _authService.GetUserCompaniesAsync(userId);
+                    }
+
+                    var pageList = new List<Page>();
+                    foreach (var company in companies)
+                    {
+                        var depts = await _authService.GetUserDepartmentsAsync(userId, company.CompanyID);
+                        foreach (var dept in depts)
+                        {
+                            var deptPages = await _pageService.GetByDepartmentIdAsync(dept.DepartmentID);
+                            pageList.AddRange(deptPages);
+                        }
+                    }
+                    allPages = pageList;
+                }
+
+                ViewBag.CanEdit = isSystemAdmin || await _authService.HasAnyCompanyAdminRoleAsync(userId);
+                ViewBag.CanDelete = ViewBag.CanEdit;
             }
 
             IEnumerable<Page> query = allPages;
 
-            // Arama filtresi
             if (!string.IsNullOrEmpty(search))
             {
                 search = search.ToLower();
@@ -48,7 +100,6 @@ namespace DigitalSignage.Controllers
                 );
             }
 
-            // Sıralama
             query = sortBy switch
             {
                 "PageTitle" => sortOrder == "asc"
@@ -60,17 +111,14 @@ namespace DigitalSignage.Controllers
                 _ => query.OrderBy(p => p.PageTitle)
             };
 
-            // Toplam sayı ve sayfa hesaplama
             var totalCount = query.Count();
             var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-            // Pagination
             var pages = query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
 
-            // ViewBag
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
             ViewBag.SearchTerm = search;
@@ -82,15 +130,26 @@ namespace DigitalSignage.Controllers
 
         public async Task<IActionResult> Create(int? departmentId)
         {
-            ViewBag.Layouts = await _layoutService.GetAllAsync();
+            var userId = GetCurrentUserId();
+            if (!await _authService.HasAnyRoleAsync(userId))
+                return AccessDenied();
+
             if (departmentId.HasValue)
             {
+                if (!await _authService.CanEditInDepartmentAsync(userId, departmentId.Value))
+                    return AccessDenied();
+
                 ViewBag.DepartmentId = departmentId;
             }
             else
             {
-                ViewBag.Departments = await _departmentService.GetAllAsync();
+                if (!await _authService.IsSystemAdminAsync(userId) &&
+                    !await _authService.HasAnyCompanyAdminRoleAsync(userId))
+                    return AccessDenied();
+
+                await LoadAccessibleDepartmentsAsync(userId);
             }
+
             return View();
         }
 
@@ -98,40 +157,106 @@ namespace DigitalSignage.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Page page)
         {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanEditInDepartmentAsync(userId, page.DepartmentID))
+                return AccessDenied();
+
+            // PageCode ve LayoutID otomatik atanacak, validation'dan çıkar
+            ModelState.Remove("PageCode");
+            ModelState.Remove("LayoutID");
+
             if (ModelState.IsValid)
             {
+                page.LayoutID = null;
                 await _pageService.CreateAsync(page);
                 AddSuccessMessage(T("page.createdSuccess"));
-                return RedirectToAction(nameof(Index), new { departmentId = page.DepartmentID });
+                return RedirectToAction(nameof(Design), new { id = page.PageID });
             }
-            ViewBag.Layouts = await _layoutService.GetAllAsync();
-            ViewBag.Departments = await _departmentService.GetAllAsync();
+
+            // Validation fail — erişilebilir veriyi tekrar yükle
+            await LoadAccessibleDepartmentsAsync(userId, page.DepartmentID);
             return View(page);
         }
 
         public async Task<IActionResult> Design(int id)
         {
-            var page = await _pageService.GetByIdAsync(id);
-            if (page == null) return NotFound();
+            var userId = GetCurrentUserId();
 
-            // Layout ve PageContent bilgilerini de getir (Service'de Include eklenmeli veya ayrı call yapılmalı)
-            // Şimdilik sadece page dönüyoruz.
-            return View(page);
-        }
+            if (!await _authService.CanAccessPageAsync(userId, id))
+                return AccessDenied();
 
-        public async Task<IActionResult> Details(int id)
-        {
             var page = await _pageService.GetByIdAsync(id);
             if (page == null)
             {
                 AddErrorMessage(T("page.notFound"));
                 return RedirectToAction(nameof(Index));
             }
+
+            // Layout'ları departmanın şirketine göre yükle
+            var dept = await _departmentService.GetByIdAsync(page.DepartmentID);
+            if (dept != null)
+            {
+                ViewBag.Layouts = await _layoutService.GetByCompanyIdAsync(dept.CompanyID);
+            }
+            else
+            {
+                ViewBag.Layouts = new List<Layout>();
+            }
+
+            ViewBag.CanEdit = await _authService.CanEditPageAsync(userId, id);
+
+            return View(page);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignLayout(int pageId, int layoutId)
+        {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanEditPageAsync(userId, pageId))
+                return AccessDenied();
+
+            var result = await _pageService.AssignLayoutAsync(pageId, layoutId);
+            if (result)
+            {
+                AddSuccessMessage(T("page.layoutAssigned"));
+            }
+            else
+            {
+                AddErrorMessage(T("page.notFound"));
+            }
+
+            return RedirectToAction(nameof(Design), new { id = pageId });
+        }
+
+        public async Task<IActionResult> Details(int id)
+        {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanAccessPageAsync(userId, id))
+                return AccessDenied();
+
+            var page = await _pageService.GetByIdAsync(id);
+            if (page == null)
+            {
+                AddErrorMessage(T("page.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
+
+            ViewBag.CanEdit = await _authService.CanEditPageAsync(userId, id);
+
             return View(page);
         }
 
         public async Task<IActionResult> Edit(int id)
         {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanEditPageAsync(userId, id))
+                return AccessDenied();
+
             var page = await _pageService.GetByIdAsync(id);
             if (page == null)
             {
@@ -139,8 +264,7 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.Departments = await _departmentService.GetAllAsync();
-            ViewBag.Layouts = await _layoutService.GetAllAsync();
+            await LoadAccessibleDepartmentsAsync(userId, page.DepartmentID);
             return View(page);
         }
 
@@ -148,29 +272,54 @@ namespace DigitalSignage.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Page page)
         {
+            var userId = GetCurrentUserId();
+
             if (id != page.PageID)
-                return BadRequest();
+            {
+                AddErrorMessage(T("page.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!await _authService.CanEditPageAsync(userId, id))
+                return AccessDenied();
+
+            // PageCode readonly, LayoutID Design'dan değiştirilecek
+            ModelState.Remove("PageCode");
+            ModelState.Remove("LayoutID");
 
             if (ModelState.IsValid)
             {
+                // Mevcut PageCode ve LayoutID değerlerini koru
+                var existingPage = await _pageService.GetByIdAsync(id);
+                if (existingPage != null)
+                {
+                    page.PageCode = existingPage.PageCode;
+                    page.LayoutID = existingPage.LayoutID;
+                }
+
                 await _pageService.UpdateAsync(page);
                 AddSuccessMessage(T("page.updatedSuccess"));
                 return RedirectToAction(nameof(Index), new { departmentId = page.DepartmentID });
             }
 
-            ViewBag.Departments = await _departmentService.GetAllAsync();
-            ViewBag.Layouts = await _layoutService.GetAllAsync();
+            await LoadAccessibleDepartmentsAsync(userId, page.DepartmentID);
             return View(page);
         }
 
         public async Task<IActionResult> Delete(int id)
         {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanModifyPageAsync(userId, id))
+                return AccessDenied();
+
             var page = await _pageService.GetByIdAsync(id);
             if (page == null)
             {
                 AddErrorMessage(T("page.notFound"));
                 return RedirectToAction(nameof(Index));
             }
+
             return View(page);
         }
 
@@ -178,6 +327,11 @@ namespace DigitalSignage.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanModifyPageAsync(userId, id))
+                return AccessDenied();
+
             var page = await _pageService.GetByIdAsync(id);
             if (page != null)
             {
@@ -186,7 +340,35 @@ namespace DigitalSignage.Controllers
                 AddSuccessMessage(T("page.deletedSuccess"));
                 return RedirectToAction(nameof(Index), new { departmentId });
             }
+
             return RedirectToAction(nameof(Index));
+        }
+
+        private async Task LoadAccessibleDepartmentsAsync(int userId, int? currentDepartmentId = null)
+        {
+            var sessionCompanyId = HttpContext.Session.GetInt32("SelectedCompanyId");
+
+            var departments = new List<Department>();
+            if (sessionCompanyId.HasValue && sessionCompanyId.Value > 0)
+            {
+                var depts = await _authService.GetUserDepartmentsAsync(userId, sessionCompanyId.Value);
+                departments.AddRange(depts);
+            }
+            else
+            {
+                var userCompanies = await _authService.GetUserCompaniesAsync(userId);
+                foreach (var company in userCompanies)
+                {
+                    var depts = await _authService.GetUserDepartmentsAsync(userId, company.CompanyID);
+                    departments.AddRange(depts);
+                }
+            }
+            ViewBag.Departments = departments;
+
+            if (currentDepartmentId.HasValue)
+            {
+                ViewBag.DepartmentId = currentDepartmentId;
+            }
         }
     }
 }

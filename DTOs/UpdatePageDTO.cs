@@ -15,8 +15,6 @@ namespace DigitalSignage.DTOs
         [MaxLength(500)]
         public string? Description { get; set; }
 
-        public int? LayoutID { get; set; }
-
         public bool IsActive { get; set; } = true;
     }
 }

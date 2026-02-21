@@ -1,35 +1,54 @@
 @model DigitalSignage.Models.Page
 
 @{
-    ViewData["Title"] = "Page Design - " + Model.PageTitle;
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("page.designLayout") + " - " + Model.PageTitle;
+
+    var layouts = ViewBag.Layouts as IEnumerable<DigitalSignage.Models.Layout> ?? Enumerable.Empty<DigitalSignage.Models.Layout>();
+    var canEdit = ViewBag.CanEdit as bool? ?? false;
+    var hasLayout = Model.LayoutID.HasValue && Model.Layout != null;
 }
 
 <div class="container-fluid mt-4">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1>Design: @Model.PageTitle</h1>
+            <h1 class="fw-bold">@T("page.designLayout"): @Model.PageTitle</h1>
+            <p class="text-muted mb-0">@T("page.pageCode"): <code>@Model.PageCode</code></p>
         </div>
         <div class="col-md-4 text-end">
-            <a asp-action="Details" asp-route-id="@Model.PageID" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Back
+            <a asp-action="Details" asp-route-id="@Model.PageID" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> @T("common.details")
             </a>
         </div>
     </div>
 
     <div class="row">
+        <!-- Ana İçerik -->
         <div class="col-md-9">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Layout Preview - @Model.Layout?.LayoutName (@Model.Layout?.GridColumnsX x @Model.Layout?.GridRowsY)</h5>
-                </div>
-                <div class="card-body">
-                    @if (Model.Layout != null)
-                    {
+            @if (hasLayout)
+            {
+                <!-- Mevcut Layout Önizleme -->
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-grid-3x3 me-2"></i>
+                            @Model.Layout!.LayoutName (@Model.Layout.GridColumnsX x @Model.Layout.GridRowsY)
+                        </h5>
+                        @if (canEdit)
+                        {
+                            <button class="btn btn-outline-warning btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#layoutSelector">
+                                <i class="bi bi-arrow-repeat me-1"></i> @T("page.changeLayout")
+                            </button>
+                        }
+                    </div>
+                    <div class="card-body">
                         <div style="display: grid;
                                     grid-template-columns: repeat(@Model.Layout.GridColumnsX, 1fr);
                                     grid-template-rows: repeat(@Model.Layout.GridRowsY, 1fr);
                                     gap: 10px;
-                                    min-height: 600px;
+                                    min-height: 500px;
                                     border: 2px solid #ddd;
                                     padding: 10px;">
                             @if (Model.Layout.LayoutSections != null)
@@ -41,55 +60,164 @@
                                                 background-color: #f8f9fa;
                                                 border: 1px solid #dee2e6;
                                                 padding: 15px;
-                                                border-radius: 5px;">
+                                                border-radius: 5px;
+                                                display: flex;
+                                                flex-direction: column;
+                                                align-items: center;
+                                                justify-content: center;">
                                         <strong>@(section.SectionPosition)</strong>
-                                        <p class="text-muted small mb-0">Position: @(section.ColumnIndex), @(section.RowIndex)</p>
+                                        <p class="text-muted small mb-0">@(section.ColumnIndex), @(section.RowIndex)</p>
                                     </div>
                                 }
                             }
                         </div>
-                    }
-                    else
-                    {
-                        <div class="alert alert-warning">No layout assigned to this page.</div>
-                    }
+                    </div>
                 </div>
-            </div>
+
+                <!-- Düzen Değiştirme Bölümü (gizli) -->
+                @if (canEdit)
+                {
+                    <div class="collapse mt-3" id="layoutSelector">
+                        @await Html.PartialAsync("_LayoutSelector", new ViewDataDictionary(ViewData) {
+                            { "Layouts", layouts },
+                            { "PageId", Model.PageID },
+                            { "CurrentLayoutId", Model.LayoutID }
+                        })
+                    </div>
+                }
+            }
+            else
+            {
+                <!-- Layout Seçim Kartları -->
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-grid-3x3 me-2"></i> @T("page.selectGridLayout")</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (canEdit)
+                        {
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i> @T("page.noLayoutAssigned")
+                            </div>
+                            @if (layouts.Any())
+                            {
+                                <div class="row g-3">
+                                    @foreach (var layout in layouts.Where(l => l.IsActive))
+                                    {
+                                        <div class="col-md-4">
+                                            <form asp-action="AssignLayout" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="pageId" value="@Model.PageID" />
+                                                <input type="hidden" name="layoutId" value="@layout.LayoutID" />
+                                                <div class="card h-100 layout-card" style="cursor: pointer;" onclick="this.closest('form').submit();">
+                                                    <div class="card-body text-center">
+                                                        <!-- Mini Grid Önizleme -->
+                                                        <div style="display: grid;
+                                                                    grid-template-columns: repeat(@layout.GridColumnsX, 1fr);
+                                                                    grid-template-rows: repeat(@layout.GridRowsY, 1fr);
+                                                                    gap: 4px;
+                                                                    height: 120px;
+                                                                    border: 1px solid #dee2e6;
+                                                                    padding: 4px;
+                                                                    border-radius: 4px;
+                                                                    margin-bottom: 10px;">
+                                                            @if (layout.LayoutSections != null)
+                                                            {
+                                                                @foreach (var section in layout.LayoutSections.OrderBy(s => s.RowIndex).ThenBy(s => s.ColumnIndex))
+                                                                {
+                                                                    <div style="grid-column: @(section.ColumnIndex + 1);
+                                                                                grid-row: @(section.RowIndex + 1);
+                                                                                background-color: #e9ecef;
+                                                                                border: 1px solid #ced4da;
+                                                                                border-radius: 3px;">
+                                                                    </div>
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                @for (int r = 0; r < layout.GridRowsY; r++)
+                                                                {
+                                                                    @for (int c = 0; c < layout.GridColumnsX; c++)
+                                                                    {
+                                                                        <div style="background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 3px;"></div>
+                                                                    }
+                                                                }
+                                                            }
+                                                        </div>
+                                                        <h6 class="fw-bold mb-1">@layout.LayoutName</h6>
+                                                        <span class="badge bg-secondary">@layout.GridColumnsX x @layout.GridRowsY</span>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted">@T("layout.noLayoutsFound")</p>
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">
+                                <i class="bi bi-lock me-2"></i> @T("page.noLayoutAssigned")
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
         </div>
 
+        <!-- Sayfa Bilgi Paneli -->
         <div class="col-md-3">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5>Page Information</h5>
+                    <h5 class="mb-0">@T("page.pageDetails")</h5>
                 </div>
                 <div class="card-body">
                     <dl>
-                        <dt>Page Name</dt>
+                        <dt>@T("page.pageName")</dt>
                         <dd>@Model.PageName</dd>
 
-                        <dt>Department</dt>
+                        <dt>@T("dashboard.department")</dt>
                         <dd>@Model.Department?.DepartmentName</dd>
 
-                        <dt>Layout</dt>
-                        <dd>@Model.Layout?.LayoutName</dd>
+                        <dt>@T("page.gridLayout")</dt>
+                        <dd>
+                            @if (hasLayout)
+                            {
+                                <span class="badge bg-success">@Model.Layout!.LayoutName</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">@T("page.noLayoutAssigned")</span>
+                            }
+                        </dd>
 
-                        <dt>Grid Size</dt>
-                        <dd>@Model.Layout?.GridColumnsX x @Model.Layout?.GridRowsY</dd>
+                        @if (hasLayout)
+                        {
+                            <dt>@T("layout.gridSize")</dt>
+                            <dd>@Model.Layout!.GridColumnsX x @Model.Layout.GridRowsY</dd>
+                        }
                     </dl>
                 </div>
             </div>
 
-            <div class="card mt-3">
+            <div class="card shadow-sm mt-3">
                 <div class="card-header">
-                    <h5>Actions</h5>
+                    <h5 class="mb-0">@T("common.actions")</h5>
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a asp-action="Edit" asp-route-id="@Model.PageID" class="btn btn-primary">
-                            Edit Page
-                        </a>
+                        @if (canEdit)
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.PageID" class="btn btn-primary">
+                                <i class="bi bi-pencil me-1"></i> @T("common.edit")
+                            </a>
+                        }
                         <a asp-controller="Content" asp-action="Index" asp-route-departmentId="@Model.DepartmentID" class="btn btn-secondary">
-                            Manage Content
+                            <i class="bi bi-collection me-1"></i> @T("content.title")
                         </a>
                     </div>
                 </div>
@@ -97,3 +225,15 @@
         </div>
     </div>
 </div>
+
+<style>
+    .layout-card {
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+    .layout-card:hover {
+        border-color: var(--bs-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+</style>

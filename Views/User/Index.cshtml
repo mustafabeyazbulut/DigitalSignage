@@ -55,15 +55,6 @@
                     <thead>
                         <tr>
                             <th>
-                                <a href="?search=@searchTerm&sortBy=UserName&sortOrder=@(sortBy == "UserName" && sortOrder == "asc" ? "desc" : "asc")" class="text-white text-decoration-none">
-                                    @T("user.userName")
-                                    @if (sortBy == "UserName")
-                                    {
-                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
-                                    }
-                                </a>
-                            </th>
-                            <th>
                                 <a href="?search=@searchTerm&sortBy=Email&sortOrder=@(sortBy == "Email" && sortOrder == "asc" ? "desc" : "asc")" class="text-white text-decoration-none">
                                     @T("user.email")
                                     @if (sortBy == "Email")
@@ -72,7 +63,15 @@
                                     }
                                 </a>
                             </th>
-                            <th>@T("user.fullName")</th>
+                            <th>
+                                <a href="?search=@searchTerm&sortBy=FullName&sortOrder=@(sortBy == "FullName" && sortOrder == "asc" ? "desc" : "asc")" class="text-white text-decoration-none">
+                                    @T("user.fullName")
+                                    @if (sortBy == "FullName")
+                                    {
+                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                    }
+                                </a>
+                            </th>
                             <th>@T("common.status")</th>
                             <th>@T("user.type")</th>
                             <th>
@@ -91,7 +90,6 @@
                         @foreach (var user in Model)
                         {
                             <tr>
-                                <td>@user.UserName</td>
                                 <td>@user.Email</td>
                                 <td>@user.FullName</td>
                                 <td>

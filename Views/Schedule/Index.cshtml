@@ -25,9 +25,12 @@
             <p class="text-muted mb-0">@T("schedule.subtitle")</p>
         </div>
         <div class="col-md-4 text-end">
-            <a asp-action="Create" class="btn btn-primary" asp-route-departmentId="@departmentId">
-                <i class="bi bi-plus-circle"></i> @T("schedule.newSchedule")
-            </a>
+            @if (ViewBag.CanEdit == true || ViewBag.IsSystemAdmin == true || ViewBag.IsCompanyAdmin == true)
+            {
+                <a asp-action="Create" class="btn btn-primary" asp-route-departmentId="@departmentId">
+                    <i class="bi bi-plus-circle"></i> @T("schedule.newSchedule")
+                </a>
+            }
         </div>
     </div>
 
@@ -117,15 +120,21 @@
                                                 <i class="bi bi-eye"></i>
                                                 <span>@T("common.details")</span>
                                             </a>
-                                            <a asp-action="Edit" asp-route-id="@item.ScheduleID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
-                                                <i class="bi bi-pencil"></i>
-                                                <span>@T("common.edit")</span>
-                                            </a>
-                                            <div class="action-dropdown-divider"></div>
-                                            <a asp-action="Delete" asp-route-id="@item.ScheduleID" class="action-dropdown-item action-delete">
-                                                <i class="bi bi-trash"></i>
-                                                <span>@T("common.delete")</span>
-                                            </a>
+                                            @if (ViewBag.CanEdit == true)
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@item.ScheduleID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                    <span>@T("common.edit")</span>
+                                                </a>
+                                            }
+                                            @if (ViewBag.CanDelete == true)
+                                            {
+                                                <div class="action-dropdown-divider"></div>
+                                                <a asp-action="Delete" asp-route-id="@item.ScheduleID" class="action-dropdown-item action-delete">
+                                                    <i class="bi bi-trash"></i>
+                                                    <span>@T("common.delete")</span>
+                                                </a>
+                                            }
                                         </div>
                                     </div>
                                 </td>

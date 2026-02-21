@@ -1,57 +1,54 @@
 @model DigitalSignage.Models.Layout
 
 @{
-    ViewData["Title"] = "Edit Layout";
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("layout.editTitle");
 }
 
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-8 offset-md-2">
-            <h1>Edit Layout</h1>
+            <h1>@T("layout.editTitle")</h1>
 
             <form asp-action="Edit" method="post">
                 <input type="hidden" asp-for="LayoutID" />
+                <input type="hidden" asp-for="CompanyID" />
+                <input type="hidden" asp-for="CreatedDate" />
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                 <div class="mb-3">
-                    <label asp-for="CompanyID" class="form-label">Company</label>
-                    <select asp-for="CompanyID" class="form-select" asp-items="ViewBag.Companies" disabled>
-                    </select>
-                    <input type="hidden" asp-for="CompanyID" />
-                    <div class="form-text">Company cannot be changed</div>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="LayoutName" class="form-label">Layout Name</label>
+                    <label asp-for="LayoutName" class="form-label">@T("layout.layoutName")</label>
                     <input asp-for="LayoutName" class="form-control" />
                     <span asp-validation-for="LayoutName" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="LayoutCode" class="form-label">Layout Code</label>
+                    <label asp-for="LayoutCode" class="form-label">@T("layout.layoutCode")</label>
                     <input asp-for="LayoutCode" class="form-control" readonly />
-                    <div class="form-text">Layout code cannot be changed</div>
+                    <div class="form-text">@T("layout.layoutCodeCannotChange")</div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label asp-for="GridColumnsX" class="form-label">Columns (X)</label>
+                            <label asp-for="GridColumnsX" class="form-label">@T("layout.columns")</label>
                             <input asp-for="GridColumnsX" type="number" min="1" max="12" class="form-control" readonly />
-                            <div class="form-text">Grid dimensions cannot be changed</div>
+                            <div class="form-text">@T("layout.gridDimensionsCannotChange")</div>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label asp-for="GridRowsY" class="form-label">Rows (Y)</label>
+                            <label asp-for="GridRowsY" class="form-label">@T("layout.rows")</label>
                             <input asp-for="GridRowsY" type="number" min="1" max="12" class="form-control" readonly />
-                            <div class="form-text">Grid dimensions cannot be changed</div>
+                            <div class="form-text">@T("layout.gridDimensionsCannotChange")</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Description" class="form-label">Description</label>
+                    <label asp-for="Description" class="form-label">@T("company.description")</label>
                     <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                 </div>
 
@@ -61,8 +58,10 @@
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Update</button>
-                    <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> @T("common.update")
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">@T("common.cancel")</button>
                 </div>
             </form>
         </div>

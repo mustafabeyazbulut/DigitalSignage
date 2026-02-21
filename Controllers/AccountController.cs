@@ -6,16 +6,21 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using AuthService = DigitalSignage.Services.IAuthorizationService;
 
 namespace DigitalSignage.Controllers
 {
     public class AccountController : BaseController
     {
         private readonly IUserService _userService;
+        private readonly IConfiguration _configuration;
+        private readonly AuthService _authService;
 
-        public AccountController(IUserService userService)
+        public AccountController(IUserService userService, IConfiguration configuration, AuthService authService)
         {
             _userService = userService;
+            _configuration = configuration;
+            _authService = authService;
         }
 
         [HttpGet]
@@ -51,7 +56,7 @@ namespace DigitalSignage.Controllers
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
-                    new Claim(ClaimTypes.Name, user.UserName),
+                    new Claim(ClaimTypes.Name, user.Email),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim("UserId", user.UserID.ToString()),
                     new Claim("IsSystemAdmin", user.IsSystemAdmin.ToString()),
@@ -59,10 +64,11 @@ namespace DigitalSignage.Controllers
                 };
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var cookieExpiration = _configuration.GetValue<int>("AppSettings:CookieExpirationMinutes", 60);
                 var authProperties = new AuthenticationProperties
                 {
                     IsPersistent = true,
-                    ExpiresUtc = DateTime.UtcNow.AddMinutes(60)
+                    ExpiresUtc = DateTime.UtcNow.AddMinutes(cookieExpiration)
                 };
 
                 await HttpContext.SignInAsync(
@@ -70,7 +76,7 @@ namespace DigitalSignage.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
-                AddSuccessMessage(string.Format(T("auth.welcomeBack"), user.UserName));
+                AddSuccessMessage(string.Format(T("auth.welcomeBack"), user.Email));
 
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {
@@ -144,7 +150,7 @@ namespace DigitalSignage.Controllers
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, existingUser.UserID.ToString()),
-                new Claim(ClaimTypes.Name, existingUser.UserName),
+                new Claim(ClaimTypes.Name, existingUser.Email),
                 new Claim(ClaimTypes.Email, existingUser.Email),
                 new Claim("UserId", existingUser.UserID.ToString()),
                 new Claim("IsSystemAdmin", existingUser.IsSystemAdmin.ToString()),
@@ -153,10 +159,11 @@ namespace DigitalSignage.Controllers
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var rememberMeExpiration = _configuration.GetValue<int>("AppSettings:RememberMeExpirationHours", 8);
             var authProperties = new AuthenticationProperties
             {
                 IsPersistent = true,
-                ExpiresUtc = DateTime.UtcNow.AddHours(8)
+                ExpiresUtc = DateTime.UtcNow.AddHours(rememberMeExpiration)
             };
 
             // OpenID Connect oturumunu temizle, Cookie oturumunu aç
@@ -166,7 +173,7 @@ namespace DigitalSignage.Controllers
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
 
-            AddSuccessMessage(string.Format(T("auth.welcomeBack"), existingUser.UserName));
+            AddSuccessMessage(string.Format(T("auth.welcomeBack"), existingUser.Email));
 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
@@ -403,6 +410,7 @@ namespace DigitalSignage.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -424,12 +432,18 @@ namespace DigitalSignage.Controllers
         /// Updates session and redirects back to the referring page.
         /// </summary>
         [HttpGet]
-        public IActionResult SwitchCompany(int companyId, string? returnUrl = null)
+        public async Task<IActionResult> SwitchCompany(int companyId, string? returnUrl = null)
         {
-            // Update the selected company in session
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanAccessCompanyAsync(userId, companyId))
+            {
+                AddErrorMessage(T("error.unauthorized"));
+                return RedirectToAction("Index", "Home");
+            }
+
             HttpContext.Session.SetInt32("SelectedCompanyId", companyId);
 
-            // Redirect to the return URL or home
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 return Redirect(returnUrl);

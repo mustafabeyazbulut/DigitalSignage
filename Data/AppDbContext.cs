@@ -33,7 +33,6 @@ namespace DigitalSignage.Data
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasKey(e => e.UserID);
-                entity.HasIndex(e => e.UserName).IsUnique();
                 entity.HasIndex(e => e.Email).IsUnique();
             });
 
@@ -133,14 +132,24 @@ namespace DigitalSignage.Data
                 entity.HasOne(p => p.Layout)
                     .WithMany(l => l.Pages)
                     .HasForeignKey(p => p.LayoutID)
+                    .IsRequired(false)
                     .OnDelete(DeleteBehavior.Restrict); // Layout silinirse sayfalar bozulmasın
+
+                // Unique index'ler
+                entity.HasIndex(p => p.PageCode).IsUnique();
+                entity.HasIndex(p => p.PageName).IsUnique();
+
+                // Performans: FK indeksleri
+                entity.HasIndex(p => p.DepartmentID);
+                entity.HasIndex(p => p.LayoutID);
+                entity.HasIndex(p => new { p.DepartmentID, p.IsActive });
             });
 
             // === Page Content N:N Configuration ===
             modelBuilder.Entity<PageContent>(entity =>
             {
                 entity.HasKey(e => e.PageContentID);
-                
+
                 entity.HasOne(pc => pc.Page)
                     .WithMany(p => p.PageContents)
                     .HasForeignKey(pc => pc.PageID)
@@ -150,6 +159,10 @@ namespace DigitalSignage.Data
                     .WithMany(c => c.PageContents)
                     .HasForeignKey(pc => pc.ContentID)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                // Performans: FK indeksleri
+                entity.HasIndex(pc => pc.PageID);
+                entity.HasIndex(pc => pc.ContentID);
             });
 
             // === Page Section Relation ===
@@ -172,17 +185,21 @@ namespace DigitalSignage.Data
             modelBuilder.Entity<Schedule>(entity =>
             {
                 entity.HasKey(e => e.ScheduleID);
-                
+
                 entity.HasOne(s => s.Department)
                     .WithMany(d => d.Schedules)
                     .HasForeignKey(s => s.DepartmentID)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                // Performans: FK indeksleri
+                entity.HasIndex(s => s.DepartmentID);
+                entity.HasIndex(s => new { s.DepartmentID, s.IsActive });
             });
 
             modelBuilder.Entity<SchedulePage>(entity =>
             {
                 entity.HasKey(e => e.SchedulePageID);
-                
+
                 entity.HasOne(sp => sp.Schedule)
                     .WithMany(s => s.SchedulePages)
                     .HasForeignKey(sp => sp.ScheduleID)
@@ -192,17 +209,25 @@ namespace DigitalSignage.Data
                     .WithMany(p => p.SchedulePages)
                     .HasForeignKey(sp => sp.PageID)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                // Performans: FK indeksleri
+                entity.HasIndex(sp => sp.ScheduleID);
+                entity.HasIndex(sp => sp.PageID);
             });
 
             // === Content Configuration ===
             modelBuilder.Entity<Content>(entity =>
             {
                 entity.HasKey(e => e.ContentID);
-                
+
                 entity.HasOne(c => c.Department)
                     .WithMany(d => d.Contents)
                     .HasForeignKey(c => c.DepartmentID)
                     .OnDelete(DeleteBehavior.NoAction); // Content silindiğinde page content'te sorun çıkmasın
+
+                // Performans: FK indeksleri
+                entity.HasIndex(c => c.DepartmentID);
+                entity.HasIndex(c => new { c.DepartmentID, c.CreatedDate });
             });
         }
     }

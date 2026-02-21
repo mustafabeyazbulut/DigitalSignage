@@ -3,7 +3,6 @@
 
 @{
     var locale = Context.Request.Cookies["locale"] ?? "en";
-    string T(string key) => LangService.Get(locale, key);
 }
 
 @if (Model != null && Model.Any())

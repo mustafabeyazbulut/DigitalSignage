@@ -25,9 +25,12 @@
             <p class="text-muted mb-0">@T("page.subtitle")</p>
         </div>
         <div class="col-md-4 text-end">
-            <a asp-action="Create" class="btn btn-primary" asp-route-departmentId="@departmentId">
-                <i class="bi bi-plus-circle"></i> @T("page.newPage")
-            </a>
+            @if (ViewBag.CanEdit == true || ViewBag.IsSystemAdmin == true || ViewBag.IsCompanyAdmin == true)
+            {
+                <a asp-action="Create" class="btn btn-primary" asp-route-departmentId="@departmentId">
+                    <i class="bi bi-plus-circle"></i> @T("page.newPage")
+                </a>
+            }
         </div>
     </div>
 
@@ -89,10 +92,20 @@
                                 <td>@item.PageTitle</td>
                                 <td>@(item.Description ?? "-")</td>
                                 <td>
-                                    <span class="type-badge layout">
-                                        <i class="bi bi-grid-3x3"></i>
-                                        @(item.Layout != null ? $"{item.Layout.GridColumnsX}x{item.Layout.GridRowsY}" : T("page.custom"))
-                                    </span>
+                                    @if (item.LayoutID.HasValue && item.Layout != null)
+                                    {
+                                        <span class="type-badge layout">
+                                            <i class="bi bi-grid-3x3"></i>
+                                            @item.Layout.LayoutName (@(item.Layout.GridColumnsX)x@(item.Layout.GridRowsY))
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            @T("page.noLayoutAssigned")
+                                        </span>
+                                    }
                                 </td>
                                 <td>
                                     <span class="status-badge @(item.IsActive ? "active" : "inactive")">
@@ -114,15 +127,21 @@
                                                 <i class="bi bi-palette"></i>
                                                 <span>@T("page.designLayout")</span>
                                             </a>
-                                            <a asp-action="Edit" asp-route-id="@item.PageID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
-                                                <i class="bi bi-pencil"></i>
-                                                <span>@T("common.edit")</span>
-                                            </a>
-                                            <div class="action-dropdown-divider"></div>
-                                            <a asp-action="Delete" asp-route-id="@item.PageID" class="action-dropdown-item action-delete">
-                                                <i class="bi bi-trash"></i>
-                                                <span>@T("common.delete")</span>
-                                            </a>
+                                            @if (ViewBag.CanEdit == true)
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@item.PageID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
+                                                    <i class="bi bi-pencil"></i>
+                                                    <span>@T("common.edit")</span>
+                                                </a>
+                                            }
+                                            @if (ViewBag.CanDelete == true)
+                                            {
+                                                <div class="action-dropdown-divider"></div>
+                                                <a asp-action="Delete" asp-route-id="@item.PageID" class="action-dropdown-item action-delete">
+                                                    <i class="bi bi-trash"></i>
+                                                    <span>@T("common.delete")</span>
+                                                </a>
+                                            }
                                         </div>
                                     </div>
                                 </td>

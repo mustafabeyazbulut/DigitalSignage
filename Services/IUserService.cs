@@ -5,7 +5,6 @@ namespace DigitalSignage.Services
 {
     public interface IUserService : IService<User>
     {
-        Task<User?> GetByUserNameAsync(string userName);
         Task<User?> GetByEmailAsync(string email);
         Task<User?> AuthenticateAsync(string email, string password);
         Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);

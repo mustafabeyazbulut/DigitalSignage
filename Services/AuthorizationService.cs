@@ -2,7 +2,9 @@ using DigitalSignage.Data;
 using DigitalSignage.Models;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,6 +20,10 @@ namespace DigitalSignage.Services
         private readonly IMemoryCache _cache;
         private readonly ILogger<AuthorizationService> _logger;
 
+        // Kullanıcı bazlı cache key takibi: userId → set of cache keys
+        private static readonly ConcurrentDictionary<int, HashSet<string>> _userCacheKeys = new();
+        private static readonly object _keyLock = new();
+
         public AuthorizationService(
             IUnitOfWork unitOfWork,
             IMemoryCache cache,
@@ -26,6 +32,15 @@ namespace DigitalSignage.Services
             _unitOfWork = unitOfWork;
             _cache = cache;
             _logger = logger;
+        }
+
+        private void TrackCacheKey(int userId, string key)
+        {
+            _userCacheKeys.AddOrUpdate(
+                userId,
+                _ => new HashSet<string> { key },
+                (_, existing) => { lock (_keyLock) { existing.Add(key); } return existing; }
+            );
         }
 
         // ============== SYSTEM LEVEL ==============
@@ -41,6 +56,7 @@ namespace DigitalSignage.Services
             isAdmin = user?.IsSystemAdmin ?? false;
 
             _cache.Set(cacheKey, isAdmin, TimeSpan.FromMinutes(15));
+            TrackCacheKey(userId, cacheKey);
             return isAdmin;
         }
 
@@ -65,6 +81,7 @@ namespace DigitalSignage.Services
 
             hasAccess = role != null;
             _cache.Set(cacheKey, hasAccess, TimeSpan.FromMinutes(10));
+            TrackCacheKey(userId, cacheKey);
 
             return hasAccess;
         }
@@ -101,14 +118,11 @@ namespace DigitalSignage.Services
             );
 
             var companyIds = companyRoles.Select(ucr => ucr.CompanyID).Distinct().ToList();
-            var companies = new List<Company>();
 
-            foreach (var companyId in companyIds)
-            {
-                var company = await _unitOfWork.Companies.GetByIdAsync(companyId);
-                if (company != null && company.IsActive)
-                    companies.Add(company);
-            }
+            // FİX N+1: Batch query ile tüm şirketleri tek sorguda getir
+            var companies = await _unitOfWork.Companies.Query()
+                .Where(c => companyIds.Contains(c.CompanyID) && c.IsActive)
+                .ToListAsync();
 
             return companies;
         }
@@ -156,6 +170,16 @@ namespace DigitalSignage.Services
             return role?.Role == "DepartmentManager";
         }
 
+        public async Task<bool> CanEditInDepartmentAsync(int userId, int departmentId)
+        {
+            // DepartmentManager'ın tüm yetkilerine ek olarak Editor da Create/Edit yapabilir
+            if (await IsDepartmentManagerAsync(userId, departmentId))
+                return true;
+
+            var role = await GetDepartmentRoleAsync(userId, departmentId);
+            return role?.Role == "Editor";
+        }
+
         public async Task<UserDepartmentRole?> GetDepartmentRoleAsync(int userId, int departmentId)
         {
             return await _unitOfWork.UserDepartmentRoles.FirstOrDefaultAsync(
@@ -181,13 +205,12 @@ namespace DigitalSignage.Services
                 udr => udr.UserID == userId && udr.IsActive
             );
 
-            var departments = new List<Department>();
-            foreach (var role in departmentRoles)
-            {
-                var dept = await _unitOfWork.Departments.GetByIdAsync(role.DepartmentID);
-                if (dept != null && dept.CompanyID == companyId && dept.IsActive)
-                    departments.Add(dept);
-            }
+            var departmentIds = departmentRoles.Select(udr => udr.DepartmentID).ToList();
+
+            // FİX N+1: Batch query ile tüm departmanları tek sorguda getir
+            var departments = await _unitOfWork.Departments.Query()
+                .Where(d => departmentIds.Contains(d.DepartmentID) && d.CompanyID == companyId && d.IsActive)
+                .ToListAsync();
 
             return departments;
         }
@@ -201,6 +224,15 @@ namespace DigitalSignage.Services
                 return false;
 
             return await CanAccessDepartmentAsync(userId, page.DepartmentID);
+        }
+
+        public async Task<bool> CanEditPageAsync(int userId, int pageId)
+        {
+            var page = await _unitOfWork.Pages.GetByIdAsync(pageId);
+            if (page == null)
+                return false;
+
+            return await CanEditInDepartmentAsync(userId, page.DepartmentID);
         }
 
         public async Task<bool> CanModifyPageAsync(int userId, int pageId)
@@ -255,17 +287,42 @@ namespace DigitalSignage.Services
             var role = await GetCompanyRoleAsync(userId, companyId);
             if (role != null)
             {
+                // Önce o şirketteki tüm department rollerini kaldır
+                var departments = await _unitOfWork.Departments.FindAsync(d => d.CompanyID == companyId);
+                foreach (var dept in departments)
+                {
+                    var deptRole = await GetDepartmentRoleAsync(userId, dept.DepartmentID);
+                    if (deptRole != null)
+                    {
+                        await _unitOfWork.UserDepartmentRoles.DeleteAsync(deptRole.UserDepartmentRoleID);
+                        _logger.LogInformation("Cascade removed department role for user {UserId} from department {DepartmentId} (company role removed)", userId, dept.DepartmentID);
+                    }
+                }
+
+                // Sonra company role'ü kaldır
                 await _unitOfWork.UserCompanyRoles.DeleteAsync(role.UserCompanyRoleID);
                 await _unitOfWork.SaveChangesAsync();
 
                 ClearUserCache(userId);
 
-                _logger.LogInformation($"User {userId} removed from company {companyId}");
+                _logger.LogInformation("User {UserId} removed from company {CompanyId} (with cascade department cleanup)", userId, companyId);
             }
         }
 
         public async Task AssignDepartmentRoleAsync(int userId, int departmentId, string role, string assignedBy)
         {
+            // Departmanın şirketini bul ve CompanyRole yoksa otomatik "Viewer" ata
+            var department = await _unitOfWork.Departments.GetByIdAsync(departmentId);
+            if (department != null)
+            {
+                var companyRole = await GetCompanyRoleAsync(userId, department.CompanyID);
+                if (companyRole == null)
+                {
+                    await AssignCompanyRoleAsync(userId, department.CompanyID, "Viewer", assignedBy);
+                    _logger.LogInformation("Auto-assigned Company Viewer role for user {UserId} in company {CompanyId} (triggered by department role assignment)", userId, department.CompanyID);
+                }
+            }
+
             var existingRole = await GetDepartmentRoleAsync(userId, departmentId);
 
             if (existingRole != null)
@@ -310,15 +367,50 @@ namespace DigitalSignage.Services
             }
         }
 
+        // ============== ROLE QUERIES ==============
+
+        public async Task<bool> HasAnyRoleAsync(int userId)
+        {
+            if (await IsSystemAdminAsync(userId))
+                return true;
+
+            var companyRoles = await _unitOfWork.UserCompanyRoles.FindAsync(
+                ucr => ucr.UserID == userId && ucr.IsActive
+            );
+            return companyRoles.Any();
+        }
+
+        public async Task<bool> HasAnyCompanyAdminRoleAsync(int userId)
+        {
+            if (await IsSystemAdminAsync(userId))
+                return true;
+
+            var companyAdminRoles = await _unitOfWork.UserCompanyRoles.FindAsync(
+                ucr => ucr.UserID == userId && ucr.Role == "CompanyAdmin" && ucr.IsActive
+            );
+            return companyAdminRoles.Any();
+        }
+
         // ============== CACHE MANAGEMENT ==============
 
         public void ClearUserCache(int userId)
         {
-            _cache.Remove($"user_sysadmin_{userId}");
+            if (_userCacheKeys.TryRemove(userId, out var keys))
+            {
+                lock (_keyLock)
+                {
+                    foreach (var key in keys)
+                        _cache.Remove(key);
+                }
 
-            // Not: Company ve department cache'lerini temizlemek için
-            // production'da distributed cache pattern kullanılmalı
-            // veya cache key pattern matching uygulanmalı
+                _logger.LogInformation("User cache cleared for userId={UserId}. Removed {Count} cache entries.", userId, keys.Count);
+            }
+            else
+            {
+                // Takipli key yoksa en azından SystemAdmin key'ini temizle
+                _cache.Remove($"user_sysadmin_{userId}");
+                _logger.LogInformation("User cache cleared for userId={UserId} (sysadmin key only).", userId);
+            }
         }
     }
 }

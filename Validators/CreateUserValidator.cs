@@ -7,11 +7,6 @@ namespace DigitalSignage.Validators
     {
         public CreateUserValidator()
         {
-            RuleFor(x => x.UserName)
-                .NotEmpty().WithMessage("User name is required")
-                .MaximumLength(100).WithMessage("User name cannot exceed 100 characters")
-                .Matches(@"^[a-zA-Z0-9_-]+$").WithMessage("User name can only contain letters, numbers, hyphens, and underscores");
-
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required")
                 .EmailAddress().WithMessage("Invalid email format")

@@ -3,6 +3,7 @@ using DigitalSignage.ViewComponents;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Authorization;
+using AuthService = DigitalSignage.Services.IAuthorizationService;
 
 namespace DigitalSignage.Controllers
 {
@@ -19,10 +20,8 @@ namespace DigitalSignage.Controllers
         /// </summary>
         protected string CurrentLocale => HttpContext?.Request.Cookies["locale"] ?? "en";
 
-        public override void OnActionExecuting(ActionExecutingContext context)
+        public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            base.OnActionExecuting(context);
-
             // DI'dan LanguageService'i al
             _languageService = HttpContext.RequestServices.GetService<ILanguageService>();
 
@@ -36,6 +35,45 @@ namespace DigitalSignage.Controllers
 
             // Breadcrumb navigation support
             SetupBreadcrumbNavigation(context);
+
+            // Rol bazlı ViewBag değerlerini ayarla (navigasyon ve buton görünürlüğü için)
+            await SetupRoleFlags();
+
+            await next();
+        }
+
+        private async Task SetupRoleFlags()
+        {
+            if (User.Identity?.IsAuthenticated != true)
+            {
+                ViewBag.IsSystemAdmin = false;
+                ViewBag.IsCompanyAdmin = false;
+                ViewBag.HasAnyRole = false;
+                return;
+            }
+
+            var isSystemAdmin = User.FindFirst("IsSystemAdmin")?.Value == "True";
+            ViewBag.IsSystemAdmin = isSystemAdmin;
+
+            if (isSystemAdmin)
+            {
+                ViewBag.IsCompanyAdmin = true;
+                ViewBag.HasAnyRole = true;
+                return;
+            }
+
+            var authService = HttpContext.RequestServices.GetService<AuthService>();
+            if (authService != null)
+            {
+                var userId = GetCurrentUserId();
+                ViewBag.IsCompanyAdmin = await authService.HasAnyCompanyAdminRoleAsync(userId);
+                ViewBag.HasAnyRole = await authService.HasAnyRoleAsync(userId);
+            }
+            else
+            {
+                ViewBag.IsCompanyAdmin = false;
+                ViewBag.HasAnyRole = false;
+            }
         }
 
         /// <summary>
@@ -220,6 +258,7 @@ namespace DigitalSignage.Controllers
                 "profile" => T("nav.profile"),
                 "settings" => T("nav.settings"),
                 "changepassword" => T("settings.changePassword"),
+                "manageroles" => T("user.manageRoles"),
                 _ => actionName ?? "Unknown"
             };
         }
@@ -257,6 +296,7 @@ namespace DigitalSignage.Controllers
                 "profile" => "fas fa-user-circle",
                 "settings" => "fas fa-cog",
                 "changepassword" => "fas fa-key",
+                "manageroles" => "fas fa-user-shield",
                 _ => "fas fa-file"
             };
         }
@@ -278,6 +318,23 @@ namespace DigitalSignage.Controllers
         protected void AddErrorMessage(string message)
         {
             TempData["ErrorMessage"] = message;
+        }
+
+        /// <summary>
+        /// Aktif kullanıcının ID'sini claim'den okur.
+        /// </summary>
+        protected int GetCurrentUserId()
+        {
+            var claim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            return claim != null && int.TryParse(claim.Value, out var id) ? id : 0;
+        }
+
+        /// <summary>
+        /// Erişim reddedildi sayfasına yönlendirir.
+        /// </summary>
+        protected IActionResult AccessDenied()
+        {
+            return RedirectToAction("AccessDenied", "Account");
         }
     }
 }

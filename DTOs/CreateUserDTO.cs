@@ -4,9 +4,6 @@ namespace DigitalSignage.DTOs
 {
     public class CreateUserDTO
     {
-        [Required(ErrorMessage = "User name is required")]
-        public string UserName { get; set; } = string.Empty;
-
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Invalid email format")]
         public string Email { get; set; } = string.Empty;

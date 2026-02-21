@@ -10,5 +10,7 @@ namespace DigitalSignage.Services
         Task<Page?> GetPageFullDetailsAsync(int pageId);
         Task<IEnumerable<Page>> GetActivePagesByDepartmentAsync(int departmentId);
         Task<PagedResult<Page>> GetPagesPagedAsync(int departmentId, int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null);
+        Task<string> GeneratePageCodeAsync();
+        Task<bool> AssignLayoutAsync(int pageId, int layoutId);
     }
 }

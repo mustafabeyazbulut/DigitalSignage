@@ -68,8 +68,8 @@ builder.Services.Configure<RequestLocalizationOptions>(options =>
         .AddSupportedUICultures(supportedCultures);
 });
 
-// Authentication - Cookie (default) + Azure AD OpenID Connect
-builder.Services.AddAuthentication(options =>
+// Authentication - Cookie (default) + Azure AD OpenID Connect (optional)
+var authBuilder = builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -79,20 +79,26 @@ builder.Services.AddAuthentication(options =>
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
-})
-.AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
-{
-    var azureAd = builder.Configuration.GetSection("AzureAd");
-    options.Authority = $"{azureAd["Instance"]}{azureAd["TenantId"]}/v2.0";
-    options.ClientId = azureAd["ClientId"];
-    options.ResponseType = "id_token";
-    options.CallbackPath = azureAd["CallbackPath"] ?? "/signin-oidc";
-    options.SignedOutCallbackPath = "/signout-oidc";
-    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.TokenValidationParameters.NameClaimType = "name";
-    options.Scope.Add("email");
-    options.Scope.Add("profile");
 });
+
+// Azure AD - Sadece ClientId varsa ekle
+var azureAdClientId = builder.Configuration["AzureAd:ClientId"];
+if (!string.IsNullOrWhiteSpace(azureAdClientId))
+{
+    authBuilder.AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
+    {
+        var azureAd = builder.Configuration.GetSection("AzureAd");
+        options.Authority = $"{azureAd["Instance"]}{azureAd["TenantId"]}/v2.0";
+        options.ClientId = azureAdClientId;
+        options.ResponseType = "id_token";
+        options.CallbackPath = azureAd["CallbackPath"] ?? "/signin-oidc";
+        options.SignedOutCallbackPath = "/signout-oidc";
+        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.TokenValidationParameters.NameClaimType = "name";
+        options.Scope.Add("email");
+        options.Scope.Add("profile");
+    });
+}
 
 // Authorization Policies
 builder.Services.AddAuthorization(options =>
@@ -110,34 +116,43 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-// Seed Data
-using (var scope = app.Services.CreateScope())
+// Seed Data (SADECE Development Ortamında)
+if (app.Environment.IsDevelopment())
 {
-    var services = scope.ServiceProvider;
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var context = services.GetRequiredService<AppDbContext>();
-        context.Database.Migrate();
+        var services = scope.ServiceProvider;
+        var logger = services.GetRequiredService<ILogger<Program>>();
 
-        // Seed Admin User
-        if (!context.Users.Any())
+        try
         {
-            context.Users.Add(new DigitalSignage.Models.User
-            {
-                UserName = "admin",
-                Email = "admin@digitalsignage.com",
-                PasswordHash = PasswordHelper.HashPassword("admin123"),
-                FirstName = "System",
-                LastName = "Administrator",
-                IsActive = true,
-                IsSystemAdmin = true,
-                CreatedDate = DateTime.UtcNow
-            });
-            context.SaveChanges();
-        }
+            var context = services.GetRequiredService<AppDbContext>();
+            context.Database.Migrate();
 
-        // Seed Example Company
-        if (!context.Companies.Any())
+            // Seed Admin User
+            if (!context.Users.Any())
+            {
+                // GÜVENLİK: Geliştirme için rastgele şifre üret
+                var randomPassword = Guid.NewGuid().ToString("N").Substring(0, 12) + "Aa1!";
+
+                context.Users.Add(new DigitalSignage.Models.User
+                {
+                    Email = "admin@digitalsignage.com",
+                    PasswordHash = PasswordHelper.HashPassword(randomPassword),
+                    FirstName = "System",
+                    LastName = "Administrator",
+                    IsActive = true,
+                    IsSystemAdmin = true,
+                    CreatedDate = DateTime.UtcNow
+                });
+                context.SaveChanges();
+
+                logger.LogWarning($"DEV SEED: Admin kullanıcısı oluşturuldu. Email: admin@digitalsignage.com, Şifre: {randomPassword}");
+                logger.LogWarning("UYARI: Bu şifre sadece development ortamı içindir. Production'da asla kullanmayın!");
+            }
+
+            // Seed Example Company (Development için örnek veri)
+            if (!context.Companies.Any())
         {
             var company = new DigitalSignage.Models.Company
             {
@@ -250,12 +265,25 @@ using (var scope = app.Services.CreateScope())
             }
             context.LayoutSections.AddRange(sections);
             context.SaveChanges();
+
+            logger.LogInformation("Örnek şirket ve veri başarıyla oluşturuldu: EXAMPLE");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Seed data hatası oluştu");
+            throw;
         }
     }
-    catch (Exception ex)
+}
+else
+{
+    // Production: Sadece migration çalıştır
+    using (var scope = app.Services.CreateScope())
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred seeding the DB.");
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<AppDbContext>();
+        context.Database.Migrate();
     }
 }
 
@@ -267,16 +295,37 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Security Headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+
+    if (!app.Environment.IsDevelopment())
+    {
+        context.Response.Headers.Append("Content-Security-Policy",
+            "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;");
+    }
+
+    await next();
+});
+
+// Session middleware (ÖNCE routing, session state'i routing'de kullanılabilir)
+app.UseSession();
+
 app.UseRequestLocalization();
 app.UseRouting();
-
-// Session middleware (must be before authentication)
-app.UseSession();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Tenant resolver middleware (after authentication)
+// Antiforgery middleware (CSRF koruması)
+app.UseAntiforgery();
+
+// Tenant resolver middleware (authentication SONRASI)
 app.UseMiddleware<DigitalSignage.Middleware.TenantResolverMiddleware>();
 
 app.MapStaticAssets();

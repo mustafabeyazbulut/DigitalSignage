@@ -21,7 +21,7 @@ namespace DigitalSignage.Data.Repositories
             return await _dbSet.AsNoTracking()
                 .Where(ucr => ucr.CompanyID == companyId && ucr.IsActive)
                 .Include(ucr => ucr.User)
-                .OrderBy(ucr => ucr.User.UserName)
+                .OrderBy(ucr => ucr.User.Email)
                 .ToListAsync();
         }
 
@@ -41,7 +41,7 @@ namespace DigitalSignage.Data.Repositories
             return await _dbSet.AsNoTracking()
                 .Where(ucr => ucr.CompanyID == companyId && ucr.Role == role && ucr.IsActive)
                 .Include(ucr => ucr.User)
-                .OrderBy(ucr => ucr.User.UserName)
+                .OrderBy(ucr => ucr.User.Email)
                 .ToListAsync();
         }
 

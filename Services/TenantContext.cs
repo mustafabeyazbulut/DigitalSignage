@@ -38,7 +38,10 @@ namespace DigitalSignage.Services
             get
             {
                 var claim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
-                return claim != null && int.TryParse(claim.Value, out var id) ? id : 0;
+                if (claim != null && int.TryParse(claim.Value, out var id) && id > 0)
+                    return id;
+
+                return 0;
             }
         }
 
@@ -76,20 +79,31 @@ namespace DigitalSignage.Services
             if (CurrentUserId == 0)
                 return false;
 
-            // Get department first
+            // Departmanı getir
             var department = await _unitOfWork.Departments.GetByIdAsync(departmentId);
             if (department == null)
                 return false;
 
-            // Check if user is company admin or department manager for this company
-            var role = await _unitOfWork.UserCompanyRoles.FirstOrDefaultAsync(ucr =>
+            // CompanyAdmin kontrolü
+            var companyRole = await _unitOfWork.UserCompanyRoles.FirstOrDefaultAsync(ucr =>
                 ucr.UserID == CurrentUserId &&
                 ucr.CompanyID == department.CompanyID &&
-                (ucr.Role == "CompanyAdmin" || ucr.Role == "DepartmentManager") &&
+                ucr.Role == "CompanyAdmin" &&
                 ucr.IsActive
             );
 
-            return role != null;
+            if (companyRole != null)
+                return true;
+
+            // DepartmentManager kontrolü (DOĞRU TABLO: UserDepartmentRoles)
+            var departmentRole = await _unitOfWork.UserDepartmentRoles.FirstOrDefaultAsync(udr =>
+                udr.UserID == CurrentUserId &&
+                udr.DepartmentID == departmentId &&
+                udr.Role == "DepartmentManager" &&
+                udr.IsActive
+            );
+
+            return departmentRole != null;
         }
 
         public async Task<CompanyConfiguration?> GetCompanyConfigAsync(int companyId)

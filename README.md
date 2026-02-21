@@ -34,13 +34,43 @@ cd DigitalSignage
 
 # Restore dependencies
 dotnet restore
+```
 
+### ⚠️ Database Configuration
+
+**appsettings.json dosyası boş connection string içerir (Git'e gider).**
+
+Kendi local ayarlarınızı yapın:
+
+#### Seçenek A: appsettings.Development.json (Önerilen)
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost,1433;Database=DigitalSignageDb;User Id=sa;Password=SENIN_SIFREN;TrustServerCertificate=True;MultipleActiveResultSets=true;Encrypt=false;Connection Timeout=30"
+  }
+}
+```
+**NOT:** Bu dosya `.gitignore`'da - Git'e GİTMEZ ✅
+
+#### Seçenek B: User Secrets (En Güvenli)
+```bash
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost,1433;Database=DigitalSignageDb;User Id=sa;Password=SENIN_SIFREN;..."
+```
+
+### Database Update & Run
+
+```bash
 # Update database
 dotnet ef database update
 
 # Run application
 dotnet run
 ```
+
+**İlk çalıştırmada:**
+- Admin kullanıcısı otomatik oluşturulur
+- **Rastgele şifre** konsola yazılır (kaydedin!)
+- Örnek şirket ve departmanlar oluşturulur
 
 Access at: `http://localhost:5259`
 

@@ -20,7 +20,7 @@ namespace DigitalSignage.Data.Repositories
         public async Task<Page?> GetPageWithLayoutAsync(int pageId)
         {
             return await _dbSet
-                .Include(p => p.Layout)
+                .Include(p => p.Layout!)
                     .ThenInclude(l => l.LayoutSections)
                 .FirstOrDefaultAsync(p => p.PageID == pageId);
         }
@@ -45,7 +45,7 @@ namespace DigitalSignage.Data.Repositories
         {
             return await _dbSet
                 .Include(p => p.Department)
-                .Include(p => p.Layout)
+                .Include(p => p.Layout!)
                     .ThenInclude(l => l.LayoutSections)
                 .Include(p => p.PageContents.OrderBy(pc => pc.DisplayOrder))
                     .ThenInclude(pc => pc.Content)
