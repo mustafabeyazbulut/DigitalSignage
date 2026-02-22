@@ -19,6 +19,13 @@ namespace DigitalSignage.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<Department?> GetWithCompanyAsync(int departmentId)
+        {
+            return await _dbSet
+                .Include(d => d.Company)
+                .FirstOrDefaultAsync(d => d.DepartmentID == departmentId);
+        }
+
         public async Task<IEnumerable<Department>> GetDepartmentsByCompanyAsync(int companyId)
         {
             return await _dbSet.AsNoTracking()

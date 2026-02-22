@@ -177,7 +177,7 @@ namespace DigitalSignage.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var userId = GetCurrentUserId();
-            var schedule = await _scheduleService.GetByIdAsync(id);
+            var schedule = await _scheduleService.GetScheduleWithPagesAsync(id);
 
             if (schedule == null)
             {

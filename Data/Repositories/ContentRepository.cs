@@ -24,6 +24,13 @@ namespace DigitalSignage.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<Content?> GetContentWithDepartmentAsync(int contentId)
+        {
+            return await _dbSet
+                .Include(c => c.Department)
+                .FirstOrDefaultAsync(c => c.ContentID == contentId);
+        }
+
         public async Task<Content?> GetContentWithPagesAsync(int contentId)
         {
             return await _dbSet

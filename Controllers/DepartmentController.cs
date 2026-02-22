@@ -168,7 +168,7 @@ namespace DigitalSignage.Controllers
             if (!await _authService.CanAccessDepartmentAsync(userId, id))
                 return AccessDenied();
 
-            var department = await _departmentService.GetByIdAsync(id);
+            var department = await _departmentService.GetWithCompanyAsync(id);
             if (department == null)
             {
                 AddErrorMessage(T("department.notFound"));

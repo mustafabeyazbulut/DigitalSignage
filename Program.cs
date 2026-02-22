@@ -157,7 +157,6 @@ if (app.Environment.IsDevelopment())
             var company = new DigitalSignage.Models.Company
             {
                 CompanyName = "Example Corporation",
-                CompanyCode = "EXAMPLE",
                 EmailDomain = "example.com",
                 Description = "Sample company for demonstration",
                 PrimaryColor = "#0078D4",

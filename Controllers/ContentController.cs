@@ -217,7 +217,7 @@ namespace DigitalSignage.Controllers
         public async Task<IActionResult> Details(int id)
         {
             var userId = GetCurrentUserId();
-            var content = await _contentService.GetByIdAsync(id);
+            var content = await _contentService.GetContentWithDepartmentAsync(id);
 
             if (content == null)
             {

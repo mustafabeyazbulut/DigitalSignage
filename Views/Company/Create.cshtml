@@ -28,12 +28,6 @@
                             <input asp-for="CompanyName" class="form-control" placeholder="@T("company.companyNamePlaceholder")" />
                             <span asp-validation-for="CompanyName" class="text-danger small"></span>
                         </div>
-                        <div class="col-md-6">
-                            <label asp-for="CompanyCode" class="form-label fw-bold">@T("company.companyCode")</label>
-                            <input asp-for="CompanyCode" class="form-control text-uppercase" placeholder="@T("company.companyCodePlaceholder")" />
-                            <div class="form-text">@T("company.companyCodeHelp")</div>
-                            <span asp-validation-for="CompanyCode" class="text-danger small"></span>
-                        </div>
                         <div class="col-md-12">
                             <label asp-for="Description" class="form-label">@T("company.description")</label>
                             <textarea asp-for="Description" class="form-control" rows="3"></textarea>

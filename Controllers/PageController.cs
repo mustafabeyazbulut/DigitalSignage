@@ -264,7 +264,7 @@ namespace DigitalSignage.Controllers
             if (!await _authService.CanAccessPageAsync(userId, id))
                 return AccessDenied();
 
-            var page = await _pageService.GetByIdAsync(id);
+            var page = await _pageService.GetPageFullDetailsAsync(id);
             if (page == null)
             {
                 AddErrorMessage(T("page.notFound"));

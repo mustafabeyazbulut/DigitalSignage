@@ -8,11 +8,6 @@ namespace DigitalSignage.DTOs
         [MaxLength(255, ErrorMessage = "Company name cannot exceed 255 characters")]
         public string CompanyName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Company code is required")]
-        [MaxLength(50, ErrorMessage = "Company code cannot exceed 50 characters")]
-        [RegularExpression(@"^[A-Z0-9_-]+$", ErrorMessage = "Company code must contain only uppercase letters, numbers, hyphens, and underscores")]
-        public string CompanyCode { get; set; } = string.Empty;
-
         [MaxLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
         public string? Description { get; set; }
 

@@ -8,12 +8,6 @@ namespace DigitalSignage.Data.Repositories
     {
         public CompanyRepository(AppDbContext context) : base(context) { }
 
-        public async Task<Company?> GetByCompanyCodeAsync(string companyCode)
-        {
-            return await _dbSet.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.CompanyCode == companyCode);
-        }
-
         public async Task<Company?> GetCompanyWithDepartmentsAsync(int companyId)
         {
             return await _dbSet
@@ -65,7 +59,6 @@ namespace DigitalSignage.Data.Repositories
                 var term = searchTerm.ToLower();
                 query = query.Where(c =>
                     c.CompanyName.ToLower().Contains(term) ||
-                    c.CompanyCode.ToLower().Contains(term) ||
                     (c.Description != null && c.Description.ToLower().Contains(term)));
             }
 
@@ -89,11 +82,5 @@ namespace DigitalSignage.Data.Repositories
             };
         }
 
-        public async Task<bool> IsCompanyCodeTakenAsync(string companyCode, int? excludeCompanyId = null)
-        {
-            return await _dbSet.AnyAsync(c =>
-                c.CompanyCode == companyCode &&
-                (!excludeCompanyId.HasValue || c.CompanyID != excludeCompanyId.Value));
-        }
     }
 }

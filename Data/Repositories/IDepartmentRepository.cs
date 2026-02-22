@@ -6,6 +6,7 @@ namespace DigitalSignage.Data.Repositories
     public interface IDepartmentRepository : IRepository<Department>
     {
         Task<IEnumerable<Department>> GetDepartmentsByCompanyAsync(int companyId);
+        Task<Department?> GetWithCompanyAsync(int departmentId);
         Task<Department?> GetDepartmentWithPagesAsync(int departmentId);
         Task<Department?> GetDepartmentWithSchedulesAsync(int departmentId);
         Task<Department?> GetDepartmentWithContentsAsync(int departmentId);

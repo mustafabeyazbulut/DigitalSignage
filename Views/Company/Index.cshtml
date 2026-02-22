@@ -64,15 +64,6 @@
                                     }
                                 </a>
                             </th>
-                            <th>
-                                <a href="?search=@searchTerm&sortBy=CompanyCode&sortOrder=@(sortBy == "CompanyCode" && sortOrder == "asc" ? "desc" : "asc")" class="text-white text-decoration-none">
-                                    @T("company.companyCode")
-                                    @if (sortBy == "CompanyCode")
-                                    {
-                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
-                                    }
-                                </a>
-                            </th>
                             <th>@T("company.domain")</th>
                             <th>@T("common.status")</th>
                             <th>@T("common.actions")</th>
@@ -95,7 +86,6 @@
                                     </div>
                                 </td>
                                 <td>@item.CompanyName</td>
-                                <td><code>@item.CompanyCode</code></td>
                                 <td>@(item.EmailDomain ?? "-")</td>
                                 <td>
                                     <span class="status-badge @(item.IsActive ? "active" : "inactive")">

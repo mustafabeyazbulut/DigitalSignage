@@ -5,6 +5,7 @@ namespace DigitalSignage.Services
 {
     public interface IContentService : IService<Content>
     {
+        Task<Content?> GetContentWithDepartmentAsync(int contentId);
         Task<IEnumerable<Content>> GetByDepartmentIdAsync(int departmentId);
         Task<IEnumerable<Content>> GetContentsByTypeAsync(int departmentId, string contentType);
         Task<IEnumerable<Content>> GetActiveContentsByDepartmentAsync(int departmentId);

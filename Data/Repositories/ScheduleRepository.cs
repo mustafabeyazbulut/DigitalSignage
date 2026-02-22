@@ -19,6 +19,7 @@ namespace DigitalSignage.Data.Repositories
         public async Task<Schedule?> GetScheduleWithPagesAsync(int scheduleId)
         {
             return await _dbSet
+                .Include(s => s.Department)
                 .Include(s => s.SchedulePages.OrderBy(sp => sp.DisplayOrder))
                     .ThenInclude(sp => sp.Page)
                         .ThenInclude(p => p.Layout)

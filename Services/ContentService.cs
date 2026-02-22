@@ -45,6 +45,11 @@ namespace DigitalSignage.Services
             await _unitOfWork.SaveChangesAsync();
         }
 
+        public async Task<Content?> GetContentWithDepartmentAsync(int contentId)
+        {
+            return await _unitOfWork.Contents.GetContentWithDepartmentAsync(contentId);
+        }
+
         public async Task<IEnumerable<Content>> GetByDepartmentIdAsync(int departmentId)
         {
             return await _unitOfWork.Contents.GetContentsByDepartmentAsync(departmentId);

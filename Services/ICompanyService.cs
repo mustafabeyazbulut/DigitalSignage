@@ -5,7 +5,6 @@ namespace DigitalSignage.Services
 {
     public interface ICompanyService : IService<Company>
     {
-        Task<Company?> GetByCompanyCodeAsync(string companyCode);
         Task<Company?> GetCompanyWithDepartmentsAsync(int companyId);
         Task<Company?> GetCompanyWithConfigurationAsync(int companyId);
         Task<IEnumerable<Company>> GetActiveCompaniesAsync();

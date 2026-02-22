@@ -11,11 +11,6 @@ namespace DigitalSignage.Validators
                 .NotEmpty().WithMessage("Company name is required")
                 .MaximumLength(255).WithMessage("Company name cannot exceed 255 characters");
 
-            RuleFor(x => x.CompanyCode)
-                .NotEmpty().WithMessage("Company code is required")
-                .MaximumLength(50).WithMessage("Company code cannot exceed 50 characters")
-                .Matches(@"^[A-Z0-9_-]+$").WithMessage("Company code must contain only uppercase letters, numbers, hyphens, and underscores");
-
             RuleFor(x => x.EmailDomain)
                 .MaximumLength(255).WithMessage("Email domain cannot exceed 255 characters")
                 .Matches(@"^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").WithMessage("Invalid email domain format")

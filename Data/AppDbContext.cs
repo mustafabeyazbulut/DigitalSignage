@@ -40,7 +40,6 @@ namespace DigitalSignage.Data
             modelBuilder.Entity<Company>(entity =>
             {
                 entity.HasKey(e => e.CompanyID);
-                entity.HasIndex(e => e.CompanyCode).IsUnique();
 
                 // 1:1 Config
                 entity.HasOne(e => e.Configuration)

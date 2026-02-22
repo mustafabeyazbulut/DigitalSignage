@@ -12,10 +12,6 @@ namespace DigitalSignage.Models
         [MaxLength(255)]
         public string CompanyName { get; set; } = string.Empty;
         
-        [Required]
-        [MaxLength(50)]
-        public string CompanyCode { get; set; } = string.Empty;
-        
         [MaxLength(255)]
         public string? EmailDomain { get; set; }
         
