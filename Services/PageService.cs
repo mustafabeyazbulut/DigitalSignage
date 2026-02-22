@@ -96,6 +96,20 @@ namespace DigitalSignage.Services
             if (page == null)
                 return false;
 
+            // Layout değişiyorsa eski section bazlı içerik atamalarını temizle
+            if (page.LayoutID != layoutId)
+            {
+                var sectionContents = await _unitOfWork.PageContents
+                    .Query()
+                    .Where(pc => pc.PageID == pageId && pc.DisplaySection != null && pc.DisplaySection != "")
+                    .ToListAsync();
+
+                foreach (var pc in sectionContents)
+                {
+                    await _unitOfWork.PageContents.DeleteAsync(pc.PageContentID);
+                }
+            }
+
             page.LayoutID = layoutId;
             await _unitOfWork.Pages.UpdateAsync(page);
             await _unitOfWork.SaveChangesAsync();

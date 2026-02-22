@@ -81,7 +81,7 @@ namespace DigitalSignage.Services
                     await _unitOfWork.SaveChangesAsync();
                 }
 
-                // Bu layout'u kullanan sayfaların LayoutID'sini null yap
+                // Bu layout'u kullanan sayfaların LayoutID'sini null yap ve section bazlı içerikleri temizle
                 var pages = await _unitOfWork.Pages
                     .Query()
                     .Where(p => p.LayoutID == id)
@@ -89,6 +89,9 @@ namespace DigitalSignage.Services
 
                 foreach (var page in pages)
                 {
+                    // Section bazlı PageContent kayıtlarını temizle
+                    await ClearPageSectionContentsAsync(page.PageID);
+
                     page.LayoutID = null;
                     await _unitOfWork.Pages.UpdateAsync(page);
                 }
@@ -177,6 +180,19 @@ namespace DigitalSignage.Services
                     await _unitOfWork.SaveChangesAsync();
                 }
 
+                // Bu layout'u kullanan sayfaların section bazlı içerik atamalarını temizle
+                var affectedPages = await _unitOfWork.Pages
+                    .QueryAsNoTracking()
+                    .Where(p => p.LayoutID == layoutId)
+                    .Select(p => p.PageID)
+                    .ToListAsync();
+
+                foreach (var pageId in affectedPages)
+                {
+                    await ClearPageSectionContentsAsync(pageId);
+                }
+                await _unitOfWork.SaveChangesAsync();
+
                 // Yeni tanımdan bölümleri yeniden oluştur
                 await CreateSectionsFromDefinition(layoutId, layoutDefinitionJson);
 
@@ -238,6 +254,23 @@ namespace DigitalSignage.Services
                         await _unitOfWork.LayoutSections.AddAsync(section);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Bir sayfanın section bazlı (DisplaySection dolu) PageContent kayıtlarını temizler.
+        /// Layout silindiğinde, değiştirildiğinde veya yapısı güncellendiğinde çağrılır.
+        /// </summary>
+        private async Task ClearPageSectionContentsAsync(int pageId)
+        {
+            var sectionContents = await _unitOfWork.PageContents
+                .Query()
+                .Where(pc => pc.PageID == pageId && pc.DisplaySection != null && pc.DisplaySection != "")
+                .ToListAsync();
+
+            foreach (var pc in sectionContents)
+            {
+                await _unitOfWork.PageContents.DeleteAsync(pc.PageContentID);
             }
         }
     }
