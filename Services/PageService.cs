@@ -124,30 +124,24 @@ namespace DigitalSignage.Services
             var content = await _unitOfWork.Contents.GetByIdAsync(contentId);
             if (content == null) return false;
 
-            // Aynı section'da mevcut atama var mı kontrol et
-            var existing = await _unitOfWork.PageContents.GetByPageAndSectionAsync(pageId, sectionPosition);
-            if (existing != null)
+            // Aynı içerik aynı section'a zaten atanmış mı kontrol et
+            var sectionContents = await _unitOfWork.PageContents.GetContentsBySectionAsync(pageId, sectionPosition);
+            if (sectionContents.Any(pc => pc.ContentID == contentId))
+                return false; // Zaten atanmış
+
+            // Yeni atama oluştur (çoklu içerik destekli)
+            var maxOrder = await _unitOfWork.PageContents.GetMaxSectionDisplayOrderAsync(pageId, sectionPosition);
+            var pageContent = new PageContent
             {
-                // Mevcut atamayı güncelle
-                existing.ContentID = contentId;
-                existing.AddedDate = DateTime.UtcNow;
-                await _unitOfWork.PageContents.UpdateAsync(existing);
-            }
-            else
-            {
-                // Yeni atama oluştur
-                var maxOrder = await _unitOfWork.PageContents.GetMaxDisplayOrderAsync(pageId);
-                var pageContent = new PageContent
-                {
-                    PageID = pageId,
-                    ContentID = contentId,
-                    DisplaySection = sectionPosition,
-                    DisplayOrder = maxOrder + 1,
-                    IsActive = true,
-                    AddedDate = DateTime.UtcNow
-                };
-                await _unitOfWork.PageContents.AddAsync(pageContent);
-            }
+                PageID = pageId,
+                ContentID = contentId,
+                DisplaySection = sectionPosition,
+                DisplayOrder = maxOrder + 1,
+                DurationSeconds = 10,
+                IsActive = true,
+                AddedDate = DateTime.UtcNow
+            };
+            await _unitOfWork.PageContents.AddAsync(pageContent);
 
             await _unitOfWork.SaveChangesAsync();
             return true;
@@ -155,21 +149,74 @@ namespace DigitalSignage.Services
 
         public async Task<bool> RemoveContentFromSectionAsync(int pageId, string sectionPosition)
         {
-            var existing = await _unitOfWork.PageContents.GetByPageAndSectionAsync(pageId, sectionPosition);
-            if (existing == null) return false;
+            var sectionContents = await _unitOfWork.PageContents
+                .Query()
+                .Where(pc => pc.PageID == pageId && pc.DisplaySection == sectionPosition && pc.IsActive)
+                .ToListAsync();
 
-            await _unitOfWork.PageContents.DeleteAsync(existing.PageContentID);
+            if (!sectionContents.Any()) return false;
+
+            foreach (var pc in sectionContents)
+            {
+                await _unitOfWork.PageContents.DeleteAsync(pc.PageContentID);
+            }
+
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
 
-        public async Task<Dictionary<string, PageContent>> GetSectionContentMapAsync(int pageId)
+        public async Task<bool> RemoveSingleContentFromSectionAsync(int pageId, string sectionPosition, int pageContentId)
+        {
+            var pc = await _unitOfWork.PageContents.GetByIdAsync(pageContentId);
+            if (pc == null || pc.PageID != pageId || pc.DisplaySection != sectionPosition)
+                return false;
+
+            await _unitOfWork.PageContents.DeleteAsync(pageContentId);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateSectionContentDurationAsync(int pageContentId, int durationSeconds)
+        {
+            if (durationSeconds < 1) durationSeconds = 1;
+
+            var pc = await _unitOfWork.PageContents.GetByIdAsync(pageContentId);
+            if (pc == null) return false;
+
+            pc.DurationSeconds = durationSeconds;
+            await _unitOfWork.PageContents.UpdateAsync(pc);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ReorderSectionContentsAsync(int pageId, string sectionPosition, int[] orderedIds)
+        {
+            var sectionContents = await _unitOfWork.PageContents
+                .Query()
+                .Where(pc => pc.PageID == pageId && pc.DisplaySection == sectionPosition && pc.IsActive)
+                .ToListAsync();
+
+            var order = 1;
+            foreach (var id in orderedIds)
+            {
+                var pc = sectionContents.FirstOrDefault(c => c.PageContentID == id);
+                if (pc != null)
+                {
+                    pc.DisplayOrder = order++;
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<Dictionary<string, List<PageContent>>> GetSectionContentMapAsync(int pageId)
         {
             var contents = await _unitOfWork.PageContents.GetContentsByPageAsync(pageId);
             return contents
                 .Where(pc => !string.IsNullOrEmpty(pc.DisplaySection))
                 .GroupBy(pc => pc.DisplaySection!)
-                .ToDictionary(g => g.Key, g => g.First());
+                .ToDictionary(g => g.Key, g => g.OrderBy(pc => pc.DisplayOrder).ToList());
         }
     }
 }

@@ -232,7 +232,11 @@
         "selectContent": "İçerik Seç",
         "contentAssigned": "İçerik başarıyla atandı.",
         "contentRemoved": "İçerik başarıyla kaldırıldı.",
-        "confirmRemoveContent": "Bu section'dan içeriği kaldırmak istediğinize emin misiniz?"
+        "confirmRemoveContent": "Bu section'dan içeriği kaldırmak istediğinize emin misiniz?",
+        "durationSeconds": "Süre (sn)",
+        "durationUpdated": "Süre güncellendi.",
+        "contentAlreadyAssigned": "Bu içerik zaten bu bölüme atanmış.",
+        "sectionContents": "Bölüm İçerikleri"
     },
     "layout": {
         "title": "Düzen Kütüphanesi",

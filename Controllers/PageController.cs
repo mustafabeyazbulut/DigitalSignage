@@ -419,10 +419,19 @@ namespace DigitalSignage.Controllers
 
             var result = await _pageService.AssignContentToSectionAsync(pageId, sectionPosition, contentId);
             if (!result)
-                return Json(new { success = false, message = T("page.notFound") });
+            {
+                // Zaten atanmış olabilir
+                return Json(new { success = false, message = T("page.contentAlreadyAssigned") });
+            }
 
             // Atanan içeriğin bilgilerini geri dön
             var content = await _contentService.GetByIdAsync(contentId);
+            // Section'daki tüm içerikleri geri dön
+            var sectionContentMap = await _pageService.GetSectionContentMapAsync(pageId);
+            var sectionContents = sectionContentMap.ContainsKey(sectionPosition)
+                ? sectionContentMap[sectionPosition]
+                : new List<PageContent>();
+
             return Json(new
             {
                 success = true,
@@ -431,7 +440,14 @@ namespace DigitalSignage.Controllers
                 {
                     contentTitle = content?.ContentTitle,
                     contentType = content?.ContentType
-                }
+                },
+                sectionContents = sectionContents.Select(pc => new
+                {
+                    pageContentId = pc.PageContentID,
+                    contentTitle = pc.Content?.ContentTitle,
+                    contentType = pc.Content?.ContentType,
+                    durationSeconds = pc.DurationSeconds
+                })
             });
         }
 
@@ -449,6 +465,54 @@ namespace DigitalSignage.Controllers
                 return Json(new { success = false, message = T("page.notFound") });
 
             return Json(new { success = true, message = T("page.contentRemoved") });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveSingleContentFromSection(int pageContentId, int pageId, string sectionPosition)
+        {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanEditPageAsync(userId, pageId))
+                return Json(new { success = false, message = "Erişim reddedildi." });
+
+            var result = await _pageService.RemoveSingleContentFromSectionAsync(pageId, sectionPosition, pageContentId);
+            if (!result)
+                return Json(new { success = false, message = T("page.notFound") });
+
+            return Json(new { success = true, message = T("page.contentRemoved") });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateContentDuration(int pageContentId, int pageId, int durationSeconds)
+        {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanEditPageAsync(userId, pageId))
+                return Json(new { success = false, message = "Erişim reddedildi." });
+
+            var result = await _pageService.UpdateSectionContentDurationAsync(pageContentId, durationSeconds);
+            if (!result)
+                return Json(new { success = false, message = T("page.notFound") });
+
+            return Json(new { success = true, message = T("page.durationUpdated") });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReorderSectionContents(int pageId, string sectionPosition, [FromBody] int[] orderedIds)
+        {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanEditPageAsync(userId, pageId))
+                return Json(new { success = false, message = "Erişim reddedildi." });
+
+            var result = await _pageService.ReorderSectionContentsAsync(pageId, sectionPosition, orderedIds);
+            if (!result)
+                return Json(new { success = false, message = T("page.notFound") });
+
+            return Json(new { success = true });
         }
 
         private async Task LoadAccessibleDepartmentsAsync(int userId, int? currentDepartmentId = null)

@@ -10,9 +10,11 @@ namespace DigitalSignage.Models
         public int ContentID { get; set; }
         
         public int DisplayOrder { get; set; }
-        
+
         [MaxLength(50)]
         public string? DisplaySection { get; set; } // Hangi section'da
+
+        public int DurationSeconds { get; set; } = 10; // Slideshow süresi (saniye)
         
         public bool IsActive { get; set; } = true;
         public DateTime AddedDate { get; set; } = DateTime.UtcNow;

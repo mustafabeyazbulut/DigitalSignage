@@ -8,7 +8,7 @@
 
     var canEdit = ViewBag.CanEdit as bool? ?? false;
     var hasLayout = Model.LayoutID.HasValue && Model.Layout != null;
-    var sectionContentMap = ViewBag.SectionContentMap as Dictionary<string, PageContent> ?? new Dictionary<string, PageContent>();
+    var sectionContentMap = ViewBag.SectionContentMap as Dictionary<string, List<PageContent>> ?? new Dictionary<string, List<PageContent>>();
 }
 
 <div class="container mt-4">
@@ -152,12 +152,12 @@
     }
 
     /// <summary>
-    /// Layout preview grid'ini recursive render eder, atanmış içerikleri gösterir.
+    /// Layout preview grid'ini recursive render eder, atanmış içerikleri gösterir (çoklu içerik destekli).
     /// </summary>
     IHtmlContent RenderPreviewGrid(
         List<LayoutRowDefinition> rows,
         string parentPos,
-        Dictionary<string, PageContent> contentMap)
+        Dictionary<string, List<PageContent>> contentMap)
     {
         var sb = new System.Text.StringBuilder();
         for (int ri = 0; ri < rows.Count; ri++)
@@ -180,18 +180,23 @@
                     }
                     else
                     {
-                        var hasContent = contentMap.ContainsKey(pos);
-                        var assigned = hasContent ? contentMap[pos] : null;
+                        var hasContent = contentMap.ContainsKey(pos) && contentMap[pos].Count > 0;
+                        var assignedList = hasContent ? contentMap[pos] : new List<PageContent>();
 
-                        if (hasContent && assigned?.Content != null)
+                        if (hasContent)
                         {
-                            var icon = GetContentIcon(assigned.Content.ContentType);
-                            var title = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentTitle);
-                            var cType = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentType);
-                            sb.Append("<div style=\"background:linear-gradient(135deg,#d4edda,#c3e6cb);border:1px solid #28a745;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;\">");
-                            sb.Append($"<i class=\"bi {icon} fs-4 text-success\"></i>");
-                            sb.Append($"<div class=\"fw-bold small mt-1\">{title}</div>");
-                            sb.Append($"<span class=\"badge bg-success mt-1\" style=\"font-size:0.7rem;\">{cType}</span>");
+                            sb.Append("<div style=\"background:linear-gradient(135deg,#d4edda,#c3e6cb);border:1px solid #28a745;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;gap:4px;\">");
+                            foreach (var assigned in assignedList)
+                            {
+                                if (assigned.Content == null) continue;
+                                var icon = GetContentIcon(assigned.Content.ContentType);
+                                var title = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentTitle);
+                                sb.Append($"<div style=\"display:flex;align-items:center;gap:4px;font-size:0.8rem;\">");
+                                sb.Append($"<i class=\"bi {icon} text-success\"></i>");
+                                sb.Append($"<span class=\"fw-bold\">{title}</span>");
+                                sb.Append($"<span class=\"badge bg-info\" style=\"font-size:0.65rem;\">{assigned.DurationSeconds}s</span>");
+                                sb.Append("</div>");
+                            }
                             sb.Append("</div>");
                         }
                         else
@@ -212,7 +217,7 @@
     string RenderPreviewGridString(
         List<LayoutRowDefinition> rows,
         string parentPos,
-        Dictionary<string, PageContent> contentMap)
+        Dictionary<string, List<PageContent>> contentMap)
     {
         return ((HtmlString)RenderPreviewGrid(rows, parentPos, contentMap)).Value ?? "";
     }

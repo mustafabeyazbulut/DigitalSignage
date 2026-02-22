@@ -9,6 +9,7 @@ namespace DigitalSignage.Data.Repositories
         Task<PageContent?> GetByPageAndContentAsync(int pageId, int contentId);
         Task<int> GetMaxDisplayOrderAsync(int pageId);
         Task ReorderContentsAsync(int pageId, IEnumerable<int> pageContentIds);
-        Task<PageContent?> GetByPageAndSectionAsync(int pageId, string sectionPosition);
+        Task<List<PageContent>> GetContentsBySectionAsync(int pageId, string sectionPosition);
+        Task<int> GetMaxSectionDisplayOrderAsync(int pageId, string sectionPosition);
     }
 }

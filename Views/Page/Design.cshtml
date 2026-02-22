@@ -9,7 +9,7 @@
     var layouts = ViewBag.Layouts as IEnumerable<DigitalSignage.Models.Layout> ?? Enumerable.Empty<DigitalSignage.Models.Layout>();
     var canEdit = ViewBag.CanEdit as bool? ?? false;
     var hasLayout = Model.LayoutID.HasValue && Model.Layout != null;
-    var sectionContentMap = ViewBag.SectionContentMap as Dictionary<string, DigitalSignage.Models.PageContent> ?? new Dictionary<string, DigitalSignage.Models.PageContent>();
+    var sectionContentMap = ViewBag.SectionContentMap as Dictionary<string, List<DigitalSignage.Models.PageContent>> ?? new Dictionary<string, List<DigitalSignage.Models.PageContent>>();
 }
 
 <div class="container-fluid mt-4">
@@ -255,6 +255,35 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
+    .content-card.already-assigned {
+        opacity: 0.5;
+        pointer-events: none;
+        border-color: #28a745;
+    }
+    .section-content-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        background: rgba(255,255,255,0.9);
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+        font-size: 0.8rem;
+        width: 100%;
+    }
+    .section-content-item .duration-input {
+        width: 50px;
+        padding: 1px 4px;
+        font-size: 0.75rem;
+        text-align: center;
+        border: 1px solid #ced4da;
+        border-radius: 3px;
+    }
+    .section-content-item .btn-remove-one {
+        padding: 0 4px;
+        font-size: 0.7rem;
+        line-height: 1;
+    }
 </style>
 
 @if (canEdit && hasLayout)
@@ -264,6 +293,9 @@
         var pageId = @Model.PageID;
         var departmentId = @Model.DepartmentID;
         var antiForgeryToken = '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)?.[1] || '';
+
+        // Section bazında atanmış content ID'lerini takip et
+        var sectionAssignedIds = {};
 
         function getContentIcon(type) {
             switch ((type || '').toLowerCase()) {
@@ -289,8 +321,12 @@
             grid.classList.add('d-none');
             grid.innerHTML = '';
 
-            var modal = new bootstrap.Modal(document.getElementById('contentModal'));
+            var modal = bootstrap.Modal.getInstance(document.getElementById('contentModal'));
+            if (!modal) modal = new bootstrap.Modal(document.getElementById('contentModal'));
             modal.show();
+
+            // Bu section'da zaten atanmış content ID'leri
+            var assignedIds = sectionAssignedIds[sectionPos] || [];
 
             fetch('@Url.Action("GetDepartmentContents", "Page")?departmentId=' + departmentId)
                 .then(function (r) { return r.json(); })
@@ -303,14 +339,17 @@
 
                     grid.classList.remove('d-none');
                     data.contents.forEach(function (c) {
+                        var isAssigned = assignedIds.indexOf(c.contentId) !== -1;
                         var col = document.createElement('div');
                         col.className = 'col-md-4';
                         col.innerHTML =
-                            '<div class="card content-card h-100" onclick="assignContent(' + c.contentId + ', this)">' +
+                            '<div class="card content-card h-100 ' + (isAssigned ? 'already-assigned' : '') + '" ' +
+                            (isAssigned ? '' : 'onclick="assignContent(' + c.contentId + ', this)"') + '>' +
                             '  <div class="card-body text-center">' +
                             '    <i class="bi ' + getContentIcon(c.contentType) + ' fs-2 text-primary"></i>' +
                             '    <h6 class="fw-bold mt-2 mb-1">' + escapeHtml(c.contentTitle || 'Untitled') + '</h6>' +
                             '    <span class="badge bg-secondary">' + escapeHtml(c.contentType) + '</span>' +
+                            (isAssigned ? '<br><span class="badge bg-success mt-1">@T("page.contentAlreadyAssigned")</span>' : '') +
                             '  </div>' +
                             '</div>';
                         grid.appendChild(col);
@@ -336,8 +375,16 @@
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.success) {
-                    updateCellUI(currentSection, data.content.contentTitle, data.content.contentType);
-                    bootstrap.Modal.getInstance(document.getElementById('contentModal')).hide();
+                    // Section UI'ını tüm içerik listesiyle güncelle
+                    updateSectionUI(currentSection, data.sectionContents);
+                    // Modal'ı kapatma — kullanıcı birden fazla içerik ekleyebilsin
+                    // Eklenen kartı devre dışı bırak
+                    if (cardEl) {
+                        cardEl.classList.add('already-assigned');
+                        cardEl.removeAttribute('onclick');
+                        cardEl.querySelector('.card-body').insertAdjacentHTML('beforeend',
+                            '<br><span class="badge bg-success mt-1">@T("page.contentAlreadyAssigned")</span>');
+                    }
                     Swal.fire({
                         icon: 'success',
                         title: '@T("page.contentAssigned")',
@@ -349,7 +396,7 @@
                     });
                 } else {
                     Swal.fire({
-                        icon: 'error',
+                        icon: 'warning',
                         title: '@T("common.error")',
                         text: data.message || '@T("common.error")'
                     });
@@ -364,7 +411,7 @@
             });
         }
 
-        function removeContent(sectionPos) {
+        function removeAllContents(sectionPos) {
             Swal.fire({
                 title: '@T("page.confirmRemoveContent")',
                 icon: 'warning',
@@ -416,34 +463,136 @@
             });
         }
 
-        function updateCellUI(sectionPos, title, type) {
+        function removeOneContent(pageContentId, sectionPos) {
+            var formData = new FormData();
+            formData.append('pageContentId', pageContentId);
+            formData.append('pageId', pageId);
+            formData.append('sectionPosition', sectionPos);
+
+            fetch('@Url.Action("RemoveSingleContentFromSection", "Page")', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': antiForgeryToken },
+                body: formData
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    // İlgili öğeyi DOM'dan kaldır
+                    var item = document.getElementById('sc-' + pageContentId);
+                    if (item) item.remove();
+
+                    // Assigned ID'lerden kaldır
+                    var ids = sectionAssignedIds[sectionPos] || [];
+                    var removedEl = item ? item.getAttribute('data-content-id') : null;
+                    if (removedEl) {
+                        var idx = ids.indexOf(parseInt(removedEl));
+                        if (idx > -1) ids.splice(idx, 1);
+                    }
+                    sectionAssignedIds[sectionPos] = ids;
+
+                    // Section'da hiç içerik kalmadıysa boş hale getir
+                    var cell = document.getElementById('cell-' + sectionPos);
+                    var remaining = cell ? cell.querySelectorAll('.section-content-item') : [];
+                    if (remaining.length === 0) {
+                        clearCellUI(sectionPos);
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '@T("page.contentRemoved")',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '@T("common.error")',
+                        text: data.message || '@T("common.error")'
+                    });
+                }
+            })
+            .catch(function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: '@T("common.error")',
+                    text: '@T("common.error")'
+                });
+            });
+        }
+
+        function updateDuration(pageContentId, inputEl) {
+            var val = parseInt(inputEl.value);
+            if (isNaN(val) || val < 1) { inputEl.value = 1; val = 1; }
+
+            var formData = new FormData();
+            formData.append('pageContentId', pageContentId);
+            formData.append('pageId', pageId);
+            formData.append('durationSeconds', val);
+
+            fetch('@Url.Action("UpdateContentDuration", "Page")', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': antiForgeryToken },
+                body: formData
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '@T("page.durationUpdated")',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    });
+                }
+            })
+            .catch(function () { });
+        }
+
+        function updateSectionUI(sectionPos, contents) {
             var cell = document.getElementById('cell-' + sectionPos);
             if (!cell) return;
+
+            // Assigned ID'leri güncelle
+            sectionAssignedIds[sectionPos] = contents.map(function(c) { return c.contentId; });
 
             cell.classList.add('has-content');
             cell.style.backgroundColor = '#d4edda';
             cell.style.borderColor = '#28a745';
             cell.removeAttribute('onclick');
 
-            cell.innerHTML =
-                '<div class="text-center w-100">' +
-                '  <i class="bi ' + getContentIcon(type) + ' fs-4 text-success"></i>' +
-                '  <div class="fw-bold small mt-1">' + escapeHtml(title || 'Untitled') + '</div>' +
-                '  <span class="badge bg-success mt-1">' + escapeHtml(type) + '</span>' +
-                '  <div class="mt-2">' +
-                '    <button class="btn btn-outline-danger btn-sm" onclick="event.stopPropagation(); removeContent(\'' + sectionPos + '\')" title="@T("common.remove")">' +
-                '      <i class="bi bi-x-circle"></i>' +
-                '    </button>' +
-                '    <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); openContentModal(\'' + sectionPos + '\')" title="@T("page.changeLayout")">' +
-                '      <i class="bi bi-arrow-repeat"></i>' +
-                '    </button>' +
-                '  </div>' +
-                '</div>';
+            var html = '<div class="w-100" style="display:flex;flex-direction:column;gap:4px;align-items:stretch;">';
+            contents.forEach(function (c) {
+                html +=
+                    '<div id="sc-' + c.pageContentId + '" class="section-content-item" data-content-id="' + (c.contentId || '') + '">' +
+                    '  <i class="bi ' + getContentIcon(c.contentType) + ' text-success"></i>' +
+                    '  <span class="flex-grow-1 text-truncate fw-bold">' + escapeHtml(c.contentTitle || 'Untitled') + '</span>' +
+                    '  <input type="number" class="duration-input" value="' + c.durationSeconds + '" min="1" ' +
+                    '    onchange="updateDuration(' + c.pageContentId + ', this)" title="@T("page.durationSeconds")">' +
+                    '  <span class="text-muted" style="font-size:0.7rem;">s</span>' +
+                    '  <button class="btn btn-outline-danger btn-remove-one" onclick="event.stopPropagation(); removeOneContent(' + c.pageContentId + ', \'' + sectionPos + '\')" title="@T("common.remove")">' +
+                    '    <i class="bi bi-x"></i>' +
+                    '  </button>' +
+                    '</div>';
+            });
+            html += '<button class="btn btn-outline-primary btn-sm mt-1" onclick="event.stopPropagation(); openContentModal(\'' + sectionPos + '\')">' +
+                    '  <i class="bi bi-plus-circle me-1"></i> @T("page.addContent")</button>';
+            html += '</div>';
+
+            cell.innerHTML = html;
         }
 
         function clearCellUI(sectionPos) {
             var cell = document.getElementById('cell-' + sectionPos);
             if (!cell) return;
+
+            // Assigned ID'leri temizle
+            sectionAssignedIds[sectionPos] = [];
 
             cell.classList.remove('has-content');
             cell.style.backgroundColor = '#f8f9fa';
@@ -462,6 +611,14 @@
             div.appendChild(document.createTextNode(text));
             return div.innerHTML;
         }
+
+        // Sayfa yüklendiğinde mevcut atanmış ID'leri initialize et
+        (function() {
+            @foreach (var kvp in sectionContentMap)
+            {
+                <text>sectionAssignedIds['@kvp.Key'] = [@string.Join(",", kvp.Value.Select(pc => pc.ContentID))];</text>
+            }
+        })();
     </script>
 }
 
@@ -480,12 +637,12 @@
     }
 
     /// <summary>
-    /// Design grid'ini recursive olarak render eder (içerik atama destekli).
+    /// Design grid'ini recursive olarak render eder (çoklu içerik atama destekli).
     /// </summary>
     IHtmlContent RenderDesignGrid(
         List<DigitalSignage.Models.LayoutRowDefinition> rows,
         string parentPos,
-        Dictionary<string, DigitalSignage.Models.PageContent> contentMap,
+        Dictionary<string, List<DigitalSignage.Models.PageContent>> contentMap,
         bool canEdit,
         Func<string, string> T)
     {
@@ -511,37 +668,48 @@
                     }
                     else
                     {
-                        // Yaprak hücre — içerik atama
-                        var hasContent = contentMap.ContainsKey(pos);
-                        var assigned = hasContent ? contentMap[pos] : null;
+                        // Yaprak hücre — içerik atama (çoklu destekli)
+                        var hasContent = contentMap.ContainsKey(pos) && contentMap[pos].Count > 0;
+                        var assignedList = hasContent ? contentMap[pos] : new List<DigitalSignage.Models.PageContent>();
                         var bgColor = hasContent ? "#d4edda" : "#f8f9fa";
                         var borderColor = hasContent ? "#28a745" : "#dee2e6";
                         var cursor = canEdit ? "cursor:pointer;" : "";
                         var posEscaped = System.Web.HttpUtility.HtmlAttributeEncode(pos);
 
                         sb.Append($"<div id=\"cell-{posEscaped}\" class=\"design-cell {(hasContent ? "has-content" : "")}\" ");
-                        sb.Append($"style=\"background-color:{bgColor};border:1px solid {borderColor};padding:15px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;{cursor}min-height:80px;\" ");
+                        sb.Append($"style=\"background-color:{bgColor};border:1px solid {borderColor};padding:10px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;{cursor}min-height:80px;\" ");
                         if (canEdit && !hasContent)
                             sb.Append($"onclick=\"openContentModal('{pos}')\" ");
                         sb.Append(">");
 
-                        if (hasContent && assigned?.Content != null)
+                        if (hasContent)
                         {
-                            var icon = GetContentIcon(assigned.Content.ContentType);
-                            var title = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentTitle);
-                            var cType = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentType);
-                            sb.Append("<div class=\"text-center w-100\">");
-                            sb.Append($"<i class=\"bi {icon} fs-4 text-success\"></i>");
-                            sb.Append($"<div class=\"fw-bold small mt-1\">{title}</div>");
-                            sb.Append($"<span class=\"badge bg-success mt-1\">{cType}</span>");
+                            sb.Append("<div class=\"w-100\" style=\"display:flex;flex-direction:column;gap:4px;align-items:stretch;\">");
+                            foreach (var assigned in assignedList)
+                            {
+                                if (assigned.Content == null) continue;
+                                var icon = GetContentIcon(assigned.Content.ContentType);
+                                var title = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentTitle);
+                                sb.Append($"<div id=\"sc-{assigned.PageContentID}\" class=\"section-content-item\" data-content-id=\"{assigned.ContentID}\">");
+                                sb.Append($"<i class=\"bi {icon} text-success\"></i>");
+                                sb.Append($"<span class=\"flex-grow-1 text-truncate fw-bold\">{title}</span>");
+                                if (canEdit)
+                                {
+                                    sb.Append($"<input type=\"number\" class=\"duration-input\" value=\"{assigned.DurationSeconds}\" min=\"1\" onchange=\"updateDuration({assigned.PageContentID}, this)\" title=\"{T("page.durationSeconds")}\">");
+                                    sb.Append("<span class=\"text-muted\" style=\"font-size:0.7rem;\">s</span>");
+                                    sb.Append($"<button class=\"btn btn-outline-danger btn-remove-one\" onclick=\"event.stopPropagation(); removeOneContent({assigned.PageContentID}, '{pos}')\" title=\"{T("common.remove")}\">");
+                                    sb.Append("<i class=\"bi bi-x\"></i></button>");
+                                }
+                                else
+                                {
+                                    sb.Append($"<span class=\"badge bg-info\">{assigned.DurationSeconds}s</span>");
+                                }
+                                sb.Append("</div>");
+                            }
                             if (canEdit)
                             {
-                                sb.Append("<div class=\"mt-2\">");
-                                sb.Append($"<button class=\"btn btn-outline-danger btn-sm\" onclick=\"event.stopPropagation(); removeContent('{pos}')\" title=\"{T("common.remove")}\">");
-                                sb.Append("<i class=\"bi bi-x-circle\"></i></button> ");
-                                sb.Append($"<button class=\"btn btn-outline-primary btn-sm\" onclick=\"event.stopPropagation(); openContentModal('{pos}')\">");
-                                sb.Append("<i class=\"bi bi-arrow-repeat\"></i></button>");
-                                sb.Append("</div>");
+                                sb.Append($"<button class=\"btn btn-outline-primary btn-sm mt-1\" onclick=\"event.stopPropagation(); openContentModal('{pos}')\">");
+                                sb.Append($"<i class=\"bi bi-plus-circle me-1\"></i> {T("page.addContent")}</button>");
                             }
                             sb.Append("</div>");
                         }
@@ -567,7 +735,7 @@
     string RenderDesignGridString(
         List<DigitalSignage.Models.LayoutRowDefinition> rows,
         string parentPos,
-        Dictionary<string, DigitalSignage.Models.PageContent> contentMap,
+        Dictionary<string, List<DigitalSignage.Models.PageContent>> contentMap,
         bool canEdit,
         Func<string, string> T)
     {

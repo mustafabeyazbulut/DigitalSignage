@@ -232,7 +232,11 @@
         "selectContent": "Select Content",
         "contentAssigned": "Content assigned successfully.",
         "contentRemoved": "Content removed successfully.",
-        "confirmRemoveContent": "Are you sure you want to remove content from this section?"
+        "confirmRemoveContent": "Are you sure you want to remove content from this section?",
+        "durationSeconds": "Duration (sec)",
+        "durationUpdated": "Duration updated.",
+        "contentAlreadyAssigned": "This content is already assigned to this section.",
+        "sectionContents": "Section Contents"
     },
     "layout": {
         "title": "Layout Library",

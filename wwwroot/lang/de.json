@@ -232,7 +232,11 @@
         "selectContent": "Inhalt auswählen",
         "contentAssigned": "Inhalt erfolgreich zugewiesen.",
         "contentRemoved": "Inhalt erfolgreich entfernt.",
-        "confirmRemoveContent": "Sind Sie sicher, dass Sie den Inhalt aus diesem Abschnitt entfernen möchten?"
+        "confirmRemoveContent": "Sind Sie sicher, dass Sie den Inhalt aus diesem Abschnitt entfernen möchten?",
+        "durationSeconds": "Dauer (Sek.)",
+        "durationUpdated": "Dauer aktualisiert.",
+        "contentAlreadyAssigned": "Dieser Inhalt ist bereits diesem Abschnitt zugewiesen.",
+        "sectionContents": "Abschnittsinhalte"
     },
     "layout": {
         "title": "Layout-Bibliothek",

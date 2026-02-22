@@ -40,13 +40,6 @@ namespace DigitalSignage.Data.Repositories
             return maxOrder ?? 0;
         }
 
-        public async Task<PageContent?> GetByPageAndSectionAsync(int pageId, string sectionPosition)
-        {
-            return await _dbSet
-                .Include(pc => pc.Content)
-                .FirstOrDefaultAsync(pc => pc.PageID == pageId && pc.DisplaySection == sectionPosition && pc.IsActive);
-        }
-
         public async Task ReorderContentsAsync(int pageId, IEnumerable<int> pageContentIds)
         {
             var contents = await _dbSet
@@ -62,6 +55,24 @@ namespace DigitalSignage.Data.Repositories
                     content.DisplayOrder = order++;
                 }
             }
+        }
+
+        public async Task<List<PageContent>> GetContentsBySectionAsync(int pageId, string sectionPosition)
+        {
+            return await _dbSet.AsNoTracking()
+                .Where(pc => pc.PageID == pageId && pc.DisplaySection == sectionPosition && pc.IsActive)
+                .Include(pc => pc.Content)
+                .OrderBy(pc => pc.DisplayOrder)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetMaxSectionDisplayOrderAsync(int pageId, string sectionPosition)
+        {
+            var maxOrder = await _dbSet
+                .Where(pc => pc.PageID == pageId && pc.DisplaySection == sectionPosition)
+                .MaxAsync(pc => (int?)pc.DisplayOrder);
+
+            return maxOrder ?? 0;
         }
     }
 }

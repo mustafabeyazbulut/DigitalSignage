@@ -14,6 +14,9 @@ namespace DigitalSignage.Services
         Task<bool> AssignLayoutAsync(int pageId, int layoutId);
         Task<bool> AssignContentToSectionAsync(int pageId, string sectionPosition, int contentId);
         Task<bool> RemoveContentFromSectionAsync(int pageId, string sectionPosition);
-        Task<Dictionary<string, PageContent>> GetSectionContentMapAsync(int pageId);
+        Task<bool> RemoveSingleContentFromSectionAsync(int pageId, string sectionPosition, int pageContentId);
+        Task<bool> UpdateSectionContentDurationAsync(int pageContentId, int durationSeconds);
+        Task<bool> ReorderSectionContentsAsync(int pageId, string sectionPosition, int[] orderedIds);
+        Task<Dictionary<string, List<PageContent>>> GetSectionContentMapAsync(int pageId);
     }
 }
