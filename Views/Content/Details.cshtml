@@ -51,21 +51,21 @@
                     <dd class="col-sm-9">
                         @if (Model.ContentType == "Image")
                         {
-                            <img src="@Model.MediaPath" alt="@Model.ContentTitle" class="img-fluid" style="max-width: 400px;" />
+                            <img src="/media/@Model.MediaPath" alt="@Model.ContentTitle" class="img-fluid" style="max-width: 400px;" />
                         }
                         else if (Model.ContentType == "Video")
                         {
                             <video controls style="max-width: 400px;">
-                                <source src="@Model.MediaPath" type="video/mp4">
+                                <source src="/media/@Model.MediaPath" type="video/mp4">
                             </video>
                         }
                         else if (Model.ContentType == "PDF")
                         {
-                            <embed src="@Model.MediaPath" type="application/pdf" width="100%" height="500px" />
+                            <embed src="/media/@Model.MediaPath" type="application/pdf" width="100%" height="500px" />
                         }
                         else
                         {
-                            <a href="@Model.MediaPath" target="_blank">@Model.MediaPath</a>
+                            <a href="/media/@Model.MediaPath" target="_blank">@Model.MediaPath</a>
                         }
                     </dd>
                 }

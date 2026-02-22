@@ -76,17 +76,17 @@
                                 <div class="card-body">
                                     @if (Model.ContentType == "Image" && !string.IsNullOrEmpty(Model.MediaPath))
                                     {
-                                        <img src="@Model.MediaPath" alt="@Model.ContentTitle" class="img-thumbnail" style="max-height: 200px;" />
+                                        <img src="/media/@Model.MediaPath" alt="@Model.ContentTitle" class="img-thumbnail" style="max-height: 200px;" />
                                     }
                                     else if (Model.ContentType == "Video" && !string.IsNullOrEmpty(Model.MediaPath))
                                     {
                                         <video controls style="max-width: 100%; max-height: 200px;">
-                                            <source src="@Model.MediaPath" />
+                                            <source src="/media/@Model.MediaPath" />
                                         </video>
                                     }
                                     else if (Model.ContentType == "PDF" && !string.IsNullOrEmpty(Model.MediaPath))
                                     {
-                                        <embed src="@Model.MediaPath" type="application/pdf" width="100%" height="300px" />
+                                        <embed src="/media/@Model.MediaPath" type="application/pdf" width="100%" height="300px" />
                                     }
                                     else if (Model.ContentType == "URL" && !string.IsNullOrEmpty(Model.ContentData))
                                     {

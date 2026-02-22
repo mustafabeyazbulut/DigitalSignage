@@ -61,12 +61,12 @@
                         <dd class="col-sm-8">
                             @if (Model.ContentType == "Image" && !string.IsNullOrEmpty(Model.MediaPath))
                             {
-                                <img src="@Model.MediaPath" alt="@Model.ContentTitle" class="img-thumbnail" style="max-height: 150px;" />
+                                <img src="/media/@Model.MediaPath" alt="@Model.ContentTitle" class="img-thumbnail" style="max-height: 150px;" />
                             }
                             else if (Model.ContentType == "Video" && !string.IsNullOrEmpty(Model.MediaPath))
                             {
                                 <video controls style="max-width: 100%; max-height: 150px;">
-                                    <source src="@Model.MediaPath" />
+                                    <source src="/media/@Model.MediaPath" />
                                 </video>
                             }
                             else if (Model.ContentType == "PDF" && !string.IsNullOrEmpty(Model.MediaPath))

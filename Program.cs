@@ -30,6 +30,7 @@ builder.Services.AddScoped<ILayoutService, LayoutService>();
 builder.Services.AddScoped<IContentService, ContentService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 
 // Language Service (JSON-based localization)
 builder.Services.AddSingleton<ILanguageService, LanguageService>();
@@ -115,6 +116,10 @@ builder.Services.AddAuthorization(options =>
 });
 
 var app = builder.Build();
+
+// Dosya yükleme klasörünü oluştur (wwwroot dışında)
+var uploadsBasePath = builder.Configuration["AppSettings:UploadsBasePath"] ?? "App_Data/uploads";
+Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), uploadsBasePath));
 
 // Seed Data (SADECE Development Ortamında)
 if (app.Environment.IsDevelopment())

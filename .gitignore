@@ -65,9 +65,9 @@ $RECYCLE.BIN/
 .AppleDouble
 .LSOverride
 
-# Uploads (kullanıcı yüklediği dosyalar)
-wwwroot/uploads/*
-!wwwroot/uploads/.gitkeep
+# Uploads (kullanıcı yüklediği dosyalar — artık wwwroot dışında)
+App_Data/uploads/*
+!App_Data/uploads/.gitkeep
 
 # Publish output
 publish/

@@ -88,7 +88,7 @@
                                     <div class="content-preview">
                                         @if(item.ContentType == "Image")
                                         {
-                                            <img src="@item.MediaPath" alt="@item.ContentTitle" />
+                                            <img src="/media/@item.MediaPath" alt="@item.ContentTitle" />
                                         }
                                         else if (item.ContentType == "Video")
                                         {

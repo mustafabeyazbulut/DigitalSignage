@@ -1,6 +1,7 @@
 using DigitalSignage.Models;
 using DigitalSignage.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using AuthService = DigitalSignage.Services.IAuthorizationService;
 
 namespace DigitalSignage.Controllers
@@ -10,23 +11,21 @@ namespace DigitalSignage.Controllers
         private readonly IContentService _contentService;
         private readonly IDepartmentService _departmentService;
         private readonly ICompanyService _companyService;
-        private readonly IConfiguration _configuration;
         private readonly AuthService _authService;
-        private readonly string _uploadsPath;
+        private readonly IFileStorageService _fileStorage;
 
         public ContentController(
             IContentService contentService,
             IDepartmentService departmentService,
             ICompanyService companyService,
-            IConfiguration configuration,
-            AuthService authService)
+            AuthService authService,
+            IFileStorageService fileStorage)
         {
             _contentService = contentService;
             _departmentService = departmentService;
             _companyService = companyService;
-            _configuration = configuration;
             _authService = authService;
-            _uploadsPath = _configuration["AppSettings:UploadsPath"] ?? "/uploads/";
+            _fileStorage = fileStorage;
         }
 
         public async Task<IActionResult> Index(int? departmentId, string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
@@ -174,27 +173,17 @@ namespace DigitalSignage.Controllers
             {
                 if (mediaFile != null && mediaFile.Length > 0)
                 {
-                    // Image, Video ve PDF dosya yükleme
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".mp4", ".webm", ".ogg", ".pdf" };
-                    var ext = Path.GetExtension(mediaFile.FileName).ToLowerInvariant();
-                    if (!allowedExtensions.Contains(ext))
+                    if (!_fileStorage.IsValidFile(mediaFile))
                     {
                         AddErrorMessage(T("content.unsupportedFormat"));
                         ViewBag.Departments = await GetAccessibleDepartmentsAsync(userId);
                         return View(content);
                     }
 
-                    var fileName = Guid.NewGuid().ToString() + ext;
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
-
-                    Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await mediaFile.CopyToAsync(stream);
-                    }
-
-                    content.MediaPath = _uploadsPath + fileName;
+                    // Departmandan şirket ID'sini al
+                    var dept = await _departmentService.GetByIdAsync(content.DepartmentID);
+                    var companyId = dept!.CompanyID;
+                    content.MediaPath = await _fileStorage.SaveFileAsync(mediaFile, companyId);
                 }
 
                 // URL tipi için ContentData'ya URL'yi kaydet
@@ -273,35 +262,20 @@ namespace DigitalSignage.Controllers
             {
                 if (file != null && file.Length > 0)
                 {
-                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".mp4", ".webm", ".ogg", ".pdf" };
-                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    if (!allowedExtensions.Contains(ext))
+                    if (!_fileStorage.IsValidFile(file))
                     {
                         AddErrorMessage(T("content.unsupportedFormat"));
                         ViewBag.Departments = await GetAccessibleDepartmentsAsync(userId);
                         return View(content);
                     }
 
-                    var fileName = Guid.NewGuid().ToString() + ext;
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
+                    // Eski dosyayı sil
+                    _fileStorage.DeleteFile(content.MediaPath);
 
-                    Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    if (!string.IsNullOrEmpty(content.MediaPath))
-                    {
-                        var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", content.MediaPath.TrimStart('/'));
-                        if (System.IO.File.Exists(oldFilePath))
-                        {
-                            System.IO.File.Delete(oldFilePath);
-                        }
-                    }
-
-                    content.MediaPath = _uploadsPath + fileName;
+                    // Departmandan şirket ID'sini al
+                    var dept = await _departmentService.GetByIdAsync(content.DepartmentID);
+                    var companyId = dept!.CompanyID;
+                    content.MediaPath = await _fileStorage.SaveFileAsync(file, companyId);
                 }
 
                 await _contentService.UpdateAsync(content);
@@ -346,18 +320,38 @@ namespace DigitalSignage.Controllers
             if (!await _authService.IsDepartmentManagerAsync(userId, content.DepartmentID))
                 return AccessDenied();
 
-            if (!string.IsNullOrEmpty(content.MediaPath))
-            {
-                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", content.MediaPath.TrimStart('/'));
-                if (System.IO.File.Exists(filePath))
-                {
-                    System.IO.File.Delete(filePath);
-                }
-            }
+            _fileStorage.DeleteFile(content.MediaPath);
 
             await _contentService.DeleteAsync(id);
             AddSuccessMessage(T("content.deletedSuccess"));
             return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// Auth kontrollü dosya servis endpoint'i.
+        /// Dosyalar wwwroot dışında saklandığı için bu endpoint üzerinden sunulur.
+        /// </summary>
+        [HttpGet("media/{companyId}/{fileName}")]
+        public async Task<IActionResult> ServeFile(int companyId, string fileName)
+        {
+            var userId = GetCurrentUserId();
+
+            // Kullanıcı bu şirkete erişebilir mi?
+            if (!await _authService.CanAccessCompanyAsync(userId, companyId))
+                return Forbid();
+
+            var mediaPath = $"{companyId}/{fileName}";
+            var physicalPath = _fileStorage.GetPhysicalPath(mediaPath);
+
+            if (!System.IO.File.Exists(physicalPath))
+                return NotFound();
+
+            // Content-Type belirle
+            var provider = new FileExtensionContentTypeProvider();
+            if (!provider.TryGetContentType(fileName, out var contentType))
+                contentType = "application/octet-stream";
+
+            return PhysicalFile(physicalPath, contentType);
         }
 
         private async Task<List<Department>> GetAccessibleDepartmentsAsync(int userId)
