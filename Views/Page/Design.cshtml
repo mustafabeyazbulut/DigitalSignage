@@ -86,11 +86,13 @@
                 @if (canEdit)
                 {
                     <div class="collapse mt-3" id="layoutSelector">
-                        @await Html.PartialAsync("_LayoutSelector", new ViewDataDictionary(ViewData) {
-                            { "Layouts", layouts },
-                            { "PageId", Model.PageID },
-                            { "CurrentLayoutId", Model.LayoutID }
-                        })
+                        @{
+                            var selectorData = new ViewDataDictionary(ViewData);
+                            selectorData["Layouts"] = layouts;
+                            selectorData["PageId"] = Model.PageID;
+                            selectorData["CurrentLayoutId"] = Model.LayoutID;
+                        }
+                        @await Html.PartialAsync("_LayoutSelector", selectorData)
                     </div>
                 }
             }
