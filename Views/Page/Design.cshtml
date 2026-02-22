@@ -338,37 +338,81 @@
                 if (data.success) {
                     updateCellUI(currentSection, data.content.contentTitle, data.content.contentType);
                     bootstrap.Modal.getInstance(document.getElementById('contentModal')).hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: '@T("page.contentAssigned")',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
                 } else {
-                    alert(data.message || 'Hata olustu');
+                    Swal.fire({
+                        icon: 'error',
+                        title: '@T("common.error")',
+                        text: data.message || '@T("common.error")'
+                    });
                 }
             })
             .catch(function () {
-                alert('Bir hata olustu');
+                Swal.fire({
+                    icon: 'error',
+                    title: '@T("common.error")',
+                    text: '@T("common.error")'
+                });
             });
         }
 
         function removeContent(sectionPos) {
-            if (!confirm('@T("page.confirmRemoveContent")')) return;
+            Swal.fire({
+                title: '@T("page.confirmRemoveContent")',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '@T("common.delete")',
+                cancelButtonText: '@T("common.cancel")'
+            }).then(function (result) {
+                if (!result.isConfirmed) return;
 
-            var formData = new FormData();
-            formData.append('pageId', pageId);
-            formData.append('sectionPosition', sectionPos);
+                var formData = new FormData();
+                formData.append('pageId', pageId);
+                formData.append('sectionPosition', sectionPos);
 
-            fetch('@Url.Action("RemoveContentFromSection", "Page")', {
-                method: 'POST',
-                headers: { 'RequestVerificationToken': antiForgeryToken },
-                body: formData
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.success) {
-                    clearCellUI(sectionPos);
-                } else {
-                    alert(data.message || 'Hata olustu');
-                }
-            })
-            .catch(function () {
-                alert('Bir hata olustu');
+                fetch('@Url.Action("RemoveContentFromSection", "Page")', {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': antiForgeryToken },
+                    body: formData
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        clearCellUI(sectionPos);
+                        Swal.fire({
+                            icon: 'success',
+                            title: '@T("page.contentRemoved")',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: '@T("common.error")',
+                            text: data.message || '@T("common.error")'
+                        });
+                    }
+                })
+                .catch(function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: '@T("common.error")',
+                        text: '@T("common.error")'
+                    });
+                });
             });
         }
 
