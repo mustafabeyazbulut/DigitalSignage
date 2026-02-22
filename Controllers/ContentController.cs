@@ -165,11 +165,26 @@ namespace DigitalSignage.Controllers
             if (!await _authService.CanEditInDepartmentAsync(userId, content.DepartmentID))
                 return AccessDenied();
 
+            // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
+            ModelState.Remove("Department");
+            ModelState.Remove("PageContents");
+            ModelState.Remove("CreatedBy");
+
             if (ModelState.IsValid)
             {
                 if (mediaFile != null && mediaFile.Length > 0)
                 {
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(mediaFile.FileName);
+                    // Image, Video ve PDF dosya yükleme
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".mp4", ".webm", ".ogg", ".pdf" };
+                    var ext = Path.GetExtension(mediaFile.FileName).ToLowerInvariant();
+                    if (!allowedExtensions.Contains(ext))
+                    {
+                        AddErrorMessage(T("content.unsupportedFormat"));
+                        ViewBag.Departments = await GetAccessibleDepartmentsAsync(userId);
+                        return View(content);
+                    }
+
+                    var fileName = Guid.NewGuid().ToString() + ext;
                     var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
 
                     Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
@@ -180,6 +195,14 @@ namespace DigitalSignage.Controllers
                     }
 
                     content.MediaPath = _uploadsPath + fileName;
+                }
+
+                // URL tipi için ContentData'ya URL'yi kaydet
+                if (content.ContentType == "URL" && string.IsNullOrEmpty(content.ContentData))
+                {
+                    AddErrorMessage(T("content.urlRequired"));
+                    ViewBag.Departments = await GetAccessibleDepartmentsAsync(userId);
+                    return View(content);
                 }
 
                 await _contentService.CreateAsync(content);
@@ -241,11 +264,25 @@ namespace DigitalSignage.Controllers
             if (!await _authService.CanEditInDepartmentAsync(userId, content.DepartmentID))
                 return AccessDenied();
 
+            // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
+            ModelState.Remove("Department");
+            ModelState.Remove("PageContents");
+            ModelState.Remove("CreatedBy");
+
             if (ModelState.IsValid)
             {
                 if (file != null && file.Length > 0)
                 {
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".mp4", ".webm", ".ogg", ".pdf" };
+                    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                    if (!allowedExtensions.Contains(ext))
+                    {
+                        AddErrorMessage(T("content.unsupportedFormat"));
+                        ViewBag.Departments = await GetAccessibleDepartmentsAsync(userId);
+                        return View(content);
+                    }
+
+                    var fileName = Guid.NewGuid().ToString() + ext;
                     var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads", fileName);
 
                     Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);

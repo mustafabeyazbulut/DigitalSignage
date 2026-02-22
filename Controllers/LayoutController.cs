@@ -123,8 +123,10 @@ namespace DigitalSignage.Controllers
             if (!await _authService.IsCompanyAdminAsync(userId, layout.CompanyID))
                 return AccessDenied();
 
-            // Navigasyon özelliği doğrulamalarını kaldır
+            // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
             ModelState.Remove("Company");
+            ModelState.Remove("LayoutSections");
+            ModelState.Remove("Pages");
 
             // LayoutDefinition JSON doğrulaması
             if (!IsValidLayoutDefinition(layout.LayoutDefinition))
@@ -175,8 +177,10 @@ namespace DigitalSignage.Controllers
             if (!await _authService.IsCompanyAdminAsync(userId, layout.CompanyID))
                 return AccessDenied();
 
-            // Navigasyon özelliği doğrulamalarını kaldır
+            // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
             ModelState.Remove("Company");
+            ModelState.Remove("LayoutSections");
+            ModelState.Remove("Pages");
 
             // LayoutDefinition JSON doğrulaması
             if (!IsValidLayoutDefinition(layout.LayoutDefinition))

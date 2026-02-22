@@ -1,3 +1,6 @@
+/* Validation summary: hata yokken gizle */
+.validation-summary-valid { display: none; }
+
 /* Global Styles */
 body {
     font-family: 'Inter', sans-serif;

@@ -11,7 +11,7 @@ namespace DigitalSignage.Models
         
         [Required]
         [MaxLength(50)]
-        public string ContentType { get; set; } = "Text"; // Text, Image, Video, HTML
+        public string ContentType { get; set; } = "Text"; // Text, Image, Video, HTML, PDF, URL
         
         [MaxLength(255)]
         public string? ContentTitle { get; set; }
@@ -24,7 +24,6 @@ namespace DigitalSignage.Models
         [MaxLength(500)]
         public string? ThumbnailPath { get; set; }
         
-        public int? DurationSeconds { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         

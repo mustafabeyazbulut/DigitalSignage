@@ -1,7 +1,10 @@
 @model DigitalSignage.Models.Content
 
 @{
-    ViewData["Title"] = "Content Details";
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("content.detailsTitle");
 }
 
 <div class="container mt-4">
@@ -10,27 +13,31 @@
             <h1>@Model.ContentTitle</h1>
         </div>
         <div class="col-md-4 text-end">
-            <a asp-action="Edit" asp-route-id="@Model.ContentID" class="btn btn-warning">Edit</a>
-            <a asp-action="Delete" asp-route-id="@Model.ContentID" class="btn btn-danger">Delete</a>
+            <a asp-action="Edit" asp-route-id="@Model.ContentID" class="btn btn-warning">@T("common.edit")</a>
+            <a asp-action="Delete" asp-route-id="@Model.ContentID" class="btn btn-danger">@T("common.delete")</a>
         </div>
     </div>
 
     <div class="card">
         <div class="card-body">
             <dl class="row">
-                <dt class="col-sm-3">Content Type</dt>
+                <dt class="col-sm-3">@T("content.contentType")</dt>
                 <dd class="col-sm-9">
                     <span class="badge bg-info">@Model.ContentType</span>
                 </dd>
 
-                <dt class="col-sm-3">Department</dt>
+                <dt class="col-sm-3">@T("dashboard.department")</dt>
                 <dd class="col-sm-9">@Model.Department?.DepartmentName</dd>
 
-                <dt class="col-sm-3">Content Data</dt>
+                <dt class="col-sm-3">@T("content.contentData")</dt>
                 <dd class="col-sm-9">
                     @if (Model.ContentType == "Text" || Model.ContentType == "HTML")
                     {
                         <div class="border p-3 bg-light">@Html.Raw(Model.ContentData)</div>
+                    }
+                    else if (Model.ContentType == "URL" && !string.IsNullOrEmpty(Model.ContentData))
+                    {
+                        <a href="@Model.ContentData" target="_blank">@Model.ContentData</a>
                     }
                     else
                     {
@@ -40,7 +47,7 @@
 
                 @if (!string.IsNullOrEmpty(Model.MediaPath))
                 {
-                    <dt class="col-sm-3">Media</dt>
+                    <dt class="col-sm-3">@T("content.mediaPath")</dt>
                     <dd class="col-sm-9">
                         @if (Model.ContentType == "Image")
                         {
@@ -50,8 +57,11 @@
                         {
                             <video controls style="max-width: 400px;">
                                 <source src="@Model.MediaPath" type="video/mp4">
-                                Your browser does not support the video tag.
                             </video>
+                        }
+                        else if (Model.ContentType == "PDF")
+                        {
+                            <embed src="@Model.MediaPath" type="application/pdf" width="100%" height="500px" />
                         }
                         else
                         {
@@ -60,29 +70,31 @@
                     </dd>
                 }
 
-                @if (Model.DurationSeconds.HasValue)
+                @if (Model.ContentType == "URL" && !string.IsNullOrEmpty(Model.ContentData))
                 {
-                    <dt class="col-sm-3">Duration</dt>
-                    <dd class="col-sm-9">@Model.DurationSeconds seconds</dd>
+                    <dt class="col-sm-3">@T("common.preview")</dt>
+                    <dd class="col-sm-9">
+                        <iframe src="@Model.ContentData" width="100%" height="400" style="border: 1px solid #dee2e6; border-radius: 0.375rem;" sandbox="allow-scripts allow-same-origin"></iframe>
+                    </dd>
                 }
 
-                <dt class="col-sm-3">Status</dt>
+                <dt class="col-sm-3">@T("common.status")</dt>
                 <dd class="col-sm-9">
                     <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
-                        @(Model.IsActive ? "Active" : "Inactive")
+                        @(Model.IsActive ? T("common.active") : T("common.inactive"))
                     </span>
                 </dd>
 
-                <dt class="col-sm-3">Created Date</dt>
+                <dt class="col-sm-3">@T("common.createdDate")</dt>
                 <dd class="col-sm-9">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
 
-                <dt class="col-sm-3">Created By</dt>
+                <dt class="col-sm-3">@T("content.createdBy")</dt>
                 <dd class="col-sm-9">@Model.CreatedBy</dd>
             </dl>
         </div>
     </div>
 
     <div class="mt-3">
-        <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">Back to List</button>
+        <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">@T("common.backToList")</button>
     </div>
 </div>

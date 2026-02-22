@@ -18,11 +18,11 @@
                         <input type="hidden" asp-for="ContentID" />
                         <input type="hidden" asp-for="CreatedDate" />
                         <input type="hidden" asp-for="MediaPath" />
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                        <div asp-validation-summary="All" class="alert alert-danger"></div>
 
                         <div class="mb-3">
                             <label asp-for="DepartmentID" class="form-label fw-bold">@T("dashboard.department")</label>
-                            <select asp-for="DepartmentID" class="form-select" asp-items="ViewBag.Departments" disabled>
+                            <select asp-for="DepartmentID" class="form-select" asp-items="@(new SelectList(ViewBag.Departments, "DepartmentID", "DepartmentName"))" disabled>
                             </select>
                             <input type="hidden" asp-for="DepartmentID" />
                             <div class="form-text">@T("content.departmentCannotChange")</div>
@@ -44,6 +44,8 @@
                                         <option value="Image">@T("content.image")</option>
                                         <option value="Video">@T("content.video")</option>
                                         <option value="HTML">@T("content.html")</option>
+                                        <option value="PDF">@T("content.pdf")</option>
+                                        <option value="URL">@T("content.url")</option>
                                     </select>
                                     <input type="hidden" asp-for="ContentType" />
                                     <div class="form-text">@T("content.contentTypeCannotChange")</div>
@@ -51,11 +53,22 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="ContentData" class="form-label">@T("content.contentData")</label>
-                            <textarea asp-for="ContentData" class="form-control" rows="5"></textarea>
-                            <div class="form-text">@T("content.contentDataHelp")</div>
-                        </div>
+                        @if (Model.ContentType == "URL")
+                        {
+                            <div class="mb-3">
+                                <label asp-for="ContentData" class="form-label fw-bold">@T("content.url")</label>
+                                <input asp-for="ContentData" type="url" class="form-control" placeholder="@T("content.urlPlaceholder")" />
+                                <div class="form-text">@T("content.urlHelp")</div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-3">
+                                <label asp-for="ContentData" class="form-label">@T("content.contentData")</label>
+                                <textarea asp-for="ContentData" class="form-control" rows="5"></textarea>
+                                <div class="form-text">@T("content.contentDataHelp")</div>
+                            </div>
+                        }
 
                         <div class="mb-3">
                             <label class="form-label">@T("content.currentMediaFile")</label>
@@ -71,6 +84,17 @@
                                             <source src="@Model.MediaPath" />
                                         </video>
                                     }
+                                    else if (Model.ContentType == "PDF" && !string.IsNullOrEmpty(Model.MediaPath))
+                                    {
+                                        <embed src="@Model.MediaPath" type="application/pdf" width="100%" height="300px" />
+                                    }
+                                    else if (Model.ContentType == "URL" && !string.IsNullOrEmpty(Model.ContentData))
+                                    {
+                                        <div class="border rounded p-2">
+                                            <i class="fas fa-link me-2"></i>
+                                            <a href="@Model.ContentData" target="_blank">@Model.ContentData</a>
+                                        </div>
+                                    }
                                     else
                                     {
                                         <p class="text-muted">@T("content.noMediaFile")</p>
@@ -83,17 +107,29 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">@T("content.replaceMediaFile")</label>
-                            <input type="file" name="file" class="form-control" />
-                            <div class="form-text">@T("common.leaveEmpty")</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="DurationSeconds" class="form-label">@T("content.durationSeconds")</label>
-                            <input asp-for="DurationSeconds" type="number" class="form-control" />
-                            <span asp-validation-for="DurationSeconds" class="text-danger"></span>
-                        </div>
+                        @if (Model.ContentType != "URL")
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">@T("content.replaceMediaFile")</label>
+                                @if (Model.ContentType == "PDF")
+                                {
+                                    <input type="file" name="file" class="form-control" accept=".pdf" />
+                                }
+                                else if (Model.ContentType == "Image")
+                                {
+                                    <input type="file" name="file" class="form-control" accept="image/*" />
+                                }
+                                else if (Model.ContentType == "Video")
+                                {
+                                    <input type="file" name="file" class="form-control" accept="video/*" />
+                                }
+                                else
+                                {
+                                    <input type="file" name="file" class="form-control" />
+                                }
+                                <div class="form-text">@T("common.leaveEmpty")</div>
+                            </div>
+                        }
 
                         <div class="mb-3 form-check">
                             <input asp-for="IsActive" class="form-check-input" />

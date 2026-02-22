@@ -159,6 +159,10 @@ namespace DigitalSignage.Controllers
             if (!await _authService.CanEditInDepartmentAsync(userId, schedule.DepartmentID))
                 return AccessDenied();
 
+            // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
+            ModelState.Remove("Department");
+            ModelState.Remove("SchedulePages");
+
             if (ModelState.IsValid)
             {
                 await _scheduleService.CreateAsync(schedule);
@@ -219,6 +223,10 @@ namespace DigitalSignage.Controllers
 
             if (!await _authService.CanEditInDepartmentAsync(userId, schedule.DepartmentID))
                 return AccessDenied();
+
+            // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
+            ModelState.Remove("Department");
+            ModelState.Remove("SchedulePages");
 
             if (ModelState.IsValid)
             {

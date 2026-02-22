@@ -69,17 +69,21 @@
                                     <source src="@Model.MediaPath" />
                                 </video>
                             }
+                            else if (Model.ContentType == "PDF" && !string.IsNullOrEmpty(Model.MediaPath))
+                            {
+                                <i class="bi bi-file-earmark-pdf fs-1 text-danger"></i>
+                                <span class="ms-2">PDF</span>
+                            }
+                            else if (Model.ContentType == "URL" && !string.IsNullOrEmpty(Model.ContentData))
+                            {
+                                <i class="bi bi-link-45deg fs-4"></i>
+                                <a href="@Model.ContentData" target="_blank" class="ms-1">@Model.ContentData</a>
+                            }
                             else
                             {
                                 <span class="text-muted">@Model.ContentType @T("content.text") - @T("common.noPreview")</span>
                             }
                         </dd>
-
-                        @if (Model.DurationSeconds.HasValue)
-                        {
-                            <dt class="col-sm-4">@T("content.duration")</dt>
-                            <dd class="col-sm-8">@Model.DurationSeconds @T("content.durationSeconds")</dd>
-                        }
 
                         <dt class="col-sm-4">@T("content.createdBy")</dt>
                         <dd class="col-sm-8">@Model.CreatedBy</dd>

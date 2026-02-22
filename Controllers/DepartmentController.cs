@@ -146,6 +146,14 @@ namespace DigitalSignage.Controllers
             if (!await _authService.IsCompanyAdminAsync(userId, department.CompanyID))
                 return AccessDenied();
 
+            // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
+            ModelState.Remove("Company");
+            ModelState.Remove("Pages");
+            ModelState.Remove("Schedules");
+            ModelState.Remove("Contents");
+            ModelState.Remove("UserDepartmentRoles");
+            ModelState.Remove("CreatedBy");
+
             if (ModelState.IsValid)
             {
                 await _departmentService.CreateAsync(department);
@@ -205,6 +213,14 @@ namespace DigitalSignage.Controllers
 
             if (!await _authService.IsCompanyAdminAsync(userId, department.CompanyID))
                 return AccessDenied();
+
+            // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
+            ModelState.Remove("Company");
+            ModelState.Remove("Pages");
+            ModelState.Remove("Schedules");
+            ModelState.Remove("Contents");
+            ModelState.Remove("UserDepartmentRoles");
+            ModelState.Remove("CreatedBy");
 
             if (ModelState.IsValid)
             {

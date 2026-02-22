@@ -17,7 +17,7 @@
                     <form asp-action="Edit" method="post">
                         <input type="hidden" asp-for="ScheduleID" />
                         <input type="hidden" asp-for="CreatedDate" />
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                        <div asp-validation-summary="All" class="alert alert-danger"></div>
 
                         <div class="mb-3">
                             <label asp-for="DepartmentID" class="form-label fw-bold">@T("dashboard.department")</label>
