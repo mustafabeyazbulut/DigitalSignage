@@ -373,7 +373,7 @@
         }
 
         function updateCellUI(sectionPos, title, type) {
-            var cell = document.getElementById('cell-' + CSS.escape(sectionPos));
+            var cell = document.getElementById('cell-' + sectionPos);
             if (!cell) return;
 
             cell.classList.add('has-content');
@@ -398,7 +398,7 @@
         }
 
         function clearCellUI(sectionPos) {
-            var cell = document.getElementById('cell-' + CSS.escape(sectionPos));
+            var cell = document.getElementById('cell-' + sectionPos);
             if (!cell) return;
 
             cell.classList.remove('has-content');
