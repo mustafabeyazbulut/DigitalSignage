@@ -80,8 +80,14 @@
 
                     <div class="sidebar-subheading text-muted text-uppercase fs-7 px-3 mt-4 mb-2">@T("nav.contentDesign")</div>
 
+                    <a asp-controller="Schedule" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Schedule" ? "active-link" : "")">
+                        <i class="fas fa-calendar-alt me-2 text-danger"></i>@T("nav.schedules")
+                    </a>
                     <a asp-controller="Page" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Page" ? "active-link" : "")">
                         <i class="fas fa-desktop me-2 text-success"></i>@T("nav.pages")
+                    </a>
+                    <a asp-controller="Content" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Content" ? "active-link" : "")">
+                        <i class="fas fa-photo-video me-2 text-info"></i>@T("nav.mediaLibrary")
                     </a>
                     @if (isSystemAdmin || isCompanyAdmin)
                     {
@@ -89,12 +95,6 @@
                             <i class="fas fa-th-large me-2 text-warning"></i>@T("nav.layouts")
                         </a>
                     }
-                    <a asp-controller="Content" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Content" ? "active-link" : "")">
-                        <i class="fas fa-photo-video me-2 text-info"></i>@T("nav.mediaLibrary")
-                    </a>
-                    <a asp-controller="Schedule" asp-action="Index" class="list-group-item list-group-item-action list-group-item-light p-3 border-0 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Schedule" ? "active-link" : "")">
-                        <i class="fas fa-calendar-alt me-2 text-danger"></i>@T("nav.schedules")
-                    </a>
                 }
             </div>
         </div>
