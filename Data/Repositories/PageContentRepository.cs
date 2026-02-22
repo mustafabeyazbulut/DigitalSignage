@@ -40,6 +40,13 @@ namespace DigitalSignage.Data.Repositories
             return maxOrder ?? 0;
         }
 
+        public async Task<PageContent?> GetByPageAndSectionAsync(int pageId, string sectionPosition)
+        {
+            return await _dbSet
+                .Include(pc => pc.Content)
+                .FirstOrDefaultAsync(pc => pc.PageID == pageId && pc.DisplaySection == sectionPosition && pc.IsActive);
+        }
+
         public async Task ReorderContentsAsync(int pageId, IEnumerable<int> pageContentIds)
         {
             var contents = await _dbSet

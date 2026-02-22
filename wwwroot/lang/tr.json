@@ -225,7 +225,13 @@
         "createdSuccess": "Sayfa başarıyla oluşturuldu.",
         "updatedSuccess": "Sayfa başarıyla güncellendi.",
         "deletedSuccess": "Sayfa başarıyla silindi.",
-        "notFound": "Sayfa bulunamadı."
+        "notFound": "Sayfa bulunamadı.",
+        "addContent": "İçerik Ekle",
+        "noContent": "Bu departmanda aktif içerik bulunamadı.",
+        "selectContent": "İçerik Seç",
+        "contentAssigned": "İçerik başarıyla atandı.",
+        "contentRemoved": "İçerik başarıyla kaldırıldı.",
+        "confirmRemoveContent": "Bu section'dan içeriği kaldırmak istediğinize emin misiniz?"
     },
     "layout": {
         "title": "Düzen Kütüphanesi",

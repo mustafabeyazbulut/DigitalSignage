@@ -225,7 +225,13 @@
         "createdSuccess": "Seite erfolgreich erstellt.",
         "updatedSuccess": "Seite erfolgreich aktualisiert.",
         "deletedSuccess": "Seite erfolgreich gelöscht.",
-        "notFound": "Seite nicht gefunden."
+        "notFound": "Seite nicht gefunden.",
+        "addContent": "Inhalt hinzufügen",
+        "noContent": "Kein aktiver Inhalt in dieser Abteilung gefunden.",
+        "selectContent": "Inhalt auswählen",
+        "contentAssigned": "Inhalt erfolgreich zugewiesen.",
+        "contentRemoved": "Inhalt erfolgreich entfernt.",
+        "confirmRemoveContent": "Sind Sie sicher, dass Sie den Inhalt aus diesem Abschnitt entfernen möchten?"
     },
     "layout": {
         "title": "Layout-Bibliothek",

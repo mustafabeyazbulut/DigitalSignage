@@ -101,5 +101,61 @@ namespace DigitalSignage.Services
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
+
+        public async Task<bool> AssignContentToSectionAsync(int pageId, string sectionPosition, int contentId)
+        {
+            var page = await _unitOfWork.Pages.GetByIdAsync(pageId);
+            if (page == null) return false;
+
+            var content = await _unitOfWork.Contents.GetByIdAsync(contentId);
+            if (content == null) return false;
+
+            // Aynı section'da mevcut atama var mı kontrol et
+            var existing = await _unitOfWork.PageContents.GetByPageAndSectionAsync(pageId, sectionPosition);
+            if (existing != null)
+            {
+                // Mevcut atamayı güncelle
+                existing.ContentID = contentId;
+                existing.AddedDate = DateTime.UtcNow;
+                await _unitOfWork.PageContents.UpdateAsync(existing);
+            }
+            else
+            {
+                // Yeni atama oluştur
+                var maxOrder = await _unitOfWork.PageContents.GetMaxDisplayOrderAsync(pageId);
+                var pageContent = new PageContent
+                {
+                    PageID = pageId,
+                    ContentID = contentId,
+                    DisplaySection = sectionPosition,
+                    DisplayOrder = maxOrder + 1,
+                    IsActive = true,
+                    AddedDate = DateTime.UtcNow
+                };
+                await _unitOfWork.PageContents.AddAsync(pageContent);
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> RemoveContentFromSectionAsync(int pageId, string sectionPosition)
+        {
+            var existing = await _unitOfWork.PageContents.GetByPageAndSectionAsync(pageId, sectionPosition);
+            if (existing == null) return false;
+
+            await _unitOfWork.PageContents.DeleteAsync(existing.PageContentID);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<Dictionary<string, PageContent>> GetSectionContentMapAsync(int pageId)
+        {
+            var contents = await _unitOfWork.PageContents.GetContentsByPageAsync(pageId);
+            return contents
+                .Where(pc => !string.IsNullOrEmpty(pc.DisplaySection))
+                .GroupBy(pc => pc.DisplaySection!)
+                .ToDictionary(g => g.Key, g => g.First());
+        }
     }
 }

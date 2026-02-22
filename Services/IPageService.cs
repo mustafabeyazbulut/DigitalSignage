@@ -12,5 +12,8 @@ namespace DigitalSignage.Services
         Task<PagedResult<Page>> GetPagesPagedAsync(int departmentId, int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null);
         Task<string> GeneratePageCodeAsync();
         Task<bool> AssignLayoutAsync(int pageId, int layoutId);
+        Task<bool> AssignContentToSectionAsync(int pageId, string sectionPosition, int contentId);
+        Task<bool> RemoveContentFromSectionAsync(int pageId, string sectionPosition);
+        Task<Dictionary<string, PageContent>> GetSectionContentMapAsync(int pageId);
     }
 }

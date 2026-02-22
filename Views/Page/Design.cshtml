@@ -9,6 +9,7 @@
     var layouts = ViewBag.Layouts as IEnumerable<DigitalSignage.Models.Layout> ?? Enumerable.Empty<DigitalSignage.Models.Layout>();
     var canEdit = ViewBag.CanEdit as bool? ?? false;
     var hasLayout = Model.LayoutID.HasValue && Model.Layout != null;
+    var sectionContentMap = ViewBag.SectionContentMap as Dictionary<string, DigitalSignage.Models.PageContent> ?? new Dictionary<string, DigitalSignage.Models.PageContent>();
 }
 
 <div class="container-fluid mt-4">
@@ -67,10 +68,47 @@
                                             @foreach (var col in row.Columns)
                                             {
                                                 var sectionPos = $"R{rowIdx + 1}C{colIdx + 1}";
-                                                var section = Model.Layout.LayoutSections?.FirstOrDefault(s => s.SectionPosition == sectionPos);
-                                                <div style="background-color:#f8f9fa;border:1px solid #dee2e6;padding:15px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                                                    <strong>@sectionPos</strong>
-                                                    <p class="text-muted small mb-0">@(col.Width)% x @(row.Height)%</p>
+                                                var hasContent = sectionContentMap.ContainsKey(sectionPos);
+                                                var assignedContent = hasContent ? sectionContentMap[sectionPos] : null;
+
+                                                <div id="cell-@sectionPos"
+                                                     class="design-cell @(hasContent ? "has-content" : "")"
+                                                     style="background-color:@(hasContent ? "#d4edda" : "#f8f9fa");border:1px solid @(hasContent ? "#28a745" : "#dee2e6");padding:15px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;@(canEdit ? "cursor:pointer;" : "")min-height:80px;"
+                                                     @if (canEdit && !hasContent)
+                                                     {
+                                                         <text>onclick="openContentModal('@sectionPos')"</text>
+                                                     }>
+
+                                                    @if (hasContent && assignedContent?.Content != null)
+                                                    {
+                                                        <div class="text-center w-100">
+                                                            <i class="bi @GetContentIcon(assignedContent.Content.ContentType) fs-4 text-success"></i>
+                                                            <div class="fw-bold small mt-1">@assignedContent.Content.ContentTitle</div>
+                                                            <span class="badge bg-success mt-1">@assignedContent.Content.ContentType</span>
+                                                            @if (canEdit)
+                                                            {
+                                                                <div class="mt-2">
+                                                                    <button class="btn btn-outline-danger btn-sm" onclick="event.stopPropagation(); removeContent('@sectionPos')" title="@T("common.remove")">
+                                                                        <i class="bi bi-x-circle"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); openContentModal('@sectionPos')" title="@T("page.changeLayout")">
+                                                                        <i class="bi bi-arrow-repeat"></i>
+                                                                    </button>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <strong class="text-muted">@sectionPos</strong>
+                                                        <p class="text-muted small mb-0">@(col.Width)% x @(row.Height)%</p>
+                                                        @if (canEdit)
+                                                        {
+                                                            <button class="btn btn-outline-primary btn-sm mt-2" onclick="event.stopPropagation(); openContentModal('@sectionPos')">
+                                                                <i class="bi bi-plus-circle me-1"></i> @T("page.addContent")
+                                                            </button>
+                                                        }
+                                                    }
                                                 </div>
                                                 colIdx++;
                                             }
@@ -226,6 +264,39 @@
     </div>
 </div>
 
+<!-- İçerik Seçim Modal'ı -->
+@if (canEdit && hasLayout)
+{
+    <div class="modal fade" id="contentModal" tabindex="-1" aria-labelledby="contentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contentModalLabel">
+                        <i class="bi bi-collection me-2"></i> @T("page.selectContent")
+                        <span id="modalSectionBadge" class="badge bg-primary ms-2"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Yükleniyor -->
+                    <div id="contentLoading" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <!-- Boş durum -->
+                    <div id="contentEmpty" class="text-center py-5 d-none">
+                        <i class="bi bi-inbox fs-1 text-muted"></i>
+                        <p class="text-muted mt-2">@T("page.noContent")</p>
+                    </div>
+                    <!-- İçerik grid'i -->
+                    <div id="contentGrid" class="row g-3 d-none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <style>
     .layout-card {
         transition: all 0.2s ease;
@@ -236,4 +307,205 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
+    .design-cell {
+        transition: all 0.2s ease;
+    }
+    .design-cell:hover {
+        border-color: var(--bs-primary) !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .design-cell.has-content {
+        border-color: #28a745 !important;
+    }
+    .content-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+    }
+    .content-card:hover {
+        border-color: var(--bs-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
 </style>
+
+@if (canEdit && hasLayout)
+{
+    <script>
+        var currentSection = '';
+        var pageId = @Model.PageID;
+        var departmentId = @Model.DepartmentID;
+        var antiForgeryToken = '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)?.[1] || '';
+
+        // İçerik tipi ikonları
+        function getContentIcon(type) {
+            switch ((type || '').toLowerCase()) {
+                case 'image': return 'bi-image';
+                case 'video': return 'bi-play-circle';
+                case 'html': return 'bi-code-slash';
+                case 'pdf': return 'bi-file-pdf';
+                case 'url': return 'bi-link-45deg';
+                default: return 'bi-file-text';
+            }
+        }
+
+        function openContentModal(sectionPos) {
+            currentSection = sectionPos;
+            document.getElementById('modalSectionBadge').textContent = sectionPos;
+
+            var loading = document.getElementById('contentLoading');
+            var empty = document.getElementById('contentEmpty');
+            var grid = document.getElementById('contentGrid');
+
+            loading.classList.remove('d-none');
+            empty.classList.add('d-none');
+            grid.classList.add('d-none');
+            grid.innerHTML = '';
+
+            var modal = new bootstrap.Modal(document.getElementById('contentModal'));
+            modal.show();
+
+            // AJAX ile içerikleri yükle
+            fetch('@Url.Action("GetDepartmentContents", "Page")?departmentId=' + departmentId)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    loading.classList.add('d-none');
+                    if (!data.success || !data.contents || data.contents.length === 0) {
+                        empty.classList.remove('d-none');
+                        return;
+                    }
+
+                    grid.classList.remove('d-none');
+                    data.contents.forEach(function (c) {
+                        var col = document.createElement('div');
+                        col.className = 'col-md-4';
+                        col.innerHTML =
+                            '<div class="card content-card h-100" onclick="assignContent(' + c.contentId + ', this)">' +
+                            '  <div class="card-body text-center">' +
+                            '    <i class="bi ' + getContentIcon(c.contentType) + ' fs-2 text-primary"></i>' +
+                            '    <h6 class="fw-bold mt-2 mb-1">' + escapeHtml(c.contentTitle || 'Untitled') + '</h6>' +
+                            '    <span class="badge bg-secondary">' + escapeHtml(c.contentType) + '</span>' +
+                            '  </div>' +
+                            '</div>';
+                        grid.appendChild(col);
+                    });
+                })
+                .catch(function () {
+                    loading.classList.add('d-none');
+                    empty.classList.remove('d-none');
+                });
+        }
+
+        function assignContent(contentId, cardEl) {
+            var formData = new FormData();
+            formData.append('pageId', pageId);
+            formData.append('sectionPosition', currentSection);
+            formData.append('contentId', contentId);
+
+            fetch('@Url.Action("AssignContentToSection", "Page")', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': antiForgeryToken },
+                body: formData
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    updateCellUI(currentSection, data.content.contentTitle, data.content.contentType);
+                    bootstrap.Modal.getInstance(document.getElementById('contentModal')).hide();
+                } else {
+                    alert(data.message || 'Hata olustu');
+                }
+            })
+            .catch(function () {
+                alert('Bir hata olustu');
+            });
+        }
+
+        function removeContent(sectionPos) {
+            if (!confirm('@T("page.confirmRemoveContent")')) return;
+
+            var formData = new FormData();
+            formData.append('pageId', pageId);
+            formData.append('sectionPosition', sectionPos);
+
+            fetch('@Url.Action("RemoveContentFromSection", "Page")', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': antiForgeryToken },
+                body: formData
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    clearCellUI(sectionPos);
+                } else {
+                    alert(data.message || 'Hata olustu');
+                }
+            })
+            .catch(function () {
+                alert('Bir hata olustu');
+            });
+        }
+
+        function updateCellUI(sectionPos, title, type) {
+            var cell = document.getElementById('cell-' + sectionPos);
+            if (!cell) return;
+
+            cell.classList.add('has-content');
+            cell.style.backgroundColor = '#d4edda';
+            cell.style.borderColor = '#28a745';
+            cell.removeAttribute('onclick');
+
+            cell.innerHTML =
+                '<div class="text-center w-100">' +
+                '  <i class="bi ' + getContentIcon(type) + ' fs-4 text-success"></i>' +
+                '  <div class="fw-bold small mt-1">' + escapeHtml(title || 'Untitled') + '</div>' +
+                '  <span class="badge bg-success mt-1">' + escapeHtml(type) + '</span>' +
+                '  <div class="mt-2">' +
+                '    <button class="btn btn-outline-danger btn-sm" onclick="event.stopPropagation(); removeContent(\'' + sectionPos + '\')" title="@T("common.remove")">' +
+                '      <i class="bi bi-x-circle"></i>' +
+                '    </button>' +
+                '    <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); openContentModal(\'' + sectionPos + '\')" title="@T("page.changeLayout")">' +
+                '      <i class="bi bi-arrow-repeat"></i>' +
+                '    </button>' +
+                '  </div>' +
+                '</div>';
+        }
+
+        function clearCellUI(sectionPos) {
+            var cell = document.getElementById('cell-' + sectionPos);
+            if (!cell) return;
+
+            cell.classList.remove('has-content');
+            cell.style.backgroundColor = '#f8f9fa';
+            cell.style.borderColor = '#dee2e6';
+            cell.setAttribute('onclick', "openContentModal('" + sectionPos + "')");
+
+            cell.innerHTML =
+                '<strong class="text-muted">' + sectionPos + '</strong>' +
+                '<button class="btn btn-outline-primary btn-sm mt-2" onclick="event.stopPropagation(); openContentModal(\'' + sectionPos + '\')">' +
+                '  <i class="bi bi-plus-circle me-1"></i> @T("page.addContent")' +
+                '</button>';
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+    </script>
+}
+
+@functions {
+    string GetContentIcon(string contentType)
+    {
+        return (contentType?.ToLower()) switch
+        {
+            "image" => "bi-image",
+            "video" => "bi-play-circle",
+            "html" => "bi-code-slash",
+            "pdf" => "bi-file-pdf",
+            "url" => "bi-link-45deg",
+            _ => "bi-file-text"
+        };
+    }
+}

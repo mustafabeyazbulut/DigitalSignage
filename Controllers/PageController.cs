@@ -11,6 +11,7 @@ namespace DigitalSignage.Controllers
         private readonly ILayoutService _layoutService;
         private readonly IDepartmentService _departmentService;
         private readonly ICompanyService _companyService;
+        private readonly IContentService _contentService;
         private readonly AuthService _authService;
 
         public PageController(
@@ -18,12 +19,14 @@ namespace DigitalSignage.Controllers
             ILayoutService layoutService,
             IDepartmentService departmentService,
             ICompanyService companyService,
+            IContentService contentService,
             AuthService authService)
         {
             _pageService = pageService;
             _layoutService = layoutService;
             _departmentService = departmentService;
             _companyService = companyService;
+            _contentService = contentService;
             _authService = authService;
         }
 
@@ -212,7 +215,7 @@ namespace DigitalSignage.Controllers
             if (!await _authService.CanAccessPageAsync(userId, id))
                 return AccessDenied();
 
-            var page = await _pageService.GetByIdAsync(id);
+            var page = await _pageService.GetPageFullDetailsAsync(id);
             if (page == null)
             {
                 AddErrorMessage(T("page.notFound"));
@@ -231,6 +234,9 @@ namespace DigitalSignage.Controllers
             }
 
             ViewBag.CanEdit = await _authService.CanEditPageAsync(userId, id);
+
+            // Section'lara atanmış içeriklerin map'i
+            ViewBag.SectionContentMap = await _pageService.GetSectionContentMapAsync(id);
 
             return View(page);
         }
@@ -320,17 +326,23 @@ namespace DigitalSignage.Controllers
 
             if (ModelState.IsValid)
             {
-                // Mevcut PageCode ve LayoutID değerlerini koru
+                // Tracked entity üzerinden güncelle (aynı PK ile iki farklı instance track edilemez)
                 var existingPage = await _pageService.GetByIdAsync(id);
-                if (existingPage != null)
+                if (existingPage == null)
                 {
-                    page.PageCode = existingPage.PageCode;
-                    page.LayoutID = existingPage.LayoutID;
+                    AddErrorMessage(T("page.notFound"));
+                    return RedirectToAction(nameof(Index));
                 }
 
-                await _pageService.UpdateAsync(page);
+                existingPage.PageName = page.PageName;
+                existingPage.PageTitle = page.PageTitle;
+                existingPage.Description = page.Description;
+                existingPage.DepartmentID = page.DepartmentID;
+                existingPage.IsActive = page.IsActive;
+
+                await _pageService.UpdateAsync(existingPage);
                 AddSuccessMessage(T("page.updatedSuccess"));
-                return RedirectToAction(nameof(Index), new { departmentId = page.DepartmentID });
+                return RedirectToAction(nameof(Index), new { departmentId = existingPage.DepartmentID });
             }
 
             await LoadAccessibleDepartmentsAsync(userId, page.DepartmentID);
@@ -373,6 +385,69 @@ namespace DigitalSignage.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetDepartmentContents(int departmentId)
+        {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanAccessDepartmentAsync(userId, departmentId))
+                return Json(new { success = false, message = "Erişim reddedildi." });
+
+            var contents = await _contentService.GetActiveContentsByDepartmentAsync(departmentId);
+            var result = contents.Select(c => new
+            {
+                contentId = c.ContentID,
+                contentTitle = c.ContentTitle,
+                contentType = c.ContentType,
+                thumbnailPath = c.ThumbnailPath
+            });
+
+            return Json(new { success = true, contents = result });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignContentToSection(int pageId, string sectionPosition, int contentId)
+        {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanEditPageAsync(userId, pageId))
+                return Json(new { success = false, message = "Erişim reddedildi." });
+
+            var result = await _pageService.AssignContentToSectionAsync(pageId, sectionPosition, contentId);
+            if (!result)
+                return Json(new { success = false, message = T("page.notFound") });
+
+            // Atanan içeriğin bilgilerini geri dön
+            var content = await _contentService.GetByIdAsync(contentId);
+            return Json(new
+            {
+                success = true,
+                message = T("page.contentAssigned"),
+                content = new
+                {
+                    contentTitle = content?.ContentTitle,
+                    contentType = content?.ContentType
+                }
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveContentFromSection(int pageId, string sectionPosition)
+        {
+            var userId = GetCurrentUserId();
+
+            if (!await _authService.CanEditPageAsync(userId, pageId))
+                return Json(new { success = false, message = "Erişim reddedildi." });
+
+            var result = await _pageService.RemoveContentFromSectionAsync(pageId, sectionPosition);
+            if (!result)
+                return Json(new { success = false, message = T("page.notFound") });
+
+            return Json(new { success = true, message = T("page.contentRemoved") });
         }
 
         private async Task LoadAccessibleDepartmentsAsync(int userId, int? currentDepartmentId = null)

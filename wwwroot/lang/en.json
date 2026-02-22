@@ -225,7 +225,13 @@
         "createdSuccess": "Page created successfully.",
         "updatedSuccess": "Page updated successfully.",
         "deletedSuccess": "Page deleted successfully.",
-        "notFound": "Page not found."
+        "notFound": "Page not found.",
+        "addContent": "Add Content",
+        "noContent": "No active content found in this department.",
+        "selectContent": "Select Content",
+        "contentAssigned": "Content assigned successfully.",
+        "contentRemoved": "Content removed successfully.",
+        "confirmRemoveContent": "Are you sure you want to remove content from this section?"
     },
     "layout": {
         "title": "Layout Library",
