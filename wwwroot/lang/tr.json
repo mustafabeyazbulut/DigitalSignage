@@ -423,6 +423,16 @@
         "tr": "Türkçe",
         "de": "Deutsch"
     },
+    "validation": {
+        "required": "Bu alan zorunludur.",
+        "fieldRequired": "\"{0}\" alanı zorunludur.",
+        "invalidValue": "Lütfen geçerli bir değer seçin.",
+        "fieldInvalidValue": "\"{0}\" alanı için geçerli bir değer seçin.",
+        "range": "Değer izin verilen aralıkta olmalıdır.",
+        "fieldRange": "\"{0}\" alanı izin verilen aralıkta olmalıdır.",
+        "maxLength": "Girilen değer çok uzun.",
+        "fieldMaxLength": "\"{0}\" alanı için girilen değer çok uzun."
+    },
     "error": {
         "title": "Hata",
         "heading": "Hata.",

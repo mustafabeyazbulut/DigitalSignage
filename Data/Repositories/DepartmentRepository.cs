@@ -8,9 +8,21 @@ namespace DigitalSignage.Data.Repositories
     {
         public DepartmentRepository(AppDbContext context) : base(context) { }
 
+        /// <summary>
+        /// Tüm departmanları Company bilgisiyle birlikte getirir.
+        /// </summary>
+        public override async Task<IEnumerable<Department>> GetAllAsync()
+        {
+            return await _dbSet.AsNoTracking()
+                .Include(d => d.Company)
+                .OrderBy(d => d.DepartmentName)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Department>> GetDepartmentsByCompanyAsync(int companyId)
         {
             return await _dbSet.AsNoTracking()
+                .Include(d => d.Company)
                 .Where(d => d.CompanyID == companyId)
                 .OrderBy(d => d.DepartmentName)
                 .ToListAsync();

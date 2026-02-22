@@ -2,6 +2,7 @@ using DigitalSignage.Services;
 using DigitalSignage.ViewComponents;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Authorization;
 using AuthService = DigitalSignage.Services.IAuthorizationService;
 
@@ -38,6 +39,12 @@ namespace DigitalSignage.Controllers
 
             // Rol bazlı ViewBag değerlerini ayarla (navigasyon ve buton görünürlüğü için)
             await SetupRoleFlags();
+
+            // POST isteklerinde ModelState hatalarını aktif dile çevir
+            if (HttpContext.Request.Method == "POST")
+            {
+                LocalizeModelStateErrors();
+            }
 
             await next();
         }
@@ -299,6 +306,128 @@ namespace DigitalSignage.Controllers
                 "manageroles" => "fas fa-user-shield",
                 _ => "fas fa-file"
             };
+        }
+
+        /// <summary>
+        /// ModelState alan adlarını kullanıcı dostu, lokalize edilmiş isimlere çevirir.
+        /// Eşleşme bulunamazsa alan adını PascalCase'den ayırarak döner (ör. "CompanyName" → "Company Name").
+        /// </summary>
+        private string GetFieldDisplayName(string fieldName)
+        {
+            // Alan adı → çeviri anahtarı eşleştirmesi
+            var displayName = fieldName switch
+            {
+                // Ortak alanlar
+                "CompanyID" or "CompanyId" => T("common.company"),
+                "DepartmentID" or "DepartmentId" => T("common.department"),
+                "IsActive" => T("common.status"),
+                "Description" => T("company.description"),
+
+                // Şirket alanları
+                "CompanyName" => T("company.companyName"),
+                "CompanyCode" => T("company.companyCode"),
+                "EmailDomain" => T("company.emailDomain"),
+                "LogoUrl" => T("company.logoUrl"),
+                "PrimaryColor" => T("company.primaryColor"),
+                "SecondaryColor" => T("company.secondaryColor"),
+
+                // Departman alanları
+                "DepartmentName" => T("department.departmentName"),
+                "DepartmentCode" => T("department.code"),
+
+                // Düzen alanları
+                "LayoutID" or "LayoutId" => T("page.layout"),
+                "LayoutName" => T("layout.layoutName"),
+                "LayoutDefinition" => T("layout.defineGrid"),
+
+                // Sayfa alanları
+                "PageName" => T("page.pageName"),
+                "PageTitle" => T("page.pageTitle"),
+                "PageCode" => T("page.pageCode"),
+
+                // İçerik alanları
+                "ContentType" => T("content.contentType"),
+                "ContentTitle" => T("content.contentTitle"),
+                "ContentData" => T("content.contentData"),
+                "MediaPath" => T("content.mediaPath"),
+
+                // Zamanlama alanları
+                "ScheduleName" => T("schedule.scheduleName"),
+                "StartDate" => T("schedule.startDate"),
+                "EndDate" => T("schedule.endDate"),
+                "StartTime" => T("schedule.startTime"),
+                "EndTime" => T("schedule.endTime"),
+                "RecurrencePattern" => T("schedule.recurrencePattern"),
+
+                // Kullanıcı alanları
+                "Email" => T("user.email"),
+                "Password" => T("user.password"),
+                "FirstName" => T("user.firstName"),
+                "LastName" => T("user.lastName"),
+
+                // Eşleşme yoksa: PascalCase'i boşluklarla ayır (ör. "ContentTitle" → "Content Title")
+                _ => System.Text.RegularExpressions.Regex.Replace(fieldName, "([a-z])([A-Z])", "$1 $2")
+            };
+
+            return displayName;
+        }
+
+        /// <summary>
+        /// ModelState'teki İngilizce varsayılan hata mesajlarını aktif dile çevirir.
+        /// Alan adı bazlı mesajlar üretir (ör. "Departman" alanı zorunludur.).
+        /// POST isteklerinde otomatik çalışır (OnActionExecutionAsync'den çağrılır).
+        /// </summary>
+        private void LocalizeModelStateErrors()
+        {
+            foreach (var entry in ModelState)
+            {
+                var errors = entry.Value?.Errors.ToList();
+                if (errors == null || errors.Count == 0) continue;
+
+                // Alan adını çeviri anahtarından çöz
+                var fieldName = entry.Key;
+                // Nested property ise son kısmı al (ör. "Model.CompanyID" → "CompanyID")
+                if (fieldName.Contains('.'))
+                    fieldName = fieldName.Split('.').Last();
+
+                var displayName = GetFieldDisplayName(fieldName);
+
+                entry.Value!.Errors.Clear();
+                foreach (var error in errors)
+                {
+                    var msg = error.ErrorMessage;
+
+                    // "The value '' is invalid." veya "The value 'x' is not valid for Y."
+                    if (msg.StartsWith("The value") && (msg.Contains("is not valid") || msg.Contains("is invalid")))
+                    {
+                        var localizedMsg = string.Format(T("validation.fieldInvalidValue"), displayName);
+                        entry.Value.Errors.Add(new ModelError(localizedMsg));
+                    }
+                    // "The X field is required."
+                    else if (msg.Contains("field is required") || msg.Contains("is required"))
+                    {
+                        var localizedMsg = string.Format(T("validation.fieldRequired"), displayName);
+                        entry.Value.Errors.Add(new ModelError(localizedMsg));
+                    }
+                    // "The field X must be between Y and Z." (Range)
+                    else if (msg.Contains("must be between"))
+                    {
+                        var localizedMsg = string.Format(T("validation.fieldRange"), displayName);
+                        entry.Value.Errors.Add(new ModelError(localizedMsg));
+                    }
+                    // "The field X must be a string with a maximum length of Y." (MaxLength)
+                    else if (msg.Contains("maximum length"))
+                    {
+                        var localizedMsg = string.Format(T("validation.fieldMaxLength"), displayName);
+                        entry.Value.Errors.Add(new ModelError(localizedMsg));
+                    }
+                    else
+                    {
+                        // Tanınmayan mesajları olduğu gibi bırak
+                        entry.Value.Errors.Add(error);
+                    }
+                }
+            }
         }
 
         /// <summary>

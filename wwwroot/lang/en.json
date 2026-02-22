@@ -423,6 +423,16 @@
         "tr": "Türkçe",
         "de": "Deutsch"
     },
+    "validation": {
+        "required": "This field is required.",
+        "fieldRequired": "\"{0}\" is required.",
+        "invalidValue": "Please select a valid value.",
+        "fieldInvalidValue": "Please select a valid value for \"{0}\".",
+        "range": "Value must be within the allowed range.",
+        "fieldRange": "\"{0}\" must be within the allowed range.",
+        "maxLength": "The entered value is too long.",
+        "fieldMaxLength": "The value entered for \"{0}\" is too long."
+    },
     "error": {
         "title": "Error",
         "heading": "Error.",

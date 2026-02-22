@@ -194,8 +194,9 @@ namespace DigitalSignage.Services
             // Company Admin tüm departmanları görür
             if (await IsCompanyAdminAsync(userId, companyId))
             {
-                var allDepts = await _unitOfWork.Departments.FindAsync(
-                    d => d.CompanyID == companyId && d.IsActive
+                var allDepts = await _unitOfWork.Departments.FindWithIncludesAsync(
+                    d => d.CompanyID == companyId && d.IsActive,
+                    d => d.Company
                 );
                 return allDepts.ToList();
             }
@@ -207,8 +208,9 @@ namespace DigitalSignage.Services
 
             var departmentIds = departmentRoles.Select(udr => udr.DepartmentID).ToList();
 
-            // FİX N+1: Batch query ile tüm departmanları tek sorguda getir
+            // Batch query ile tüm departmanları Company bilgisiyle tek sorguda getir
             var departments = await _unitOfWork.Departments.Query()
+                .Include(d => d.Company)
                 .Where(d => departmentIds.Contains(d.DepartmentID) && d.CompanyID == companyId && d.IsActive)
                 .ToListAsync();
 
