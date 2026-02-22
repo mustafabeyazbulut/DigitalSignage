@@ -1,7 +1,10 @@
 @model DigitalSignage.Models.Layout
 
 @{
-    ViewData["Title"] = "Layout Details";
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("layout.detailsTitle");
 }
 
 <div class="container mt-4">
@@ -10,58 +13,90 @@
             <h1>@Model.LayoutName</h1>
         </div>
         <div class="col-md-4 text-end">
-            <a asp-action="Edit" asp-route-id="@Model.LayoutID" class="btn btn-warning">Edit</a>
-            <a asp-action="Delete" asp-route-id="@Model.LayoutID" class="btn btn-danger">Delete</a>
+            <a asp-action="Edit" asp-route-id="@Model.LayoutID" class="btn btn-warning">@T("common.edit")</a>
+            <a asp-action="Delete" asp-route-id="@Model.LayoutID" class="btn btn-danger">@T("common.delete")</a>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-5">
             <div class="card">
                 <div class="card-header">
-                    <h5>Layout Information</h5>
+                    <h5>@T("layout.layoutInfo")</h5>
                 </div>
                 <div class="card-body">
                     <dl class="row">
-                        <dt class="col-sm-4">Layout Code</dt>
-                        <dd class="col-sm-8"><code>@Model.LayoutCode</code></dd>
+                        <dt class="col-sm-4">@T("layout.totalSections")</dt>
+                        <dd class="col-sm-8">@Model.TotalSections</dd>
 
-                        <dt class="col-sm-4">Grid Size</dt>
-                        <dd class="col-sm-8">@Model.GridColumnsX × @Model.GridRowsY</dd>
+                        <dt class="col-sm-4">@T("layout.rows")</dt>
+                        <dd class="col-sm-8">@Model.RowCount</dd>
 
-                        <dt class="col-sm-4">Total Sections</dt>
-                        <dd class="col-sm-8">@(Model.GridColumnsX * Model.GridRowsY)</dd>
+                        <dt class="col-sm-4">@T("company.description")</dt>
+                        <dd class="col-sm-8">@(Model.Description ?? T("common.noDescription"))</dd>
 
-                        <dt class="col-sm-4">Description</dt>
-                        <dd class="col-sm-8">@(Model.Description ?? "N/A")</dd>
-
-                        <dt class="col-sm-4">Status</dt>
+                        <dt class="col-sm-4">@T("common.status")</dt>
                         <dd class="col-sm-8">
                             <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
-                                @(Model.IsActive ? "Active" : "Inactive")
+                                @(Model.IsActive ? T("common.active") : T("common.inactive"))
                             </span>
                         </dd>
 
-                        <dt class="col-sm-4">Created Date</dt>
+                        <dt class="col-sm-4">@T("common.createdDate")</dt>
                         <dd class="col-sm-8">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
                     </dl>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-7">
             <div class="card">
                 <div class="card-header">
-                    <h5>Grid Preview</h5>
+                    <h5>@T("layout.preview")</h5>
                 </div>
                 <div class="card-body">
-                    @await Component.InvokeAsync("LayoutGrid", new { layoutId = Model.LayoutID })
+                    @{
+                        var definition = Model.LayoutDefinition ?? "{\"rows\":[{\"height\":100,\"columns\":[{\"width\":100}]}]}";
+                        try
+                        {
+                            var def = System.Text.Json.JsonSerializer.Deserialize<DigitalSignage.Models.LayoutDefinitionModel>(definition,
+                                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                            if (def?.Rows != null)
+                            {
+                                <div style="display:flex;flex-direction:column;gap:6px;min-height:400px;border:2px solid #dee2e6;padding:6px;border-radius:8px;background:#f8f9fa;">
+                                    @foreach (var row in def.Rows)
+                                    {
+                                        var colTemplate = string.Join(" ", row.Columns?.Select(c => c.Width + "fr") ?? Array.Empty<string>());
+                                        <div style="display:grid;grid-template-columns:@colTemplate;gap:6px;flex:@row.Height;">
+                                            @if (row.Columns != null)
+                                            {
+                                                var rowIdx = def.Rows.IndexOf(row);
+                                                var colIdx = 0;
+                                                @foreach (var col in row.Columns)
+                                                {
+                                                    <div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);border:1px solid #90caf9;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;">
+                                                        <strong class="text-primary">R@(rowIdx + 1)C@(colIdx + 1)</strong>
+                                                        <small class="text-muted">@(col.Width)% x @(row.Height)%</small>
+                                                    </div>
+                                                    colIdx++;
+                                                }
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        }
+                        catch
+                        {
+                            <div class="alert alert-warning">@T("layout.invalidDefinition")</div>
+                        }
+                    }
                 </div>
             </div>
         </div>
     </div>
 
     <div class="mt-3">
-        <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">Back to List</button>
+        <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">@T("common.backToList")</button>
     </div>
 </div>

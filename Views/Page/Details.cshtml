@@ -56,7 +56,7 @@
                 <dd class="col-sm-9">
                     @if (hasLayout)
                     {
-                        <span class="badge bg-success">@Model.Layout!.LayoutName (@Model.Layout.GridColumnsX x @Model.Layout.GridRowsY)</span>
+                        <span class="badge bg-success">@Model.Layout!.LayoutName (@Model.Layout.RowCount @T("layout.rows") / @Model.Layout.TotalSections @T("layout.sections"))</span>
                     }
                     else
                     {

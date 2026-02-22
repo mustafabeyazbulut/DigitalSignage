@@ -1,3 +1,4 @@
+using System.Text.Json;
 using DigitalSignage.Models;
 using DigitalSignage.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -64,6 +65,23 @@ namespace DigitalSignage.Controllers
             return View(new List<Layout>());
         }
 
+        public async Task<IActionResult> Details(int id)
+        {
+            var userId = GetCurrentUserId();
+            var layout = await _layoutService.GetLayoutWithSectionsAsync(id);
+
+            if (layout == null)
+            {
+                AddErrorMessage(T("layout.notFound"));
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!await _authService.CanAccessCompanyAsync(userId, layout.CompanyID))
+                return AccessDenied();
+
+            return View(layout);
+        }
+
         public async Task<IActionResult> Create(int? companyId)
         {
             var userId = GetCurrentUserId();
@@ -89,8 +107,7 @@ namespace DigitalSignage.Controllers
             var layout = new Layout
             {
                 CompanyID = companyId.Value,
-                GridColumnsX = 2,
-                GridRowsY = 2,
+                LayoutDefinition = "{\"rows\":[{\"height\":50,\"columns\":[{\"width\":50},{\"width\":50}]},{\"height\":50,\"columns\":[{\"width\":50},{\"width\":50}]}]}",
                 IsActive = true
             };
 
@@ -105,6 +122,15 @@ namespace DigitalSignage.Controllers
 
             if (!await _authService.IsCompanyAdminAsync(userId, layout.CompanyID))
                 return AccessDenied();
+
+            // Navigasyon özelliği doğrulamalarını kaldır
+            ModelState.Remove("Company");
+
+            // LayoutDefinition JSON doğrulaması
+            if (!IsValidLayoutDefinition(layout.LayoutDefinition))
+            {
+                ModelState.AddModelError("LayoutDefinition", T("layout.invalidDefinition"));
+            }
 
             if (ModelState.IsValid)
             {
@@ -149,9 +175,30 @@ namespace DigitalSignage.Controllers
             if (!await _authService.IsCompanyAdminAsync(userId, layout.CompanyID))
                 return AccessDenied();
 
+            // Navigasyon özelliği doğrulamalarını kaldır
+            ModelState.Remove("Company");
+
+            // LayoutDefinition JSON doğrulaması
+            if (!IsValidLayoutDefinition(layout.LayoutDefinition))
+            {
+                ModelState.AddModelError("LayoutDefinition", T("layout.invalidDefinition"));
+            }
+
             if (ModelState.IsValid)
             {
-                await _layoutService.UpdateAsync(layout);
+                // Düzen tanımını güncelle ve bölümleri yeniden oluştur
+                await _layoutService.UpdateLayoutDefinitionAsync(layout.LayoutID, layout.LayoutDefinition);
+
+                // Diğer alanları güncelle
+                var existingLayout = await _layoutService.GetByIdAsync(id);
+                if (existingLayout != null)
+                {
+                    existingLayout.LayoutName = layout.LayoutName;
+                    existingLayout.Description = layout.Description;
+                    existingLayout.IsActive = layout.IsActive;
+                    await _layoutService.UpdateAsync(existingLayout);
+                }
+
                 AddSuccessMessage(T("layout.updatedSuccess"));
                 return RedirectToAction(nameof(Index), new { companyId = layout.CompanyID });
             }
@@ -173,6 +220,7 @@ namespace DigitalSignage.Controllers
             if (!await _authService.IsCompanyAdminAsync(userId, layout.CompanyID))
                 return AccessDenied();
 
+            ViewBag.IsInUse = await _layoutService.IsLayoutInUseAsync(id);
             return View(layout);
         }
 
@@ -196,6 +244,40 @@ namespace DigitalSignage.Controllers
             await _layoutService.DeleteAsync(id);
             AddSuccessMessage(T("layout.deletedSuccess"));
             return RedirectToAction(nameof(Index), new { companyId });
+        }
+
+        private bool IsValidLayoutDefinition(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return false;
+            try
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var def = JsonSerializer.Deserialize<LayoutDefinitionModel>(json, options);
+                if (def?.Rows == null || def.Rows.Count == 0) return false;
+
+                double totalHeight = 0;
+                foreach (var row in def.Rows)
+                {
+                    if (row.Columns == null || row.Columns.Count == 0) return false;
+                    if (row.Height <= 0) return false;
+                    totalHeight += row.Height;
+
+                    double totalWidth = 0;
+                    foreach (var col in row.Columns)
+                    {
+                        if (col.Width <= 0) return false;
+                        totalWidth += col.Width;
+                    }
+                    if (Math.Abs(totalWidth - 100) > 0.5) return false;
+                }
+                if (Math.Abs(totalHeight - 100) > 0.5) return false;
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

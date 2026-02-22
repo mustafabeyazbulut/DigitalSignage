@@ -29,12 +29,21 @@
         <div class="col-md-9">
             @if (hasLayout)
             {
+                var layoutDef = Model.Layout!.LayoutDefinition ?? "{\"rows\":[{\"height\":100,\"columns\":[{\"width\":100}]}]}";
+                DigitalSignage.Models.LayoutDefinitionModel? def = null;
+                try
+                {
+                    def = System.Text.Json.JsonSerializer.Deserialize<DigitalSignage.Models.LayoutDefinitionModel>(layoutDef,
+                        new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                }
+                catch { }
+
                 <!-- Mevcut Layout Önizleme -->
                 <div class="card shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
                             <i class="bi bi-grid-3x3 me-2"></i>
-                            @Model.Layout!.LayoutName (@Model.Layout.GridColumnsX x @Model.Layout.GridRowsY)
+                            @Model.Layout!.LayoutName (@Model.Layout.RowCount @T("layout.rows") / @Model.Layout.TotalSections @T("layout.sections"))
                         </h5>
                         @if (canEdit)
                         {
@@ -44,33 +53,32 @@
                         }
                     </div>
                     <div class="card-body">
-                        <div style="display: grid;
-                                    grid-template-columns: repeat(@Model.Layout.GridColumnsX, 1fr);
-                                    grid-template-rows: repeat(@Model.Layout.GridRowsY, 1fr);
-                                    gap: 10px;
-                                    min-height: 500px;
-                                    border: 2px solid #ddd;
-                                    padding: 10px;">
-                            @if (Model.Layout.LayoutSections != null)
-                            {
-                                @foreach (var section in Model.Layout.LayoutSections.OrderBy(s => s.RowIndex).ThenBy(s => s.ColumnIndex))
+                        @if (def?.Rows != null)
+                        {
+                            <div style="display:flex;flex-direction:column;gap:10px;min-height:500px;border:2px solid #ddd;padding:10px;">
+                                @foreach (var row in def.Rows)
                                 {
-                                    <div style="grid-column: @(section.ColumnIndex + 1);
-                                                grid-row: @(section.RowIndex + 1);
-                                                background-color: #f8f9fa;
-                                                border: 1px solid #dee2e6;
-                                                padding: 15px;
-                                                border-radius: 5px;
-                                                display: flex;
-                                                flex-direction: column;
-                                                align-items: center;
-                                                justify-content: center;">
-                                        <strong>@(section.SectionPosition)</strong>
-                                        <p class="text-muted small mb-0">@(section.ColumnIndex), @(section.RowIndex)</p>
+                                    var colTemplate = string.Join(" ", row.Columns?.Select(c => c.Width + "fr") ?? Array.Empty<string>());
+                                    <div style="display:grid;grid-template-columns:@colTemplate;gap:10px;flex:@row.Height;">
+                                        @if (row.Columns != null)
+                                        {
+                                            var rowIdx = def.Rows.IndexOf(row);
+                                            var colIdx = 0;
+                                            @foreach (var col in row.Columns)
+                                            {
+                                                var sectionPos = $"R{rowIdx + 1}C{colIdx + 1}";
+                                                var section = Model.Layout.LayoutSections?.FirstOrDefault(s => s.SectionPosition == sectionPos);
+                                                <div style="background-color:#f8f9fa;border:1px solid #dee2e6;padding:15px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                                                    <strong>@sectionPos</strong>
+                                                    <p class="text-muted small mb-0">@(col.Width)% x @(row.Height)%</p>
+                                                </div>
+                                                colIdx++;
+                                            }
+                                        }
                                     </div>
                                 }
-                            }
-                        </div>
+                            </div>
+                        }
                     </div>
                 </div>
 
@@ -112,40 +120,30 @@
                                                 <div class="card h-100 layout-card" style="cursor: pointer;" onclick="this.closest('form').submit();">
                                                     <div class="card-body text-center">
                                                         <!-- Mini Grid Önizleme -->
-                                                        <div style="display: grid;
-                                                                    grid-template-columns: repeat(@layout.GridColumnsX, 1fr);
-                                                                    grid-template-rows: repeat(@layout.GridRowsY, 1fr);
-                                                                    gap: 4px;
-                                                                    height: 120px;
-                                                                    border: 1px solid #dee2e6;
-                                                                    padding: 4px;
-                                                                    border-radius: 4px;
-                                                                    margin-bottom: 10px;">
-                                                            @if (layout.LayoutSections != null)
+                                                        @{
+                                                            var lDef = layout.LayoutDefinition ?? "{\"rows\":[{\"height\":100,\"columns\":[{\"width\":100}]}]}";
+                                                            DigitalSignage.Models.LayoutDefinitionModel? lDefObj = null;
+                                                            try { lDefObj = System.Text.Json.JsonSerializer.Deserialize<DigitalSignage.Models.LayoutDefinitionModel>(lDef, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }); } catch { }
+                                                        }
+                                                        <div style="display:flex;flex-direction:column;gap:3px;height:120px;border:1px solid #dee2e6;padding:3px;border-radius:4px;margin-bottom:10px;">
+                                                            @if (lDefObj?.Rows != null)
                                                             {
-                                                                @foreach (var section in layout.LayoutSections.OrderBy(s => s.RowIndex).ThenBy(s => s.ColumnIndex))
+                                                                @foreach (var row in lDefObj.Rows)
                                                                 {
-                                                                    <div style="grid-column: @(section.ColumnIndex + 1);
-                                                                                grid-row: @(section.RowIndex + 1);
-                                                                                background-color: #e9ecef;
-                                                                                border: 1px solid #ced4da;
-                                                                                border-radius: 3px;">
+                                                                    <div style="display:flex;gap:3px;flex:@row.Height;">
+                                                                        @if (row.Columns != null)
+                                                                        {
+                                                                            @foreach (var col in row.Columns)
+                                                                            {
+                                                                                <div style="flex:@col.Width;background-color:#e9ecef;border:1px solid #ced4da;border-radius:3px;"></div>
+                                                                            }
+                                                                        }
                                                                     </div>
-                                                                }
-                                                            }
-                                                            else
-                                                            {
-                                                                @for (int r = 0; r < layout.GridRowsY; r++)
-                                                                {
-                                                                    @for (int c = 0; c < layout.GridColumnsX; c++)
-                                                                    {
-                                                                        <div style="background-color: #e9ecef; border: 1px solid #ced4da; border-radius: 3px;"></div>
-                                                                    }
                                                                 }
                                                             }
                                                         </div>
                                                         <h6 class="fw-bold mb-1">@layout.LayoutName</h6>
-                                                        <span class="badge bg-secondary">@layout.GridColumnsX x @layout.GridRowsY</span>
+                                                        <span class="badge bg-secondary">@layout.RowCount @T("layout.rows") / @layout.TotalSections @T("layout.sections")</span>
                                                     </div>
                                                 </div>
                                             </form>
@@ -197,8 +195,8 @@
 
                         @if (hasLayout)
                         {
-                            <dt>@T("layout.gridSize")</dt>
-                            <dd>@Model.Layout!.GridColumnsX x @Model.Layout.GridRowsY</dd>
+                            <dt>@T("layout.totalSections")</dt>
+                            <dd>@Model.Layout!.TotalSections</dd>
                         }
                     </dl>
                 </div>

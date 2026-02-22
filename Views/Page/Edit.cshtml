@@ -62,7 +62,7 @@
                                     @if (hasLayout)
                                     {
                                         <div class="form-control bg-light" style="pointer-events: none;">
-                                            @Model.Layout!.LayoutName (@Model.Layout.GridColumnsX x @Model.Layout.GridRowsY)
+                                            @Model.Layout!.LayoutName (@Model.Layout.RowCount @T("layout.rows") / @Model.Layout.TotalSections @T("layout.sections"))
                                         </div>
                                     }
                                     else

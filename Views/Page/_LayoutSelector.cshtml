@@ -19,6 +19,10 @@
                 @foreach (var layout in layouts.Where(l => l.IsActive))
                 {
                     var isCurrentLayout = currentLayoutId.HasValue && currentLayoutId.Value == layout.LayoutID;
+                    var lDef = layout.LayoutDefinition ?? "{\"rows\":[{\"height\":100,\"columns\":[{\"width\":100}]}]}";
+                    DigitalSignage.Models.LayoutDefinitionModel? def = null;
+                    try { def = System.Text.Json.JsonSerializer.Deserialize<DigitalSignage.Models.LayoutDefinitionModel>(lDef, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }); } catch { }
+
                     <div class="col-md-3">
                         <form asp-action="AssignLayout" method="post">
                             @Html.AntiForgeryToken()
@@ -26,41 +30,26 @@
                             <input type="hidden" name="layoutId" value="@layout.LayoutID" />
                             <div class="card h-100 layout-card @(isCurrentLayout ? "border-primary" : "")" style="cursor: pointer;" onclick="this.closest('form').submit();">
                                 <div class="card-body text-center p-2">
-                                    <div style="display: grid;
-                                                grid-template-columns: repeat(@layout.GridColumnsX, 1fr);
-                                                grid-template-rows: repeat(@layout.GridRowsY, 1fr);
-                                                gap: 3px;
-                                                height: 80px;
-                                                border: 1px solid #dee2e6;
-                                                padding: 3px;
-                                                border-radius: 4px;
-                                                margin-bottom: 8px;">
-                                        @if (layout.LayoutSections != null)
+                                    <div style="display:flex;flex-direction:column;gap:2px;height:80px;border:1px solid #dee2e6;padding:2px;border-radius:4px;margin-bottom:8px;">
+                                        @if (def?.Rows != null)
                                         {
-                                            @foreach (var section in layout.LayoutSections.OrderBy(s => s.RowIndex).ThenBy(s => s.ColumnIndex))
+                                            @foreach (var row in def.Rows)
                                             {
-                                                <div style="grid-column: @(section.ColumnIndex + 1);
-                                                            grid-row: @(section.RowIndex + 1);
-                                                            background-color: @(isCurrentLayout ? "#cfe2ff" : "#e9ecef");
-                                                            border: 1px solid @(isCurrentLayout ? "#9ec5fe" : "#ced4da");
-                                                            border-radius: 2px;">
+                                                <div style="display:flex;gap:2px;flex:@row.Height;">
+                                                    @if (row.Columns != null)
+                                                    {
+                                                        @foreach (var col in row.Columns)
+                                                        {
+                                                            <div style="flex:@col.Width;background-color:@(isCurrentLayout ? "#cfe2ff" : "#e9ecef");border:1px solid @(isCurrentLayout ? "#9ec5fe" : "#ced4da");border-radius:2px;"></div>
+                                                        }
+                                                    }
                                                 </div>
-                                            }
-                                        }
-                                        else
-                                        {
-                                            @for (int r = 0; r < layout.GridRowsY; r++)
-                                            {
-                                                @for (int c = 0; c < layout.GridColumnsX; c++)
-                                                {
-                                                    <div style="background-color: @(isCurrentLayout ? "#cfe2ff" : "#e9ecef"); border: 1px solid @(isCurrentLayout ? "#9ec5fe" : "#ced4da"); border-radius: 2px;"></div>
-                                                }
                                             }
                                         }
                                     </div>
                                     <small class="fw-bold">@layout.LayoutName</small>
                                     <br />
-                                    <span class="badge bg-secondary" style="font-size: 0.7rem;">@layout.GridColumnsX x @layout.GridRowsY</span>
+                                    <span class="badge bg-secondary" style="font-size: 0.7rem;">@layout.RowCount @T("layout.rows") / @layout.TotalSections @T("layout.sections")</span>
                                     @if (isCurrentLayout)
                                     {
                                         <br />

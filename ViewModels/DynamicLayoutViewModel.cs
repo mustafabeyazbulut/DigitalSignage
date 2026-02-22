@@ -5,12 +5,9 @@ namespace DigitalSignage.ViewModels
         public int LayoutID { get; set; }
         public int CompanyID { get; set; }
         public string LayoutName { get; set; } = string.Empty;
+        public string LayoutDefinition { get; set; } = string.Empty;
 
-        // Dynamic Grid Configuration
-        public int GridColumnsX { get; set; }  // 1-12
-        public int GridRowsY { get; set; }     // 1-12
-
-        // Sections with coordinates
+        // Koordinatlı bölümler
         public List<GridSectionDTO> Sections { get; set; } = new();
 
         public class GridSectionDTO

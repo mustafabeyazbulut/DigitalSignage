@@ -1,6 +1,8 @@
+using System.Text.Json;
 using DigitalSignage.Models;
 using DigitalSignage.Models.Common;
 using DigitalSignage.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace DigitalSignage.Services
 {
@@ -33,24 +35,8 @@ namespace DigitalSignage.Services
                 await _unitOfWork.Layouts.AddAsync(entity);
                 await _unitOfWork.SaveChangesAsync();
 
-                // Auto-create LayoutSections based on grid dimensions
-                for (int row = 0; row < entity.GridRowsY; row++)
-                {
-                    for (int col = 0; col < entity.GridColumnsX; col++)
-                    {
-                        var section = new LayoutSection
-                        {
-                            LayoutID = entity.LayoutID,
-                            SectionPosition = $"{(char)('A' + col)}{row + 1}",
-                            ColumnIndex = col,
-                            RowIndex = row,
-                            Width = "100%",
-                            Height = "100%",
-                            IsActive = true
-                        };
-                        await _unitOfWork.LayoutSections.AddAsync(section);
-                    }
-                }
+                // LayoutDefinition JSON'ından otomatik LayoutSection'lar oluştur
+                await CreateSectionsFromDefinition(entity.LayoutID, entity.LayoutDefinition);
 
                 await _unitOfWork.CommitTransactionAsync();
             }
@@ -72,8 +58,53 @@ namespace DigitalSignage.Services
 
         public async Task DeleteAsync(int id)
         {
-            await _unitOfWork.Layouts.DeleteAsync(id);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                // Bu layout'a ait PageSection'ları temizle
+                var sectionIds = await _unitOfWork.LayoutSections
+                    .QueryAsNoTracking()
+                    .Where(ls => ls.LayoutID == id)
+                    .Select(ls => ls.LayoutSectionID)
+                    .ToListAsync();
+
+                if (sectionIds.Any())
+                {
+                    var pageSections = await _unitOfWork.PageSections
+                        .Query()
+                        .Where(ps => sectionIds.Contains(ps.LayoutSectionID))
+                        .ToListAsync();
+
+                    foreach (var ps in pageSections)
+                        await _unitOfWork.PageSections.DeleteAsync(ps.PageSectionID);
+
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                // Bu layout'u kullanan sayfaların LayoutID'sini null yap
+                var pages = await _unitOfWork.Pages
+                    .Query()
+                    .Where(p => p.LayoutID == id)
+                    .ToListAsync();
+
+                foreach (var page in pages)
+                {
+                    page.LayoutID = null;
+                    await _unitOfWork.Pages.UpdateAsync(page);
+                }
+                await _unitOfWork.SaveChangesAsync();
+
+                // Layout'u sil (section'lar cascade ile silinir)
+                await _unitOfWork.Layouts.DeleteAsync(id);
+                await _unitOfWork.SaveChangesAsync();
+
+                await _unitOfWork.CommitTransactionAsync();
+            }
+            catch
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;
+            }
         }
 
         public async Task<IEnumerable<Layout>> GetByCompanyIdAsync(int companyId)
@@ -95,6 +126,99 @@ namespace DigitalSignage.Services
             int companyId, int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null)
         {
             return await _unitOfWork.Layouts.GetLayoutsPagedAsync(companyId, pageNumber, pageSize, searchTerm, isActive);
+        }
+
+        public async Task<bool> IsLayoutInUseAsync(int layoutId)
+        {
+            return await _unitOfWork.Pages
+                .QueryAsNoTracking()
+                .AnyAsync(p => p.LayoutID == layoutId);
+        }
+
+        public async Task UpdateLayoutDefinitionAsync(int layoutId, string layoutDefinitionJson)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                // Mevcut bölümleri al
+                var existingSections = await _unitOfWork.LayoutSections
+                    .Query()
+                    .Where(ls => ls.LayoutID == layoutId)
+                    .ToListAsync();
+
+                // Önce bu section'lara bağlı PageSection'ları temizle
+                var sectionIds = existingSections.Select(s => s.LayoutSectionID).ToList();
+                if (sectionIds.Any())
+                {
+                    var pageSections = await _unitOfWork.PageSections
+                        .Query()
+                        .Where(ps => sectionIds.Contains(ps.LayoutSectionID))
+                        .ToListAsync();
+
+                    foreach (var ps in pageSections)
+                        await _unitOfWork.PageSections.DeleteAsync(ps.PageSectionID);
+
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                // Mevcut bölümleri sil
+                foreach (var section in existingSections)
+                {
+                    await _unitOfWork.LayoutSections.DeleteAsync(section.LayoutSectionID);
+                }
+                await _unitOfWork.SaveChangesAsync();
+
+                // Düzen tanımını güncelle
+                var layout = await _unitOfWork.Layouts.GetByIdAsync(layoutId);
+                if (layout != null)
+                {
+                    layout.LayoutDefinition = layoutDefinitionJson;
+                    await _unitOfWork.Layouts.UpdateAsync(layout);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                // Yeni tanımdan bölümleri yeniden oluştur
+                await CreateSectionsFromDefinition(layoutId, layoutDefinitionJson);
+
+                await _unitOfWork.CommitTransactionAsync();
+            }
+            catch
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;
+            }
+        }
+
+        private async Task CreateSectionsFromDefinition(int layoutId, string layoutDefinitionJson)
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var definition = JsonSerializer.Deserialize<LayoutDefinitionModel>(layoutDefinitionJson, options);
+
+            if (definition?.Rows == null) return;
+
+            for (int rowIdx = 0; rowIdx < definition.Rows.Count; rowIdx++)
+            {
+                var row = definition.Rows[rowIdx];
+                if (row.Columns == null) continue;
+
+                for (int colIdx = 0; colIdx < row.Columns.Count; colIdx++)
+                {
+                    var col = row.Columns[colIdx];
+                    var section = new LayoutSection
+                    {
+                        LayoutID = layoutId,
+                        SectionPosition = $"R{rowIdx + 1}C{colIdx + 1}",
+                        ColumnIndex = colIdx,
+                        RowIndex = rowIdx,
+                        Width = $"{col.Width}%",
+                        Height = $"{row.Height}%",
+                        IsActive = true
+                    };
+                    await _unitOfWork.LayoutSections.AddAsync(section);
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

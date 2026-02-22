@@ -9,5 +9,7 @@ namespace DigitalSignage.Services
         Task<Layout?> GetLayoutWithSectionsAsync(int layoutId);
         Task<IEnumerable<Layout>> GetActiveLayoutsByCompanyAsync(int companyId);
         Task<PagedResult<Layout>> GetLayoutsPagedAsync(int companyId, int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null);
+        Task UpdateLayoutDefinitionAsync(int layoutId, string layoutDefinitionJson);
+        Task<bool> IsLayoutInUseAsync(int layoutId);
     }
 }

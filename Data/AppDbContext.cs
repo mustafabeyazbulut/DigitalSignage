@@ -105,6 +105,9 @@ namespace DigitalSignage.Data
             modelBuilder.Entity<Layout>(entity =>
             {
                 entity.HasKey(e => e.LayoutID);
+                entity.Property(e => e.LayoutDefinition).HasColumnType("nvarchar(max)");
+                entity.Ignore(e => e.TotalSections);
+                entity.Ignore(e => e.RowCount);
                 entity.HasOne(l => l.Company)
                     .WithMany(c => c.Layouts)
                     .HasForeignKey(l => l.CompanyID)

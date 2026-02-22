@@ -28,40 +28,62 @@
         @T("layout.noLayoutsFound")
     </div>
 }
-
 else
 {
 <div class="container">
 <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
     @foreach (var item in Model)
     {
+        var definition = item.LayoutDefinition ?? "{\"rows\":[{\"height\":100,\"columns\":[{\"width\":100}]}]}";
         <div class="col">
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-body text-center p-4">
-                    <div class="mb-3 d-inline-block border rounded p-2 bg-light">
-                        <!-- Simple visual representation of grid -->
-                        <div class="d-grid gap-1" style="grid-template-columns: repeat(@item.GridColumnsX, 1fr); grid-template-rows: repeat(@item.GridRowsY, 1fr); width: 100px; height: 60px;">
-                            @for(int i=0; i < (item.GridColumnsX * item.GridRowsY); i++) {
-                                <div class="bg-secondary opacity-25 rounded-1 w-100 h-100 border"></div>
+                    <div class="mb-3 d-inline-block border rounded p-2 bg-light" style="width:120px;height:80px;">
+                        @{
+                            try
+                            {
+                                var def = System.Text.Json.JsonSerializer.Deserialize<DigitalSignage.Models.LayoutDefinitionModel>(definition,
+                                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                                if (def?.Rows != null)
+                                {
+                                    <div style="display:flex;flex-direction:column;gap:2px;height:100%;">
+                                        @foreach (var row in def.Rows)
+                                        {
+                                            <div style="display:flex;gap:2px;flex:@row.Height;">
+                                                @if (row.Columns != null)
+                                                {
+                                                    @foreach (var col in row.Columns)
+                                                    {
+                                                        <div style="flex:@col.Width;background-color:#90caf9;border-radius:2px;border:1px solid #64b5f6;"></div>
+                                                    }
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                }
                             }
-                        </div>
+                            catch
+                            {
+                                <div class="text-muted small">?</div>
+                            }
+                        }
                     </div>
                     <h5 class="fw-bold mb-1">@item.LayoutName</h5>
-                    <span class="badge bg-light text-dark border mb-2">@item.GridColumnsX x @item.GridRowsY Grid</span>
-                    <p class="text-muted small">@(item.Description ?? "No description")</p>
+                    <span class="badge bg-light text-dark border mb-2">@item.RowCount @T("layout.rows") / @item.TotalSections @T("layout.sections")</span>
+                    <p class="text-muted small">@(item.Description ?? T("common.noDescription"))</p>
                 </div>
                 <div class="card-footer bg-white border-top-0 pt-0 pb-3">
                      <div class="btn-group w-100">
                          <a asp-action="Details" asp-route-id="@item.LayoutID" class="btn btn-outline-info btn-sm">
-                            <i class="bi bi-eye"></i> View
+                            <i class="bi bi-eye"></i> @T("common.view")
                         </a>
                         @if (ViewBag.IsSystemAdmin == true || ViewBag.IsCompanyAdmin == true)
                         {
                              <a asp-action="Edit" asp-route-id="@item.LayoutID" class="btn btn-outline-secondary btn-sm">
-                                <i class="bi bi-pencil"></i> Edit
+                                <i class="bi bi-pencil"></i> @T("common.edit")
                             </a>
                              <a asp-action="Delete" asp-route-id="@item.LayoutID" class="btn btn-outline-danger btn-sm">
-                                <i class="bi bi-trash"></i> Delete
+                                <i class="bi bi-trash"></i> @T("common.delete")
                             </a>
                         }
                     </div>
@@ -72,4 +94,3 @@ else
 </div>
 </div>
 }
-

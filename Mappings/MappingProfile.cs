@@ -58,7 +58,9 @@ namespace DigitalSignage.Mappings
                 .ForMember(dest => dest.CreatedBy, opt => opt.Ignore());
 
             // Layout Mappings
-            CreateMap<Layout, LayoutViewModel>();
+            CreateMap<Layout, LayoutViewModel>()
+                .ForMember(dest => dest.TotalSections, opt => opt.MapFrom(src => src.TotalSections))
+                .ForMember(dest => dest.RowCount, opt => opt.MapFrom(src => src.RowCount));
             CreateMap<LayoutViewModel, Layout>();
             CreateMap<CreateLayoutDTO, Layout>()
                 .ForMember(dest => dest.LayoutID, opt => opt.Ignore())

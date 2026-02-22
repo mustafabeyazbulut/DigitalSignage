@@ -1,28 +1,46 @@
 @model DigitalSignage.ViewModels.DynamicLayoutViewModel
 
-<div class="layout-grid" style="display: grid;
-    grid-template-columns: repeat(@Model.GridColumnsX, 1fr);
-    grid-template-rows: repeat(@Model.GridRowsY, 1fr);
-    gap: 10px;
-    min-height: 400px;
-    border: 2px solid #dee2e6;
-    padding: 10px;">
-
-    @foreach (var section in Model.Sections.OrderBy(s => s.Row).ThenBy(s => s.Column))
+@{
+    DigitalSignage.Models.LayoutDefinitionModel? def = null;
+    try
     {
-        <div class="grid-section" style="
-            grid-column: @(section.Column + 1);
-            grid-row: @(section.Row + 1);
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            padding: 15px;
-            border-radius: 5px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;">
-            <h5 class="mb-1">@(section.Position)</h5>
-            <small class="text-muted">Section @(section.SectionID)</small>
-        </div>
+        def = System.Text.Json.JsonSerializer.Deserialize<DigitalSignage.Models.LayoutDefinitionModel>(
+            Model.LayoutDefinition ?? "{}",
+            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
-</div>
+    catch { }
+}
+
+@if (def?.Rows != null)
+{
+    <div class="layout-grid" style="display:flex;flex-direction:column;gap:6px;min-height:400px;border:2px solid #dee2e6;padding:6px;border-radius:8px;">
+        @foreach (var row in def.Rows)
+        {
+            var colTemplate = string.Join(" ", row.Columns?.Select(c => c.Width + "fr") ?? Array.Empty<string>());
+            <div style="display:grid;grid-template-columns:@colTemplate;gap:6px;flex:@row.Height;">
+                @if (row.Columns != null)
+                {
+                    var rowIdx = def.Rows.IndexOf(row);
+                    var colIdx = 0;
+                    @foreach (var col in row.Columns)
+                    {
+                        var sectionPos = $"R{rowIdx + 1}C{colIdx + 1}";
+                        var matchedSection = Model.Sections.FirstOrDefault(s => s.Position == sectionPos);
+                        <div class="grid-section" style="background-color:#f8f9fa;border:1px solid #dee2e6;padding:15px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                            <h5 class="mb-1">@sectionPos</h5>
+                            @if (matchedSection != null)
+                            {
+                                <small class="text-muted">@matchedSection.SectionID</small>
+                            }
+                        </div>
+                        colIdx++;
+                    }
+                }
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">Invalid layout definition</div>
+}

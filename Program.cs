@@ -230,14 +230,12 @@ if (app.Environment.IsDevelopment())
             context.Departments.AddRange(departments);
             context.SaveChanges();
 
-            // Seed Example Layout
+            // Örnek Düzen Oluştur
             var layout = new DigitalSignage.Models.Layout
             {
                 CompanyID = company.CompanyID,
                 LayoutName = "2x2 Grid Layout",
-                LayoutCode = "GRID_2X2",
-                GridColumnsX = 2,
-                GridRowsY = 2,
+                LayoutDefinition = "{\"rows\":[{\"height\":50,\"columns\":[{\"width\":50},{\"width\":50}]},{\"height\":50,\"columns\":[{\"width\":50},{\"width\":50}]}]}",
                 Description = "Standard 2x2 grid layout",
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow
@@ -245,24 +243,14 @@ if (app.Environment.IsDevelopment())
             context.Layouts.Add(layout);
             context.SaveChanges();
 
-            // Seed Layout Sections
-            var sections = new List<DigitalSignage.Models.LayoutSection>();
-            for (int row = 0; row < layout.GridRowsY; row++)
+            // Tanımdan düzen bölümlerini oluştur
+            var sections = new List<DigitalSignage.Models.LayoutSection>
             {
-                for (int col = 0; col < layout.GridColumnsX; col++)
-                {
-                    sections.Add(new DigitalSignage.Models.LayoutSection
-                    {
-                        LayoutID = layout.LayoutID,
-                        SectionPosition = $"{(char)('A' + row)}{col + 1}",
-                        ColumnIndex = col,
-                        RowIndex = row,
-                        Width = "100%",
-                        Height = "100%",
-                        IsActive = true
-                    });
-                }
-            }
+                new() { LayoutID = layout.LayoutID, SectionPosition = "R1C1", ColumnIndex = 0, RowIndex = 0, Width = "50%", Height = "50%", IsActive = true },
+                new() { LayoutID = layout.LayoutID, SectionPosition = "R1C2", ColumnIndex = 1, RowIndex = 0, Width = "50%", Height = "50%", IsActive = true },
+                new() { LayoutID = layout.LayoutID, SectionPosition = "R2C1", ColumnIndex = 0, RowIndex = 1, Width = "50%", Height = "50%", IsActive = true },
+                new() { LayoutID = layout.LayoutID, SectionPosition = "R2C2", ColumnIndex = 1, RowIndex = 1, Width = "50%", Height = "50%", IsActive = true }
+            };
             context.LayoutSections.AddRange(sections);
             context.SaveChanges();
 

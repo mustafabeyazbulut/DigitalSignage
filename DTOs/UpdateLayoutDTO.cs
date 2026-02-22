@@ -12,5 +12,8 @@ namespace DigitalSignage.DTOs
         public string? Description { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        [Required(ErrorMessage = "Layout definition is required")]
+        public string LayoutDefinition { get; set; } = string.Empty;
     }
 }
