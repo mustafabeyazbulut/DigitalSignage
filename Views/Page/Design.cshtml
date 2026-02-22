@@ -57,64 +57,7 @@
                         @if (def?.Rows != null)
                         {
                             <div style="display:flex;flex-direction:column;gap:10px;min-height:500px;border:2px solid #ddd;padding:10px;">
-                                @foreach (var row in def.Rows)
-                                {
-                                    var colTemplate = string.Join(" ", row.Columns?.Select(c => c.Width + "fr") ?? Array.Empty<string>());
-                                    <div style="display:grid;grid-template-columns:@colTemplate;gap:10px;flex:@row.Height;">
-                                        @if (row.Columns != null)
-                                        {
-                                            var rowIdx = def.Rows.IndexOf(row);
-                                            var colIdx = 0;
-                                            @foreach (var col in row.Columns)
-                                            {
-                                                var sectionPos = $"R{rowIdx + 1}C{colIdx + 1}";
-                                                var hasContent = sectionContentMap.ContainsKey(sectionPos);
-                                                var assignedContent = hasContent ? sectionContentMap[sectionPos] : null;
-
-                                                <div id="cell-@sectionPos"
-                                                     class="design-cell @(hasContent ? "has-content" : "")"
-                                                     style="background-color:@(hasContent ? "#d4edda" : "#f8f9fa");border:1px solid @(hasContent ? "#28a745" : "#dee2e6");padding:15px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;@(canEdit ? "cursor:pointer;" : "")min-height:80px;"
-                                                     @if (canEdit && !hasContent)
-                                                     {
-                                                         <text>onclick="openContentModal('@sectionPos')"</text>
-                                                     }>
-
-                                                    @if (hasContent && assignedContent?.Content != null)
-                                                    {
-                                                        <div class="text-center w-100">
-                                                            <i class="bi @GetContentIcon(assignedContent.Content.ContentType) fs-4 text-success"></i>
-                                                            <div class="fw-bold small mt-1">@assignedContent.Content.ContentTitle</div>
-                                                            <span class="badge bg-success mt-1">@assignedContent.Content.ContentType</span>
-                                                            @if (canEdit)
-                                                            {
-                                                                <div class="mt-2">
-                                                                    <button class="btn btn-outline-danger btn-sm" onclick="event.stopPropagation(); removeContent('@sectionPos')" title="@T("common.remove")">
-                                                                        <i class="bi bi-x-circle"></i>
-                                                                    </button>
-                                                                    <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); openContentModal('@sectionPos')" title="@T("page.changeLayout")">
-                                                                        <i class="bi bi-arrow-repeat"></i>
-                                                                    </button>
-                                                                </div>
-                                                            }
-                                                        </div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <strong class="text-muted">@sectionPos</strong>
-                                                        <p class="text-muted small mb-0">@(col.Width)% x @(row.Height)%</p>
-                                                        @if (canEdit)
-                                                        {
-                                                            <button class="btn btn-outline-primary btn-sm mt-2" onclick="event.stopPropagation(); openContentModal('@sectionPos')">
-                                                                <i class="bi bi-plus-circle me-1"></i> @T("page.addContent")
-                                                            </button>
-                                                        }
-                                                    }
-                                                </div>
-                                                colIdx++;
-                                            }
-                                        }
-                                    </div>
-                                }
+                                @RenderDesignGrid(def.Rows, "", sectionContentMap, canEdit, T)
                             </div>
                         }
                     </div>
@@ -159,7 +102,6 @@
                                                 <input type="hidden" name="layoutId" value="@layout.LayoutID" />
                                                 <div class="card h-100 layout-card" style="cursor: pointer;" onclick="this.closest('form').submit();">
                                                     <div class="card-body text-center">
-                                                        <!-- Mini Grid Önizleme -->
                                                         @{
                                                             var lDef = layout.LayoutDefinition ?? "{\"rows\":[{\"height\":100,\"columns\":[{\"width\":100}]}]}";
                                                             DigitalSignage.Models.LayoutDefinitionModel? lDefObj = null;
@@ -168,18 +110,7 @@
                                                         <div style="display:flex;flex-direction:column;gap:3px;height:120px;border:1px solid #dee2e6;padding:3px;border-radius:4px;margin-bottom:10px;">
                                                             @if (lDefObj?.Rows != null)
                                                             {
-                                                                @foreach (var row in lDefObj.Rows)
-                                                                {
-                                                                    <div style="display:flex;gap:3px;flex:@row.Height;">
-                                                                        @if (row.Columns != null)
-                                                                        {
-                                                                            @foreach (var col in row.Columns)
-                                                                            {
-                                                                                <div style="flex:@col.Width;background-color:#e9ecef;border:1px solid #ced4da;border-radius:3px;"></div>
-                                                                            }
-                                                                        }
-                                                                    </div>
-                                                                }
+                                                                @RenderMiniPreview(lDefObj.Rows)
                                                             }
                                                         </div>
                                                         <h6 class="fw-bold mb-1">@layout.LayoutName</h6>
@@ -278,18 +209,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Yükleniyor -->
                     <div id="contentLoading" class="text-center py-5">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
                     </div>
-                    <!-- Boş durum -->
                     <div id="contentEmpty" class="text-center py-5 d-none">
                         <i class="bi bi-inbox fs-1 text-muted"></i>
                         <p class="text-muted mt-2">@T("page.noContent")</p>
                     </div>
-                    <!-- İçerik grid'i -->
                     <div id="contentGrid" class="row g-3 d-none"></div>
                 </div>
             </div>
@@ -337,7 +265,6 @@
         var departmentId = @Model.DepartmentID;
         var antiForgeryToken = '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)?.[1] || '';
 
-        // İçerik tipi ikonları
         function getContentIcon(type) {
             switch ((type || '').toLowerCase()) {
                 case 'image': return 'bi-image';
@@ -365,7 +292,6 @@
             var modal = new bootstrap.Modal(document.getElementById('contentModal'));
             modal.show();
 
-            // AJAX ile içerikleri yükle
             fetch('@Url.Action("GetDepartmentContents", "Page")?departmentId=' + departmentId)
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
@@ -447,7 +373,7 @@
         }
 
         function updateCellUI(sectionPos, title, type) {
-            var cell = document.getElementById('cell-' + sectionPos);
+            var cell = document.getElementById('cell-' + CSS.escape(sectionPos));
             if (!cell) return;
 
             cell.classList.add('has-content');
@@ -472,7 +398,7 @@
         }
 
         function clearCellUI(sectionPos) {
-            var cell = document.getElementById('cell-' + sectionPos);
+            var cell = document.getElementById('cell-' + CSS.escape(sectionPos));
             if (!cell) return;
 
             cell.classList.remove('has-content');
@@ -507,5 +433,135 @@
             "url" => "bi-link-45deg",
             _ => "bi-file-text"
         };
+    }
+
+    /// <summary>
+    /// Design grid'ini recursive olarak render eder (içerik atama destekli).
+    /// </summary>
+    IHtmlContent RenderDesignGrid(
+        List<DigitalSignage.Models.LayoutRowDefinition> rows,
+        string parentPos,
+        Dictionary<string, DigitalSignage.Models.PageContent> contentMap,
+        bool canEdit,
+        Func<string, string> T)
+    {
+        var sb = new System.Text.StringBuilder();
+        for (int ri = 0; ri < rows.Count; ri++)
+        {
+            var row = rows[ri];
+            var colTemplate = string.Join(" ", row.Columns?.Select(c => c.Width + "fr") ?? Array.Empty<string>());
+            sb.Append($"<div style=\"display:grid;grid-template-columns:{colTemplate};gap:10px;flex:{row.Height};\">");
+            if (row.Columns != null)
+            {
+                for (int ci = 0; ci < row.Columns.Count; ci++)
+                {
+                    var col = row.Columns[ci];
+                    var pos = string.IsNullOrEmpty(parentPos) ? $"R{ri + 1}C{ci + 1}" : $"{parentPos}.R{ri + 1}C{ci + 1}";
+
+                    if (col.Rows != null && col.Rows.Count > 0)
+                    {
+                        // İç içe bölünmüş sütun — alt yapıyı render et
+                        sb.Append("<div style=\"display:flex;flex-direction:column;gap:8px;border:2px dashed #ff9800;border-radius:5px;padding:8px;background:rgba(255,152,0,0.05);\">");
+                        sb.Append(RenderDesignGridString(col.Rows, pos, contentMap, canEdit, T));
+                        sb.Append("</div>");
+                    }
+                    else
+                    {
+                        // Yaprak hücre — içerik atama
+                        var hasContent = contentMap.ContainsKey(pos);
+                        var assigned = hasContent ? contentMap[pos] : null;
+                        var bgColor = hasContent ? "#d4edda" : "#f8f9fa";
+                        var borderColor = hasContent ? "#28a745" : "#dee2e6";
+                        var cursor = canEdit ? "cursor:pointer;" : "";
+                        var posEscaped = System.Web.HttpUtility.HtmlAttributeEncode(pos);
+
+                        sb.Append($"<div id=\"cell-{posEscaped}\" class=\"design-cell {(hasContent ? "has-content" : "")}\" ");
+                        sb.Append($"style=\"background-color:{bgColor};border:1px solid {borderColor};padding:15px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;{cursor}min-height:80px;\" ");
+                        if (canEdit && !hasContent)
+                            sb.Append($"onclick=\"openContentModal('{pos}')\" ");
+                        sb.Append(">");
+
+                        if (hasContent && assigned?.Content != null)
+                        {
+                            var icon = GetContentIcon(assigned.Content.ContentType);
+                            var title = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentTitle);
+                            var cType = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentType);
+                            sb.Append("<div class=\"text-center w-100\">");
+                            sb.Append($"<i class=\"bi {icon} fs-4 text-success\"></i>");
+                            sb.Append($"<div class=\"fw-bold small mt-1\">{title}</div>");
+                            sb.Append($"<span class=\"badge bg-success mt-1\">{cType}</span>");
+                            if (canEdit)
+                            {
+                                sb.Append("<div class=\"mt-2\">");
+                                sb.Append($"<button class=\"btn btn-outline-danger btn-sm\" onclick=\"event.stopPropagation(); removeContent('{pos}')\" title=\"{T("common.remove")}\">");
+                                sb.Append("<i class=\"bi bi-x-circle\"></i></button> ");
+                                sb.Append($"<button class=\"btn btn-outline-primary btn-sm\" onclick=\"event.stopPropagation(); openContentModal('{pos}')\">");
+                                sb.Append("<i class=\"bi bi-arrow-repeat\"></i></button>");
+                                sb.Append("</div>");
+                            }
+                            sb.Append("</div>");
+                        }
+                        else
+                        {
+                            sb.Append($"<strong class=\"text-muted\">{pos}</strong>");
+                            sb.Append($"<p class=\"text-muted small mb-0\">{col.Width}% x {row.Height}%</p>");
+                            if (canEdit)
+                            {
+                                sb.Append($"<button class=\"btn btn-outline-primary btn-sm mt-2\" onclick=\"event.stopPropagation(); openContentModal('{pos}')\">");
+                                sb.Append($"<i class=\"bi bi-plus-circle me-1\"></i> {T("page.addContent")}</button>");
+                            }
+                        }
+                        sb.Append("</div>");
+                    }
+                }
+            }
+            sb.Append("</div>");
+        }
+        return new HtmlString(sb.ToString());
+    }
+
+    string RenderDesignGridString(
+        List<DigitalSignage.Models.LayoutRowDefinition> rows,
+        string parentPos,
+        Dictionary<string, DigitalSignage.Models.PageContent> contentMap,
+        bool canEdit,
+        Func<string, string> T)
+    {
+        return ((HtmlString)RenderDesignGrid(rows, parentPos, contentMap, canEdit, T)).Value ?? "";
+    }
+
+    /// <summary>
+    /// Mini preview (layout seçim kartları için) recursive render.
+    /// </summary>
+    IHtmlContent RenderMiniPreview(List<DigitalSignage.Models.LayoutRowDefinition> rows)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var row in rows)
+        {
+            sb.Append($"<div style=\"display:flex;gap:3px;flex:{row.Height};\">");
+            if (row.Columns != null)
+            {
+                foreach (var col in row.Columns)
+                {
+                    if (col.Rows != null && col.Rows.Count > 0)
+                    {
+                        sb.Append($"<div style=\"flex:{col.Width};display:flex;flex-direction:column;gap:2px;border:1px dashed #ff9800;border-radius:2px;padding:1px;\">");
+                        sb.Append(RenderMiniPreviewString(col.Rows));
+                        sb.Append("</div>");
+                    }
+                    else
+                    {
+                        sb.Append($"<div style=\"flex:{col.Width};background-color:#e9ecef;border:1px solid #ced4da;border-radius:3px;\"></div>");
+                    }
+                }
+            }
+            sb.Append("</div>");
+        }
+        return new HtmlString(sb.ToString());
+    }
+
+    string RenderMiniPreviewString(List<DigitalSignage.Models.LayoutRowDefinition> rows)
+    {
+        return ((HtmlString)RenderMiniPreview(rows)).Value ?? "";
     }
 }

@@ -196,29 +196,49 @@ namespace DigitalSignage.Services
 
             if (definition?.Rows == null) return;
 
-            for (int rowIdx = 0; rowIdx < definition.Rows.Count; rowIdx++)
+            await CreateSectionsRecursive(layoutId, definition.Rows, "");
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Recursive olarak satır/sütun yapısından LayoutSection nesneleri oluşturur.
+        /// İç içe sütunlar için pozisyon formatı: R1C1.R1C2 şeklinde nokta ile ayrılır.
+        /// </summary>
+        private async Task CreateSectionsRecursive(int layoutId, List<LayoutRowDefinition> rows, string parentPrefix)
+        {
+            for (int rowIdx = 0; rowIdx < rows.Count; rowIdx++)
             {
-                var row = definition.Rows[rowIdx];
+                var row = rows[rowIdx];
                 if (row.Columns == null) continue;
 
                 for (int colIdx = 0; colIdx < row.Columns.Count; colIdx++)
                 {
                     var col = row.Columns[colIdx];
-                    var section = new LayoutSection
+                    var position = $"{parentPrefix}R{rowIdx + 1}C{colIdx + 1}";
+
+                    if (col.Rows != null && col.Rows.Count > 0)
                     {
-                        LayoutID = layoutId,
-                        SectionPosition = $"R{rowIdx + 1}C{colIdx + 1}",
-                        ColumnIndex = colIdx,
-                        RowIndex = rowIdx,
-                        Width = $"{col.Width}%",
-                        Height = $"{row.Height}%",
-                        IsActive = true
-                    };
-                    await _unitOfWork.LayoutSections.AddAsync(section);
+                        // İç içe bölünmüş sütun — alt section'ları recursive oluştur
+                        await CreateSectionsRecursive(layoutId, col.Rows, position + ".");
+                    }
+                    else
+                    {
+                        // Yaprak (leaf) hücre — section oluştur
+                        var section = new LayoutSection
+                        {
+                            LayoutID = layoutId,
+                            SectionPosition = position,
+                            ColumnIndex = colIdx,
+                            RowIndex = rowIdx,
+                            Width = $"{col.Width}%",
+                            Height = $"{row.Height}%",
+                            IsActive = true
+                        };
+                        await _unitOfWork.LayoutSections.AddAsync(section);
+                    }
                 }
             }
-
-            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

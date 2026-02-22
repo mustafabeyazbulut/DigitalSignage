@@ -37,13 +37,27 @@ namespace DigitalSignage.Models
                 {
                     var def = JsonSerializer.Deserialize<LayoutDefinitionModel>(LayoutDefinition ?? "{}");
                     if (def?.Rows == null) return 0;
-                    int count = 0;
-                    foreach (var row in def.Rows)
-                        count += row.Columns?.Count ?? 0;
-                    return count;
+                    return CountSections(def.Rows);
                 }
                 catch { return 0; }
             }
+        }
+
+        private static int CountSections(List<LayoutRowDefinition> rows)
+        {
+            int count = 0;
+            foreach (var row in rows)
+            {
+                if (row.Columns == null) continue;
+                foreach (var col in row.Columns)
+                {
+                    if (col.Rows != null && col.Rows.Count > 0)
+                        count += CountSections(col.Rows);
+                    else
+                        count++;
+                }
+            }
+            return count;
         }
 
         /// <summary>
@@ -85,5 +99,10 @@ namespace DigitalSignage.Models
     public class LayoutColumnDefinition
     {
         public double Width { get; set; }
+        /// <summary>
+        /// İç içe bölme: sütunun kendi alt satır/sütun yapısı (opsiyonel).
+        /// Null ise sütun yaprak (leaf) hücredir.
+        /// </summary>
+        public List<LayoutRowDefinition>? Rows { get; set; }
     }
 }

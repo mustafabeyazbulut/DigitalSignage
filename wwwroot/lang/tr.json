@@ -276,7 +276,10 @@
         "totalHeight": "Toplam Yükseklik",
         "layoutInfo": "Düzen Bilgileri",
         "invalidDefinition": "Geçersiz düzen tanımı. Satır yükseklikleri ve sütun genişlikleri toplamları %100 olmalıdır.",
-        "inUseWarning": "Bu düzen şu anda sayfalar tarafından kullanılmaktadır. Silinirse ilgili sayfalardan düzen bağlantısı kaldırılacaktır."
+        "inUseWarning": "Bu düzen şu anda sayfalar tarafından kullanılmaktadır. Silinirse ilgili sayfalardan düzen bağlantısı kaldırılacaktır.",
+        "splitCell": "Hücreyi Böl",
+        "unsplitCell": "Bölmeyi Kaldır",
+        "nested": "İç İçe"
     },
     "content": {
         "title": "Medya Kütüphanesi",

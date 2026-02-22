@@ -64,25 +64,7 @@
                             if (def?.Rows != null)
                             {
                                 <div style="display:flex;flex-direction:column;gap:6px;min-height:400px;border:2px solid #dee2e6;padding:6px;border-radius:8px;background:#f8f9fa;">
-                                    @foreach (var row in def.Rows)
-                                    {
-                                        var colTemplate = string.Join(" ", row.Columns?.Select(c => c.Width + "fr") ?? Array.Empty<string>());
-                                        <div style="display:grid;grid-template-columns:@colTemplate;gap:6px;flex:@row.Height;">
-                                            @if (row.Columns != null)
-                                            {
-                                                var rowIdx = def.Rows.IndexOf(row);
-                                                var colIdx = 0;
-                                                @foreach (var col in row.Columns)
-                                                {
-                                                    <div style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);border:1px solid #90caf9;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;">
-                                                        <strong class="text-primary">R@(rowIdx + 1)C@(colIdx + 1)</strong>
-                                                        <small class="text-muted">@(col.Width)% x @(row.Height)%</small>
-                                                    </div>
-                                                    colIdx++;
-                                                }
-                                            }
-                                        </div>
-                                    }
+                                    @RenderPreviewRows(def.Rows, "")
                                 </div>
                             }
                         }
@@ -100,3 +82,74 @@
         <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">@T("common.backToList")</button>
     </div>
 </div>
+
+@functions {
+    IHtmlContent RenderPreviewRows(List<DigitalSignage.Models.LayoutRowDefinition> rows, string parentPos)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var row in rows)
+        {
+            var colTemplate = string.Join(" ", row.Columns?.Select(c => c.Width + "fr") ?? Array.Empty<string>());
+            var rowIdx = rows.IndexOf(row);
+            sb.Append($"<div style=\"display:grid;grid-template-columns:{colTemplate};gap:6px;flex:{row.Height};\">");
+            if (row.Columns != null)
+            {
+                var colIdx = 0;
+                foreach (var col in row.Columns)
+                {
+                    var pos = string.IsNullOrEmpty(parentPos) ? $"R{rowIdx + 1}C{colIdx + 1}" : $"{parentPos}.R{rowIdx + 1}C{colIdx + 1}";
+                    if (col.Rows != null && col.Rows.Count > 0)
+                    {
+                        sb.Append("<div style=\"display:flex;flex-direction:column;gap:4px;border:2px dashed #ff9800;border-radius:6px;padding:4px;background:rgba(255,152,0,0.05);\">");
+                        sb.Append(RenderPreviewRowsString(col.Rows, pos));
+                        sb.Append("</div>");
+                    }
+                    else
+                    {
+                        sb.Append($"<div style=\"background:linear-gradient(135deg,#e3f2fd,#bbdefb);border:1px solid #90caf9;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;\">");
+                        sb.Append($"<strong class=\"text-primary\">{pos}</strong>");
+                        sb.Append($"<small class=\"text-muted\">{col.Width}% x {row.Height}%</small>");
+                        sb.Append("</div>");
+                    }
+                    colIdx++;
+                }
+            }
+            sb.Append("</div>");
+        }
+        return new HtmlString(sb.ToString());
+    }
+
+    string RenderPreviewRowsString(List<DigitalSignage.Models.LayoutRowDefinition> rows, string parentPos)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var row in rows)
+        {
+            var colTemplate = string.Join(" ", row.Columns?.Select(c => c.Width + "fr") ?? Array.Empty<string>());
+            var rowIdx = rows.IndexOf(row);
+            sb.Append($"<div style=\"display:grid;grid-template-columns:{colTemplate};gap:4px;flex:{row.Height};\">");
+            if (row.Columns != null)
+            {
+                var colIdx = 0;
+                foreach (var col in row.Columns)
+                {
+                    var pos = $"{parentPos}.R{rowIdx + 1}C{colIdx + 1}";
+                    if (col.Rows != null && col.Rows.Count > 0)
+                    {
+                        sb.Append("<div style=\"display:flex;flex-direction:column;gap:3px;border:2px dashed #ff9800;border-radius:4px;padding:3px;background:rgba(255,152,0,0.05);\">");
+                        sb.Append(RenderPreviewRowsString(col.Rows, pos));
+                        sb.Append("</div>");
+                    }
+                    else
+                    {
+                        sb.Append($"<div style=\"background:linear-gradient(135deg,#e3f2fd,#bbdefb);border:1px solid #90caf9;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px;font-size:0.75rem;\">");
+                        sb.Append($"<strong class=\"text-primary\">{pos}</strong>");
+                        sb.Append("</div>");
+                    }
+                    colIdx++;
+                }
+            }
+            sb.Append("</div>");
+        }
+        return sb.ToString();
+    }
+}

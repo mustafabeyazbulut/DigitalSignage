@@ -276,7 +276,10 @@
         "totalHeight": "Gesamthöhe",
         "layoutInfo": "Layout-Informationen",
         "invalidDefinition": "Ungültige Layout-Definition. Zeilenhöhen und Spaltenbreiten müssen jeweils 100% ergeben.",
-        "inUseWarning": "Dieses Layout wird derzeit von Seiten verwendet. Beim Löschen wird die Layout-Zuordnung dieser Seiten aufgehoben."
+        "inUseWarning": "Dieses Layout wird derzeit von Seiten verwendet. Beim Löschen wird die Layout-Zuordnung dieser Seiten aufgehoben.",
+        "splitCell": "Zelle teilen",
+        "unsplitCell": "Teilung aufheben",
+        "nested": "Verschachtelt"
     },
     "content": {
         "title": "Mediathek",

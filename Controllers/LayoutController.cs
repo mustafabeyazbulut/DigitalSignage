@@ -259,29 +259,44 @@ namespace DigitalSignage.Controllers
                 var def = JsonSerializer.Deserialize<LayoutDefinitionModel>(json, options);
                 if (def?.Rows == null || def.Rows.Count == 0) return false;
 
-                double totalHeight = 0;
-                foreach (var row in def.Rows)
-                {
-                    if (row.Columns == null || row.Columns.Count == 0) return false;
-                    if (row.Height <= 0) return false;
-                    totalHeight += row.Height;
-
-                    double totalWidth = 0;
-                    foreach (var col in row.Columns)
-                    {
-                        if (col.Width <= 0) return false;
-                        totalWidth += col.Width;
-                    }
-                    if (Math.Abs(totalWidth - 100) > 0.5) return false;
-                }
-                if (Math.Abs(totalHeight - 100) > 0.5) return false;
-
-                return true;
+                return ValidateRows(def.Rows);
             }
             catch
             {
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Satır/sütun yapısını recursive olarak doğrular.
+        /// İç içe sütunların alt satırları da aynı kurallara tabi.
+        /// </summary>
+        private static bool ValidateRows(List<LayoutRowDefinition> rows)
+        {
+            double totalHeight = 0;
+            foreach (var row in rows)
+            {
+                if (row.Columns == null || row.Columns.Count == 0) return false;
+                if (row.Height <= 0) return false;
+                totalHeight += row.Height;
+
+                double totalWidth = 0;
+                foreach (var col in row.Columns)
+                {
+                    if (col.Width <= 0) return false;
+                    totalWidth += col.Width;
+
+                    // İç içe bölünmüş sütunun alt satırlarını da doğrula
+                    if (col.Rows != null && col.Rows.Count > 0)
+                    {
+                        if (!ValidateRows(col.Rows)) return false;
+                    }
+                }
+                if (Math.Abs(totalWidth - 100) > 0.5) return false;
+            }
+            if (Math.Abs(totalHeight - 100) > 0.5) return false;
+
+            return true;
         }
     }
 }

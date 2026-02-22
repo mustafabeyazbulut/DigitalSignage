@@ -33,18 +33,7 @@
                                     <div style="display:flex;flex-direction:column;gap:2px;height:80px;border:1px solid #dee2e6;padding:2px;border-radius:4px;margin-bottom:8px;">
                                         @if (def?.Rows != null)
                                         {
-                                            @foreach (var row in def.Rows)
-                                            {
-                                                <div style="display:flex;gap:2px;flex:@row.Height;">
-                                                    @if (row.Columns != null)
-                                                    {
-                                                        @foreach (var col in row.Columns)
-                                                        {
-                                                            <div style="flex:@col.Width;background-color:@(isCurrentLayout ? "#cfe2ff" : "#e9ecef");border:1px solid @(isCurrentLayout ? "#9ec5fe" : "#ced4da");border-radius:2px;"></div>
-                                                        }
-                                                    }
-                                                </div>
-                                            }
+                                            @RenderMiniPreview(def.Rows, isCurrentLayout)
                                         }
                                     </div>
                                     <small class="fw-bold">@layout.LayoutName</small>
@@ -68,3 +57,39 @@
         }
     </div>
 </div>
+
+@functions {
+    IHtmlContent RenderMiniPreview(List<DigitalSignage.Models.LayoutRowDefinition> rows, bool isCurrent)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var row in rows)
+        {
+            sb.Append($"<div style=\"display:flex;gap:2px;flex:{row.Height};\">");
+            if (row.Columns != null)
+            {
+                foreach (var col in row.Columns)
+                {
+                    if (col.Rows != null && col.Rows.Count > 0)
+                    {
+                        sb.Append($"<div style=\"flex:{col.Width};display:flex;flex-direction:column;gap:1px;border:1px dashed #ff9800;border-radius:2px;padding:1px;\">");
+                        sb.Append(RenderMiniPreviewString(col.Rows, isCurrent));
+                        sb.Append("</div>");
+                    }
+                    else
+                    {
+                        var bg = isCurrent ? "#cfe2ff" : "#e9ecef";
+                        var border = isCurrent ? "#9ec5fe" : "#ced4da";
+                        sb.Append($"<div style=\"flex:{col.Width};background-color:{bg};border:1px solid {border};border-radius:2px;\"></div>");
+                    }
+                }
+            }
+            sb.Append("</div>");
+        }
+        return new HtmlString(sb.ToString());
+    }
+
+    string RenderMiniPreviewString(List<DigitalSignage.Models.LayoutRowDefinition> rows, bool isCurrent)
+    {
+        return ((HtmlString)RenderMiniPreview(rows, isCurrent)).Value ?? "";
+    }
+}

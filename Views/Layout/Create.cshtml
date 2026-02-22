@@ -86,7 +86,10 @@
             colTotal: '@T("layout.columnWidth")',
             row: '@T("layout.row")',
             totalHeight: '@T("layout.totalHeight")',
-            equalDistribute: '@T("layout.equalDistribute")'
+            equalDistribute: '@T("layout.equalDistribute")',
+            splitCell: '@T("layout.splitCell")',
+            unsplitCell: '@T("layout.unsplitCell")',
+            nested: '@T("layout.nested")'
         };
         LayoutBuilder.init('@Html.Raw(Model.LayoutDefinition?.Replace("'", "\\'") ?? "{\"rows\":[{\"height\":100,\"columns\":[{\"width\":100}]}]}")');
     </script>

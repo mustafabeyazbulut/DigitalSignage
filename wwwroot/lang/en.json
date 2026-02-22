@@ -276,7 +276,10 @@
         "totalHeight": "Total Height",
         "layoutInfo": "Layout Information",
         "invalidDefinition": "Invalid layout definition. Row heights and column widths must each total 100%.",
-        "inUseWarning": "This layout is currently used by pages. Deleting it will detach the layout from those pages."
+        "inUseWarning": "This layout is currently used by pages. Deleting it will detach the layout from those pages.",
+        "splitCell": "Split Cell",
+        "unsplitCell": "Remove Split",
+        "nested": "Nested"
     },
     "content": {
         "title": "Media Library",
