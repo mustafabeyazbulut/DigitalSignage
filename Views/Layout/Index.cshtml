@@ -47,18 +47,7 @@ else
                                 if (def?.Rows != null)
                                 {
                                     <div style="display:flex;flex-direction:column;gap:2px;height:100%;">
-                                        @foreach (var row in def.Rows)
-                                        {
-                                            <div style="display:flex;gap:2px;flex:@row.Height;">
-                                                @if (row.Columns != null)
-                                                {
-                                                    @foreach (var col in row.Columns)
-                                                    {
-                                                        <div style="flex:@col.Width;background-color:#90caf9;border-radius:2px;border:1px solid #64b5f6;"></div>
-                                                    }
-                                                }
-                                            </div>
-                                        }
+                                        @RenderMiniPreview(def.Rows)
                                     </div>
                                 }
                             }
@@ -93,4 +82,38 @@ else
     }
 </div>
 </div>
+}
+
+@functions {
+    IHtmlContent RenderMiniPreview(List<LayoutRowDefinition> rows)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var row in rows)
+        {
+            sb.Append($"<div style=\"display:flex;gap:2px;flex:{row.Height};\">");
+            if (row.Columns != null)
+            {
+                foreach (var col in row.Columns)
+                {
+                    if (col.Rows != null && col.Rows.Count > 0)
+                    {
+                        sb.Append($"<div style=\"flex:{col.Width};display:flex;flex-direction:column;gap:1px;border:1px dashed #ff9800;border-radius:2px;padding:1px;\">");
+                        sb.Append(RenderMiniPreviewString(col.Rows));
+                        sb.Append("</div>");
+                    }
+                    else
+                    {
+                        sb.Append($"<div style=\"flex:{col.Width};background-color:#90caf9;border-radius:2px;border:1px solid #64b5f6;\"></div>");
+                    }
+                }
+            }
+            sb.Append("</div>");
+        }
+        return new HtmlString(sb.ToString());
+    }
+
+    string RenderMiniPreviewString(List<LayoutRowDefinition> rows)
+    {
+        return ((HtmlString)RenderMiniPreview(rows)).Value ?? "";
+    }
 }

@@ -8,6 +8,7 @@
 
     var canEdit = ViewBag.CanEdit as bool? ?? false;
     var hasLayout = Model.LayoutID.HasValue && Model.Layout != null;
+    var sectionContentMap = ViewBag.SectionContentMap as Dictionary<string, PageContent> ?? new Dictionary<string, PageContent>();
 }
 
 <div class="container mt-4">
@@ -40,56 +41,179 @@
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">@T("page.pageName")</dt>
-                <dd class="col-sm-9">@Model.PageName</dd>
+    <div class="row">
+        <div class="col-md-@(hasLayout ? "5" : "12")">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">@T("page.pageDetails")</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">@T("page.pageName")</dt>
+                        <dd class="col-sm-8">@Model.PageName</dd>
 
-                <dt class="col-sm-3">@T("page.pageCode")</dt>
-                <dd class="col-sm-9"><code>@Model.PageCode</code></dd>
+                        <dt class="col-sm-4">@T("page.pageCode")</dt>
+                        <dd class="col-sm-8"><code>@Model.PageCode</code></dd>
 
-                <dt class="col-sm-3">@T("dashboard.department")</dt>
-                <dd class="col-sm-9">@Model.Department?.DepartmentName</dd>
+                        <dt class="col-sm-4">@T("dashboard.department")</dt>
+                        <dd class="col-sm-8">@Model.Department?.DepartmentName</dd>
 
-                <dt class="col-sm-3">@T("page.gridLayout")</dt>
-                <dd class="col-sm-9">
-                    @if (hasLayout)
-                    {
-                        <span class="badge bg-success">@Model.Layout!.LayoutName (@Model.Layout.RowCount @T("layout.rows") / @Model.Layout.TotalSections @T("layout.sections"))</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-warning text-dark">@T("page.noLayoutAssigned")</span>
+                        <dt class="col-sm-4">@T("page.gridLayout")</dt>
+                        <dd class="col-sm-8">
+                            @if (hasLayout)
+                            {
+                                <span class="badge bg-success">@Model.Layout!.LayoutName (@Model.Layout.RowCount @T("layout.rows") / @Model.Layout.TotalSections @T("layout.sections"))</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">@T("page.noLayoutAssigned")</span>
+                                @if (canEdit)
+                                {
+                                    <a asp-action="Design" asp-route-id="@Model.PageID" class="btn btn-sm btn-outline-primary ms-2">
+                                        <i class="bi bi-grid-3x3 me-1"></i> @T("page.selectGridLayout")
+                                    </a>
+                                }
+                            }
+                        </dd>
+
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <dt class="col-sm-4">@T("company.description")</dt>
+                            <dd class="col-sm-8">@Model.Description</dd>
+                        }
+
+                        <dt class="col-sm-4">@T("common.status")</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                                @(Model.IsActive ? T("common.active") : T("common.inactive"))
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4">@T("common.createdDate")</dt>
+                        <dd class="col-sm-8">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        @if (hasLayout)
+        {
+            <div class="col-md-7">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-grid-3x3 me-2"></i> @T("layout.preview")</h5>
                         @if (canEdit)
                         {
-                            <a asp-action="Design" asp-route-id="@Model.PageID" class="btn btn-sm btn-outline-primary ms-2">
-                                <i class="bi bi-grid-3x3 me-1"></i> @T("page.selectGridLayout")
+                            <a asp-action="Design" asp-route-id="@Model.PageID" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil me-1"></i> @T("page.designLayout")
                             </a>
                         }
-                    }
-                </dd>
-
-                @if (!string.IsNullOrEmpty(Model.Description))
-                {
-                    <dt class="col-sm-3">@T("company.description")</dt>
-                    <dd class="col-sm-9">@Model.Description</dd>
-                }
-
-                <dt class="col-sm-3">@T("common.status")</dt>
-                <dd class="col-sm-9">
-                    <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
-                        @(Model.IsActive ? T("common.active") : T("common.inactive"))
-                    </span>
-                </dd>
-
-                <dt class="col-sm-3">@T("common.createdDate")</dt>
-                <dd class="col-sm-9">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
-            </dl>
-        </div>
+                    </div>
+                    <div class="card-body">
+                        @{
+                            var layoutDef = Model.Layout!.LayoutDefinition ?? "{\"rows\":[{\"height\":100,\"columns\":[{\"width\":100}]}]}";
+                            LayoutDefinitionModel? def = null;
+                            try
+                            {
+                                def = System.Text.Json.JsonSerializer.Deserialize<LayoutDefinitionModel>(layoutDef,
+                                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                            }
+                            catch { }
+                        }
+                        @if (def?.Rows != null)
+                        {
+                            <div style="display:flex;flex-direction:column;gap:8px;min-height:350px;border:2px solid #dee2e6;padding:8px;border-radius:8px;background:#f8f9fa;">
+                                @RenderPreviewGrid(def.Rows, "", sectionContentMap)
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
     </div>
 
     <div class="mt-3">
         <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">@T("common.backToList")</button>
     </div>
 </div>
+
+@functions {
+    string GetContentIcon(string contentType)
+    {
+        return (contentType?.ToLower()) switch
+        {
+            "image" => "bi-image",
+            "video" => "bi-play-circle",
+            "html" => "bi-code-slash",
+            "pdf" => "bi-file-pdf",
+            "url" => "bi-link-45deg",
+            _ => "bi-file-text"
+        };
+    }
+
+    /// <summary>
+    /// Layout preview grid'ini recursive render eder, atanmış içerikleri gösterir.
+    /// </summary>
+    IHtmlContent RenderPreviewGrid(
+        List<LayoutRowDefinition> rows,
+        string parentPos,
+        Dictionary<string, PageContent> contentMap)
+    {
+        var sb = new System.Text.StringBuilder();
+        for (int ri = 0; ri < rows.Count; ri++)
+        {
+            var row = rows[ri];
+            var colTemplate = string.Join(" ", row.Columns?.Select(c => c.Width + "fr") ?? Array.Empty<string>());
+            sb.Append($"<div style=\"display:grid;grid-template-columns:{colTemplate};gap:8px;flex:{row.Height};\">");
+            if (row.Columns != null)
+            {
+                for (int ci = 0; ci < row.Columns.Count; ci++)
+                {
+                    var col = row.Columns[ci];
+                    var pos = string.IsNullOrEmpty(parentPos) ? $"R{ri + 1}C{ci + 1}" : $"{parentPos}.R{ri + 1}C{ci + 1}";
+
+                    if (col.Rows != null && col.Rows.Count > 0)
+                    {
+                        sb.Append("<div style=\"display:flex;flex-direction:column;gap:6px;border:2px dashed #ff9800;border-radius:6px;padding:6px;background:rgba(255,152,0,0.05);\">");
+                        sb.Append(RenderPreviewGridString(col.Rows, pos, contentMap));
+                        sb.Append("</div>");
+                    }
+                    else
+                    {
+                        var hasContent = contentMap.ContainsKey(pos);
+                        var assigned = hasContent ? contentMap[pos] : null;
+
+                        if (hasContent && assigned?.Content != null)
+                        {
+                            var icon = GetContentIcon(assigned.Content.ContentType);
+                            var title = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentTitle);
+                            var cType = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentType);
+                            sb.Append("<div style=\"background:linear-gradient(135deg,#d4edda,#c3e6cb);border:1px solid #28a745;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;\">");
+                            sb.Append($"<i class=\"bi {icon} fs-4 text-success\"></i>");
+                            sb.Append($"<div class=\"fw-bold small mt-1\">{title}</div>");
+                            sb.Append($"<span class=\"badge bg-success mt-1\" style=\"font-size:0.7rem;\">{cType}</span>");
+                            sb.Append("</div>");
+                        }
+                        else
+                        {
+                            sb.Append("<div style=\"background:linear-gradient(135deg,#e3f2fd,#bbdefb);border:1px solid #90caf9;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;\">");
+                            sb.Append($"<strong class=\"text-primary\" style=\"font-size:0.8rem;\">{pos}</strong>");
+                            sb.Append($"<small class=\"text-muted\">{col.Width}% x {row.Height}%</small>");
+                            sb.Append("</div>");
+                        }
+                    }
+                }
+            }
+            sb.Append("</div>");
+        }
+        return new HtmlString(sb.ToString());
+    }
+
+    string RenderPreviewGridString(
+        List<LayoutRowDefinition> rows,
+        string parentPos,
+        Dictionary<string, PageContent> contentMap)
+    {
+        return ((HtmlString)RenderPreviewGrid(rows, parentPos, contentMap)).Value ?? "";
+    }
+}

@@ -278,6 +278,7 @@ namespace DigitalSignage.Controllers
             }
 
             ViewBag.CanEdit = await _authService.CanEditPageAsync(userId, id);
+            ViewBag.SectionContentMap = await _pageService.GetSectionContentMapAsync(id);
 
             return View(page);
         }
