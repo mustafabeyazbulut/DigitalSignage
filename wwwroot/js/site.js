@@ -507,3 +507,27 @@ if (document.readyState === 'loading') {
 }
 
 window.TableActionDropdown = TableActionDropdown;
+
+// Footer koruma — DOM üzerinden değiştirilmesini engeller
+(function () {
+    var footer = document.querySelector('[data-protected="true"]');
+    if (!footer) return;
+    var originalHTML = footer.innerHTML;
+    // İçerik değişirse geri yükle
+    var observer = new MutationObserver(function () {
+        if (footer.innerHTML !== originalHTML) {
+            observer.disconnect();
+            footer.innerHTML = originalHTML;
+            observer.observe(footer, { childList: true, subtree: true, characterData: true });
+        }
+    });
+    observer.observe(footer, { childList: true, subtree: true, characterData: true });
+    // Element silinirse geri ekle
+    var parentObserver = new MutationObserver(function () {
+        if (!document.contains(footer)) {
+            var wrapper = document.getElementById('page-content-wrapper');
+            if (wrapper) { wrapper.appendChild(footer); }
+        }
+    });
+    parentObserver.observe(document.body, { childList: true, subtree: true });
+})();
