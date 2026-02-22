@@ -200,7 +200,6 @@ if (app.Environment.IsDevelopment())
                 {
                     CompanyID = company.CompanyID,
                     DepartmentName = "Marketing",
-                    DepartmentCode = "MKT",
                     Description = "Marketing department displays",
                     IsActive = true,
                     CreatedDate = DateTime.UtcNow,
@@ -210,7 +209,6 @@ if (app.Environment.IsDevelopment())
                 {
                     CompanyID = company.CompanyID,
                     DepartmentName = "Sales",
-                    DepartmentCode = "SALES",
                     Description = "Sales department displays",
                     IsActive = true,
                     CreatedDate = DateTime.UtcNow,
@@ -220,7 +218,6 @@ if (app.Environment.IsDevelopment())
                 {
                     CompanyID = company.CompanyID,
                     DepartmentName = "Reception",
-                    DepartmentCode = "RCP",
                     Description = "Reception area displays",
                     IsActive = true,
                     CreatedDate = DateTime.UtcNow,

@@ -176,7 +176,6 @@
         "deleteAffects": "This action will also affect all users associated with this department.",
         "departmentName": "Department Name",
         "departmentID": "Department ID",
-        "code": "Code",
         "company": "Company",
         "companyCannotChange": "Company cannot be changed",
         "viewPages": "Pages",

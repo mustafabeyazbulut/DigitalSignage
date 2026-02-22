@@ -13,10 +13,6 @@ namespace DigitalSignage.Models
         [MaxLength(255)]
         public string DepartmentName { get; set; } = string.Empty;
         
-        [Required]
-        [MaxLength(50)]
-        public string DepartmentCode { get; set; } = string.Empty;
-        
         [MaxLength(500)]
         public string? Description { get; set; }
         

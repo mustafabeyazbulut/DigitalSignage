@@ -11,10 +11,6 @@ namespace DigitalSignage.DTOs
         [MaxLength(255, ErrorMessage = "Department name cannot exceed 255 characters")]
         public string DepartmentName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Department code is required")]
-        [MaxLength(50, ErrorMessage = "Department code cannot exceed 50 characters")]
-        public string DepartmentCode { get; set; } = string.Empty;
-
         [MaxLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
         public string? Description { get; set; }
 

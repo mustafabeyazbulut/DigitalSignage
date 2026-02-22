@@ -5,7 +5,6 @@ namespace DigitalSignage.ViewModels
         public int DepartmentID { get; set; }
         public int CompanyID { get; set; }
         public string DepartmentName { get; set; } = string.Empty;
-        public string DepartmentCode { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public string CompanyName { get; set; } = string.Empty;

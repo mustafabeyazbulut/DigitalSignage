@@ -78,7 +78,6 @@ namespace DigitalSignage.Controllers
                 search = search.ToLower();
                 query = query.Where(d =>
                     (d.DepartmentName != null && d.DepartmentName.ToLower().Contains(search)) ||
-                    (d.DepartmentCode != null && d.DepartmentCode.ToLower().Contains(search)) ||
                     (d.Company?.CompanyName != null && d.Company.CompanyName.ToLower().Contains(search))
                 );
             }
@@ -88,9 +87,6 @@ namespace DigitalSignage.Controllers
                 "DepartmentName" => sortOrder == "asc"
                     ? query.OrderBy(d => d.DepartmentName)
                     : query.OrderByDescending(d => d.DepartmentName),
-                "DepartmentCode" => sortOrder == "asc"
-                    ? query.OrderBy(d => d.DepartmentCode)
-                    : query.OrderByDescending(d => d.DepartmentCode),
                 _ => query.OrderBy(d => d.DepartmentName)
             };
 

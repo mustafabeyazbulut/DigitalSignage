@@ -75,15 +75,6 @@
                                     }
                                 </a>
                             </th>
-                            <th>
-                                <a href="?search=@searchTerm&sortBy=DepartmentCode&sortOrder=@(sortBy == "DepartmentCode" && sortOrder == "asc" ? "desc" : "asc")@(companyId != null ? $"&companyId={companyId}" : "")" class="text-white text-decoration-none">
-                                    @T("department.code")
-                                    @if (sortBy == "DepartmentCode")
-                                    {
-                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
-                                    }
-                                </a>
-                            </th>
                             <th>@T("department.company")</th>
                             <th>@T("common.status")</th>
                             <th>@T("common.actions")</th>
@@ -94,7 +85,6 @@
                         {
                             <tr>
                                 <td>@item.DepartmentName</td>
-                                <td><code>@item.DepartmentCode</code></td>
                                 <td>
                                     @if(item.Company != null) {
                                         <span><i class="bi bi-building"></i> @item.Company.CompanyName</span>

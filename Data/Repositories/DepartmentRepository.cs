@@ -80,7 +80,6 @@ namespace DigitalSignage.Data.Repositories
                 var term = searchTerm.ToLower();
                 query = query.Where(d =>
                     d.DepartmentName.ToLower().Contains(term) ||
-                    d.DepartmentCode.ToLower().Contains(term) ||
                     (d.Description != null && d.Description.ToLower().Contains(term)));
             }
 

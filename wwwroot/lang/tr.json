@@ -176,7 +176,6 @@
         "deleteAffects": "Bu işlem aynı zamanda bu departmanla ilişkili tüm kullanıcıları da etkileyecektir.",
         "departmentName": "Departman Adı",
         "departmentID": "Departman ID",
-        "code": "Kod",
         "company": "Şirket",
         "companyCannotChange": "Şirket değiştirilemez",
         "viewPages": "Sayfalar",

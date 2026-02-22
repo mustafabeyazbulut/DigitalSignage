@@ -176,7 +176,6 @@
         "deleteAffects": "Diese Aktion wirkt sich auch auf alle Benutzer aus, die dieser Abteilung zugeordnet sind.",
         "departmentName": "Abteilungsname",
         "departmentID": "Abteilungs-ID",
-        "code": "Kürzel",
         "company": "Unternehmen",
         "companyCannotChange": "Unternehmen kann nicht geändert werden",
         "viewPages": "Seiten",

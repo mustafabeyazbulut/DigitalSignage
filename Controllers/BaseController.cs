@@ -333,8 +333,6 @@ namespace DigitalSignage.Controllers
 
                 // Departman alanları
                 "DepartmentName" => T("department.departmentName"),
-                "DepartmentCode" => T("department.code"),
-
                 // Düzen alanları
                 "LayoutID" or "LayoutId" => T("page.layout"),
                 "LayoutName" => T("layout.layoutName"),
