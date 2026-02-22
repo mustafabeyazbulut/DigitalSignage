@@ -9,11 +9,13 @@ namespace DigitalSignage.Controllers
     {
         private readonly ICompanyService _companyService;
         private readonly AuthService _authService;
+        private readonly IFileStorageService _fileStorage;
 
-        public CompanyController(ICompanyService companyService, AuthService authService)
+        public CompanyController(ICompanyService companyService, AuthService authService, IFileStorageService fileStorage)
         {
             _companyService = companyService;
             _authService = authService;
+            _fileStorage = fileStorage;
         }
 
         public async Task<IActionResult> Index(string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
@@ -94,7 +96,7 @@ namespace DigitalSignage.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Company company)
+        public async Task<IActionResult> Create(Company company, IFormFile? logoFile)
         {
             var userId = GetCurrentUserId();
 
@@ -107,9 +109,24 @@ namespace DigitalSignage.Controllers
             ModelState.Remove("UserCompanyRoles");
             ModelState.Remove("CreatedBy");
 
+            // Logo dosyası varsa doğrula
+            if (logoFile != null && !_fileStorage.IsValidImageFile(logoFile))
+            {
+                ModelState.AddModelError("logoFile", T("company.invalidLogoFile"));
+            }
+
             if (ModelState.IsValid)
             {
+                // Önce şirketi kaydet (CompanyID oluşsun)
                 await _companyService.CreateAsync(company);
+
+                // Logo dosyası varsa yükle ve LogoPath'i güncelle
+                if (logoFile != null)
+                {
+                    company.LogoPath = await _fileStorage.SaveFileAsync(logoFile, company.CompanyID);
+                    await _companyService.UpdateAsync(company);
+                }
+
                 AddSuccessMessage(T("company.createdSuccess"));
                 return RedirectToAction(nameof(Index));
             }
@@ -135,7 +152,7 @@ namespace DigitalSignage.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Company company)
+        public async Task<IActionResult> Edit(int id, Company company, IFormFile? logoFile)
         {
             var userId = GetCurrentUserId();
 
@@ -154,8 +171,21 @@ namespace DigitalSignage.Controllers
             ModelState.Remove("UserCompanyRoles");
             ModelState.Remove("CreatedBy");
 
+            // Logo dosyası varsa doğrula
+            if (logoFile != null && !_fileStorage.IsValidImageFile(logoFile))
+            {
+                ModelState.AddModelError("logoFile", T("company.invalidLogoFile"));
+            }
+
             if (ModelState.IsValid)
             {
+                // Yeni logo dosyası yüklendiyse eskiyi sil, yenisini kaydet
+                if (logoFile != null)
+                {
+                    _fileStorage.DeleteFile(company.LogoPath);
+                    company.LogoPath = await _fileStorage.SaveFileAsync(logoFile, company.CompanyID);
+                }
+
                 await _companyService.UpdateAsync(company);
                 AddSuccessMessage(T("company.updatedSuccess"));
                 return RedirectToAction(nameof(Index));
@@ -188,6 +218,13 @@ namespace DigitalSignage.Controllers
 
             if (!await _authService.IsSystemAdminAsync(userId))
                 return AccessDenied();
+
+            // Silmeden önce logo dosyasını temizle
+            var company = await _companyService.GetByIdAsync(id);
+            if (company != null)
+            {
+                _fileStorage.DeleteFile(company.LogoPath);
+            }
 
             await _companyService.DeleteAsync(id);
             AddSuccessMessage(T("company.deletedSuccess"));

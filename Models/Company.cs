@@ -16,13 +16,7 @@ namespace DigitalSignage.Models
         public string? EmailDomain { get; set; }
         
         [MaxLength(500)]
-        public string? LogoUrl { get; set; }
-        
-        [MaxLength(50)]
-        public string? PrimaryColor { get; set; }
-        
-        [MaxLength(50)]
-        public string? SecondaryColor { get; set; }
+        public string? LogoPath { get; set; }
         
         [MaxLength(500)]
         public string? Description { get; set; }

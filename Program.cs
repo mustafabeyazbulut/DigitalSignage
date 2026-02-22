@@ -164,8 +164,6 @@ if (app.Environment.IsDevelopment())
                 CompanyName = "Example Corporation",
                 EmailDomain = "example.com",
                 Description = "Sample company for demonstration",
-                PrimaryColor = "#0078D4",
-                SecondaryColor = "#50E6FF",
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow,
                 CreatedBy = "System"

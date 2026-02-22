@@ -12,8 +12,9 @@
         <div class="col-md-8 offset-md-2">
             <h1>@T("company.editTitle")</h1>
 
-            <form asp-action="Edit" method="post">
+            <form asp-action="Edit" method="post" enctype="multipart/form-data">
                 <input type="hidden" asp-for="CompanyID" />
+                <input type="hidden" asp-for="LogoPath" />
                 <div asp-validation-summary="All" class="alert alert-danger"></div>
 
                 <div class="mb-3">
@@ -33,19 +34,21 @@
                     <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="PrimaryColor" class="form-label"></label>
-                            <input asp-for="PrimaryColor" type="color" class="form-control form-control-color" />
-                        </div>
+                <div class="mb-3">
+                    <label class="form-label">@T("company.currentLogo")</label>
+                    <div class="mb-2">
+                        @if (!string.IsNullOrEmpty(Model.LogoPath))
+                        {
+                            <img src="/media/@Model.LogoPath" alt="@Model.CompanyName Logo" class="img-thumbnail" style="max-height: 120px;" />
+                        }
+                        else
+                        {
+                            <span class="text-muted">@T("common.noLogo")</span>
+                        }
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="SecondaryColor" class="form-label"></label>
-                            <input asp-for="SecondaryColor" type="color" class="form-control form-control-color" />
-                        </div>
-                    </div>
+                    <label class="form-label">@T("company.changeLogo")</label>
+                    <input type="file" name="logoFile" class="form-control" accept="image/*" />
+                    <div class="form-text">@T("company.logoHelp")</div>
                 </div>
 
                 <div class="mb-3 form-check">

@@ -18,7 +18,7 @@
 
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <form asp-action="Create">
+                <form asp-action="Create" enctype="multipart/form-data">
                     <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
 
                     <h5 class="text-primary fw-bold mb-3"><i class="fas fa-info-circle me-2"></i> @T("company.basicInfo")</h5>
@@ -47,13 +47,9 @@
                             <span asp-validation-for="EmailDomain" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
-                            <label asp-for="LogoUrl" class="form-label">@T("company.logoUrl")</label>
-                            <input asp-for="LogoUrl" class="form-control" placeholder="https://..." />
-                            <span asp-validation-for="LogoUrl" class="text-danger small"></span>
-                        </div>
-                        <div class="col-md-6">
-                            <label asp-for="PrimaryColor" class="form-label">@T("company.brandColor")</label>
-                            <input asp-for="PrimaryColor" type="color" class="form-control form-control-color w-100" value="#0d6efd" title="Choose your color">
+                            <label class="form-label">@T("company.uploadLogo")</label>
+                            <input type="file" name="logoFile" class="form-control" accept="image/*" />
+                            <div class="form-text">@T("company.logoHelp")</div>
                         </div>
                          <div class="col-md-6 pt-4">
                             <div class="form-check form-switch">

@@ -19,13 +19,6 @@ namespace DigitalSignage.Validators
             RuleFor(x => x.Description)
                 .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters");
 
-            RuleFor(x => x.PrimaryColor)
-                .Matches(@"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").WithMessage("Invalid color format. Use hex format (e.g., #FFFFFF)")
-                .When(x => !string.IsNullOrEmpty(x.PrimaryColor));
-
-            RuleFor(x => x.SecondaryColor)
-                .Matches(@"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").WithMessage("Invalid color format. Use hex format (e.g., #FFFFFF)")
-                .When(x => !string.IsNullOrEmpty(x.SecondaryColor));
         }
     }
 }

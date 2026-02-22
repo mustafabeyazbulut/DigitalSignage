@@ -26,5 +26,11 @@ namespace DigitalSignage.Services
         /// Dosya uzantısının izin verilen listede olup olmadığını kontrol eder.
         /// </summary>
         bool IsValidFile(IFormFile file);
+
+        /// <summary>
+        /// Dosyanın geçerli bir resim dosyası olup olmadığını kontrol eder.
+        /// Sadece resim uzantıları kabul edilir (.jpg, .jpeg, .png, .gif, .bmp, .webp).
+        /// </summary>
+        bool IsValidImageFile(IFormFile file);
     }
 }

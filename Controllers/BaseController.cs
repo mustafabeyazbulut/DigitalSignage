@@ -326,9 +326,7 @@ namespace DigitalSignage.Controllers
                 // Şirket alanları
                 "CompanyName" => T("company.companyName"),
                 "EmailDomain" => T("company.emailDomain"),
-                "LogoUrl" => T("company.logoUrl"),
-                "PrimaryColor" => T("company.primaryColor"),
-                "SecondaryColor" => T("company.secondaryColor"),
+                "LogoPath" => T("company.uploadLogo"),
 
                 // Departman alanları
                 "DepartmentName" => T("department.departmentName"),

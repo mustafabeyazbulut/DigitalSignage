@@ -14,9 +14,6 @@ namespace DigitalSignage.DTOs
         [EmailAddress(ErrorMessage = "Invalid email domain format")]
         public string? EmailDomain { get; set; }
 
-        public string? PrimaryColor { get; set; } = "#0078D4";
-        public string? SecondaryColor { get; set; } = "#50E6FF";
-
         public string CreatedBy { get; set; } = "System";
     }
 }

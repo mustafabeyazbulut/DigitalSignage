@@ -8,8 +8,6 @@ namespace DigitalSignage.ViewModels
         public bool IsActive { get; set; }
         public int DepartmentCount { get; set; }
         public int LayoutCount { get; set; }
-        public string? PrimaryColor { get; set; }
-        public string? SecondaryColor { get; set; }
-        public DateTime CreatedDate { get; set; }
+public DateTime CreatedDate { get; set; }
     }
 }

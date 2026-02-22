@@ -5,6 +5,8 @@ namespace DigitalSignage.Services
         private readonly string _basePath;
         private static readonly string[] AllowedExtensions =
             { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".mp4", ".webm", ".ogg", ".pdf" };
+        private static readonly string[] AllowedImageExtensions =
+            { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
 
         public FileStorageService(IConfiguration configuration)
         {
@@ -55,6 +57,15 @@ namespace DigitalSignage.Services
 
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
             return AllowedExtensions.Contains(ext);
+        }
+
+        public bool IsValidImageFile(IFormFile file)
+        {
+            if (file == null || file.Length <= 0)
+                return false;
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            return AllowedImageExtensions.Contains(ext);
         }
     }
 }

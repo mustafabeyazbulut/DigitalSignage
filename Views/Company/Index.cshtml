@@ -75,13 +75,13 @@
                             <tr>
                                 <td>
                                     <div class="company-logo">
-                                        @if(string.IsNullOrEmpty(item.LogoUrl))
+                                        @if(string.IsNullOrEmpty(item.LogoPath))
                                         {
                                             <i class="bi bi-building"></i>
                                         }
                                         else
                                         {
-                                            <img src="@item.LogoUrl" alt="@item.CompanyName Logo" />
+                                            <img src="/media/@item.LogoPath" alt="@item.CompanyName Logo" />
                                         }
                                     </div>
                                 </td>
