@@ -137,8 +137,7 @@ namespace DigitalSignage.Data
                     .IsRequired(false)
                     .OnDelete(DeleteBehavior.Restrict); // Layout silinirse sayfalar bozulmasın
 
-                // Unique index'ler
-                entity.HasIndex(p => p.PageCode).IsUnique();
+                // Unique index
                 entity.HasIndex(p => p.PageName).IsUnique();
 
                 // Performans: FK indeksleri

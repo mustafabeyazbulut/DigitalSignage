@@ -17,10 +17,6 @@ namespace DigitalSignage.Models
         [MaxLength(255)]
         public string PageTitle { get; set; } = string.Empty;
         
-        [Required]
-        [MaxLength(50)]
-        public string PageCode { get; set; } = string.Empty;
-        
         public int? LayoutID { get; set; }
         
         [MaxLength(500)]

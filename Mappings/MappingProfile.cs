@@ -100,7 +100,6 @@ namespace DigitalSignage.Mappings
             CreateMap<UpdatePageDTO, Page>()
                 .ForMember(dest => dest.PageID, opt => opt.Ignore())
                 .ForMember(dest => dest.DepartmentID, opt => opt.Ignore())
-                .ForMember(dest => dest.PageCode, opt => opt.Ignore())
                 .ForMember(dest => dest.LayoutID, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedDate, opt => opt.Ignore());
 

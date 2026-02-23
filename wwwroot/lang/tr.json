@@ -236,7 +236,17 @@
         "durationSeconds": "Süre (sn)",
         "durationUpdated": "Süre güncellendi.",
         "contentAlreadyAssigned": "Bu içerik zaten bu bölüme atanmış.",
-        "sectionContents": "Bölüm İçerikleri"
+        "sectionContents": "Bölüm İçerikleri",
+        "totalDuration": "Toplam süre",
+        "seconds": "saniye",
+        "contents": "içerik",
+        "moveUp": "Yukarı Taşı",
+        "moveDown": "Aşağı Taşı",
+        "clearAllContents": "Tüm İçerikleri Temizle",
+        "confirmClearAll": "Bu bölümdeki tüm içerikleri kaldırmak istediğinize emin misiniz?",
+        "noContentAssigned": "Bu bölüme henüz içerik atanmamış.",
+        "reorderSuccess": "Sıralama güncellendi.",
+        "moreContents": "daha"
     },
     "layout": {
         "title": "Düzen Kütüphanesi",

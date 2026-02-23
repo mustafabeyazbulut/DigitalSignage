@@ -16,7 +16,7 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h1 class="fw-bold">@T("page.designLayout"): @Model.PageTitle</h1>
-            <p class="text-muted mb-0">@T("page.pageCode"): <code>@Model.PageCode</code></p>
+            <p class="text-muted mb-0">@Model.PageName</p>
         </div>
         <div class="col-md-4 text-end">
             <a asp-action="Details" asp-route-id="@Model.PageID" class="btn btn-outline-secondary">
@@ -167,7 +167,7 @@
                         @if (hasLayout)
                         {
                             <dt>@T("layout.totalSections")</dt>
-                            <dd>@Model.Layout!.TotalSections</dd>
+                            <dd>@Model.Layout!.RowCount @T("layout.rows") / @Model.Layout!.TotalSections @T("layout.sections")</dd>
                         }
                     </dl>
                 </div>
@@ -194,6 +194,49 @@
         </div>
     </div>
 </div>
+
+<!-- Section Offcanvas Panel -->
+@if (hasLayout)
+{
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="sectionPanel" style="width:440px;">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title">
+                <i class="bi bi-grid-3x3-gap me-2"></i> @T("page.sectionContents")
+                <span id="panelSectionBadge" class="badge bg-primary ms-2"></span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <!-- Toplam süre bilgisi -->
+            <div id="panelTotalDuration" class="alert alert-info small m-3 mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-clock"></i>
+                <span></span>
+            </div>
+
+            <!-- Atanmış içerikler listesi -->
+            <div id="panelContentList" class="p-3"></div>
+
+            <!-- Boş durum mesajı -->
+            <div id="panelEmpty" class="text-center py-5 px-3 d-none">
+                <i class="bi bi-inbox fs-1 text-muted"></i>
+                <p class="text-muted mt-2 mb-0">@T("page.noContentAssigned")</p>
+            </div>
+
+            <!-- Alt butonlar -->
+            @if (canEdit)
+            {
+                <div class="p-3 pt-0">
+                    <button id="panelAddBtn" class="btn btn-primary w-100 mb-2" onclick="openContentModal(currentPanelSection)">
+                        <i class="bi bi-plus-circle me-1"></i> @T("page.addContent")
+                    </button>
+                    <button id="panelClearBtn" class="btn btn-outline-danger btn-sm w-100 d-none" onclick="clearAllPanelContents()">
+                        <i class="bi bi-trash me-1"></i> @T("page.clearAllContents")
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+}
 
 <!-- İçerik Seçim Modal'ı -->
 @if (canEdit && hasLayout)
@@ -260,42 +303,116 @@
         pointer-events: none;
         border-color: #28a745;
     }
-    .section-content-item {
+    /* Hücre özet stili */
+    .cell-summary {
+        text-align: center;
+        width: 100%;
+        padding: 4px;
+    }
+    .design-cell.active-panel {
+        border-color: var(--bs-primary) !important;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    }
+    /* Offcanvas panel içerik kartları */
+    .panel-content-card {
         display: flex;
         align-items: center;
-        gap: 6px;
-        padding: 4px 8px;
-        background: rgba(255,255,255,0.9);
-        border-radius: 4px;
+        gap: 8px;
+        padding: 10px 12px;
+        background: #fff;
         border: 1px solid #dee2e6;
-        font-size: 0.8rem;
-        width: 100%;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        transition: all 0.15s ease;
     }
-    .section-content-item .duration-input {
-        width: 50px;
-        padding: 1px 4px;
-        font-size: 0.75rem;
+    .panel-content-card:hover {
+        border-color: var(--bs-primary);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .panel-content-card .drag-handle {
+        color: #adb5bd;
+        cursor: grab;
+        font-size: 1.1rem;
+    }
+    .panel-content-card .content-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .panel-content-card .content-title {
+        font-weight: 600;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .panel-content-card .content-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+    .panel-content-card .duration-input {
+        width: 55px;
+        padding: 2px 6px;
+        font-size: 0.8rem;
         text-align: center;
         border: 1px solid #ced4da;
-        border-radius: 3px;
+        border-radius: 4px;
     }
-    .section-content-item .btn-remove-one {
-        padding: 0 4px;
-        font-size: 0.7rem;
-        line-height: 1;
+    .panel-content-card .btn-action {
+        padding: 2px 6px;
+        font-size: 0.8rem;
+        line-height: 1.2;
+    }
+    .panel-order-num {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #495057;
+        flex-shrink: 0;
     }
 </style>
 
-@if (canEdit && hasLayout)
+@if (hasLayout)
 {
     <script>
         var currentSection = '';
+        var currentPanelSection = '';
         var pageId = @Model.PageID;
         var departmentId = @Model.DepartmentID;
+        var canEdit = @(canEdit ? "true" : "false");
         var antiForgeryToken = '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)?.[1] || '';
 
-        // Section bazında atanmış content ID'lerini takip et
+        // Çeviri string'leri (encoding sorunsuz)
+        var LANG = {
+            durationSeconds: '@Html.Raw(T("page.durationSeconds"))',
+            moveUp: '@Html.Raw(T("page.moveUp"))',
+            moveDown: '@Html.Raw(T("page.moveDown"))',
+            remove: '@Html.Raw(T("common.remove"))',
+            totalDuration: '@Html.Raw(T("page.totalDuration"))',
+            seconds: '@Html.Raw(T("page.seconds"))',
+            contents: '@Html.Raw(T("page.contents"))',
+            addContent: '@Html.Raw(T("page.addContent"))',
+            reorderSuccess: '@Html.Raw(T("page.reorderSuccess"))',
+            confirmClearAll: '@Html.Raw(T("page.confirmClearAll"))',
+            deleteTxt: '@Html.Raw(T("common.delete"))',
+            cancel: '@Html.Raw(T("common.cancel"))',
+            contentRemoved: '@Html.Raw(T("page.contentRemoved"))',
+            contentAssigned: '@Html.Raw(T("page.contentAssigned"))',
+            contentAlreadyAssigned: '@Html.Raw(T("page.contentAlreadyAssigned"))',
+            durationUpdated: '@Html.Raw(T("page.durationUpdated"))',
+            error: '@Html.Raw(T("common.error"))'
+        };
+
+        // Section bazında atanmış içerik bilgilerini takip et
         var sectionAssignedIds = {};
+        var sectionContentsData = {};
 
         function getContentIcon(type) {
             switch ((type || '').toLowerCase()) {
@@ -307,6 +424,213 @@
                 default: return 'bi-file-text';
             }
         }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        // ========== OFFCANVAS PANEL ==========
+
+        function openSectionPanel(pos) {
+            currentPanelSection = pos;
+
+            // Önceki aktif hücre vurgusunu kaldır
+            document.querySelectorAll('.design-cell.active-panel').forEach(function(el) {
+                el.classList.remove('active-panel');
+            });
+            // Yeni hücreyi vurgula
+            var cell = document.getElementById('cell-' + pos);
+            if (cell) cell.classList.add('active-panel');
+
+            // Panel başlığını ayarla
+            document.getElementById('panelSectionBadge').textContent = pos;
+
+            // Panel içeriğini render et
+            renderPanelContents(pos);
+
+            // Offcanvas'ı aç
+            var panelEl = document.getElementById('sectionPanel');
+            var offcanvas = bootstrap.Offcanvas.getInstance(panelEl);
+            if (!offcanvas) offcanvas = new bootstrap.Offcanvas(panelEl);
+            offcanvas.show();
+        }
+
+        function renderPanelContents(pos) {
+            var list = document.getElementById('panelContentList');
+            var emptyEl = document.getElementById('panelEmpty');
+            var durationEl = document.getElementById('panelTotalDuration');
+            var clearBtn = document.getElementById('panelClearBtn');
+
+            var contents = sectionContentsData[pos] || [];
+
+            if (contents.length === 0) {
+                list.innerHTML = '';
+                emptyEl.classList.remove('d-none');
+                durationEl.classList.add('d-none');
+                if (clearBtn) clearBtn.classList.add('d-none');
+                return;
+            }
+
+            emptyEl.classList.add('d-none');
+            durationEl.classList.remove('d-none');
+            if (clearBtn) clearBtn.classList.remove('d-none');
+
+            var html = '';
+            contents.forEach(function(c, idx) {
+                html += '<div class="panel-content-card" data-pcid="' + c.pageContentId + '" data-content-id="' + c.contentId + '">';
+                html += '  <span class="panel-order-num">' + (idx + 1) + '</span>';
+                html += '  <i class="bi ' + getContentIcon(c.contentType) + ' fs-5 text-primary"></i>';
+                html += '  <div class="content-info">';
+                html += '    <div class="content-title" title="' + escapeHtml(c.contentTitle || '') + '">' + escapeHtml(c.contentTitle || 'Untitled') + '</div>';
+                html += '    <small class="text-muted">' + escapeHtml(c.contentType || '') + '</small>';
+                html += '  </div>';
+                html += '  <div class="content-actions">';
+                if (canEdit) {
+                    html += '    <input type="number" class="duration-input" value="' + c.durationSeconds + '" min="1" ';
+                    html += '      onchange="updateDuration(' + c.pageContentId + ', this)" title="' + LANG.durationSeconds + '">';
+                    html += '    <span class="text-muted" style="font-size:0.75rem;">s</span>';
+                    // Yukarı taşı
+                    if (idx > 0) {
+                        html += '    <button class="btn btn-outline-secondary btn-action" onclick="moveContent(' + c.pageContentId + ', \'' + pos + '\', \'up\')" title="' + LANG.moveUp + '">';
+                        html += '      <i class="bi bi-chevron-up"></i></button>';
+                    } else {
+                        html += '    <button class="btn btn-outline-secondary btn-action" disabled><i class="bi bi-chevron-up"></i></button>';
+                    }
+                    // Aşağı taşı
+                    if (idx < contents.length - 1) {
+                        html += '    <button class="btn btn-outline-secondary btn-action" onclick="moveContent(' + c.pageContentId + ', \'' + pos + '\', \'down\')" title="' + LANG.moveDown + '">';
+                        html += '      <i class="bi bi-chevron-down"></i></button>';
+                    } else {
+                        html += '    <button class="btn btn-outline-secondary btn-action" disabled><i class="bi bi-chevron-down"></i></button>';
+                    }
+                    // Sil
+                    html += '    <button class="btn btn-outline-danger btn-action" onclick="removeOneContent(' + c.pageContentId + ', \'' + pos + '\')" title="' + LANG.remove + '">';
+                    html += '      <i class="bi bi-trash"></i></button>';
+                } else {
+                    html += '    <span class="badge bg-info">' + c.durationSeconds + 's</span>';
+                }
+                html += '  </div>';
+                html += '</div>';
+            });
+
+            list.innerHTML = html;
+            updatePanelTotalDuration(pos);
+        }
+
+        function updatePanelTotalDuration(pos) {
+            var contents = sectionContentsData[pos] || [];
+            var total = 0;
+            // Panel'deki duration input'lardan oku (güncel değerler)
+            var inputs = document.querySelectorAll('#panelContentList .duration-input');
+            if (inputs.length > 0) {
+                inputs.forEach(function(inp) { total += parseInt(inp.value) || 0; });
+            } else {
+                contents.forEach(function(c) { total += c.durationSeconds || 0; });
+            }
+
+            var durationEl = document.getElementById('panelTotalDuration');
+            if (durationEl) {
+                var span = durationEl.querySelector('span');
+                if (span) span.textContent = LANG.totalDuration + ': ' + total + ' ' + LANG.seconds + ' (' + contents.length + ' ' + LANG.contents + ')';
+            }
+        }
+
+        function moveContent(pageContentId, pos, direction) {
+            var contents = sectionContentsData[pos] || [];
+            var idx = contents.findIndex(function(c) { return c.pageContentId === pageContentId; });
+            if (idx === -1) return;
+
+            var swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+            if (swapIdx < 0 || swapIdx >= contents.length) return;
+
+            // Yerlerini değiştir
+            var temp = contents[idx];
+            contents[idx] = contents[swapIdx];
+            contents[swapIdx] = temp;
+            sectionContentsData[pos] = contents;
+
+            // Sıralı ID listesini oluştur
+            var orderedIds = contents.map(function(c) { return c.pageContentId; });
+
+            // JSON body olarak gönder (endpoint [FromBody] int[] bekliyor)
+            fetch('@Url.Action("ReorderSectionContents", "Page")' + '?pageId=' + pageId + '&sectionPosition=' + encodeURIComponent(pos), {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': antiForgeryToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderedIds)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    renderPanelContents(pos);
+                    updateCellSummary(pos);
+                    Swal.fire({
+                        icon: 'success',
+                        title: LANG.reorderSuccess,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    });
+                }
+            })
+            .catch(function() { });
+        }
+
+        function clearAllPanelContents() {
+            var pos = currentPanelSection;
+            Swal.fire({
+                title: LANG.confirmClearAll,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: LANG.deleteTxt,
+                cancelButtonText: LANG.cancel
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
+
+                var formData = new FormData();
+                formData.append('pageId', pageId);
+                formData.append('sectionPosition', pos);
+
+                fetch('@Url.Action("RemoveContentFromSection", "Page")', {
+                    method: 'POST',
+                    headers: { 'RequestVerificationToken': antiForgeryToken },
+                    body: formData
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        sectionContentsData[pos] = [];
+                        sectionAssignedIds[pos] = [];
+                        renderPanelContents(pos);
+                        clearCellUI(pos);
+                        Swal.fire({
+                            icon: 'success',
+                            title: LANG.contentRemoved,
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                    } else {
+                        Swal.fire({ icon: 'error', title: LANG.error, text: data.message || LANG.error });
+                    }
+                })
+                .catch(function() {
+                    Swal.fire({ icon: 'error', title: LANG.error, text: LANG.error });
+                });
+            });
+        }
+
+        // ========== İÇERİK MODAL ==========
 
         function openContentModal(sectionPos) {
             currentSection = sectionPos;
@@ -329,8 +653,8 @@
             var assignedIds = sectionAssignedIds[sectionPos] || [];
 
             fetch('@Url.Action("GetDepartmentContents", "Page")?departmentId=' + departmentId)
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
                     loading.classList.add('d-none');
                     if (!data.success || !data.contents || data.contents.length === 0) {
                         empty.classList.remove('d-none');
@@ -338,7 +662,7 @@
                     }
 
                     grid.classList.remove('d-none');
-                    data.contents.forEach(function (c) {
+                    data.contents.forEach(function(c) {
                         var isAssigned = assignedIds.indexOf(c.contentId) !== -1;
                         var col = document.createElement('div');
                         col.className = 'col-md-4';
@@ -349,13 +673,13 @@
                             '    <i class="bi ' + getContentIcon(c.contentType) + ' fs-2 text-primary"></i>' +
                             '    <h6 class="fw-bold mt-2 mb-1">' + escapeHtml(c.contentTitle || 'Untitled') + '</h6>' +
                             '    <span class="badge bg-secondary">' + escapeHtml(c.contentType) + '</span>' +
-                            (isAssigned ? '<br><span class="badge bg-success mt-1">@T("page.contentAlreadyAssigned")</span>' : '') +
+                            (isAssigned ? '<br><span class="badge bg-success mt-1">' + LANG.contentAlreadyAssigned + '</span>' : '') +
                             '  </div>' +
                             '</div>';
                         grid.appendChild(col);
                     });
                 })
-                .catch(function () {
+                .catch(function() {
                     loading.classList.add('d-none');
                     empty.classList.remove('d-none');
                 });
@@ -372,22 +696,26 @@
                 headers: { 'RequestVerificationToken': antiForgeryToken },
                 body: formData
             })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success) {
-                    // Section UI'ını tüm içerik listesiyle güncelle
-                    updateSectionUI(currentSection, data.sectionContents);
+                    // Section veri ve UI'ını güncelle
+                    updateSectionData(currentSection, data.sectionContents);
+                    updateCellSummary(currentSection);
+                    // Panel açıksa paneli de güncelle
+                    if (currentPanelSection === currentSection) {
+                        renderPanelContents(currentSection);
+                    }
                     // Modal'ı kapatma — kullanıcı birden fazla içerik ekleyebilsin
-                    // Eklenen kartı devre dışı bırak
                     if (cardEl) {
                         cardEl.classList.add('already-assigned');
                         cardEl.removeAttribute('onclick');
                         cardEl.querySelector('.card-body').insertAdjacentHTML('beforeend',
-                            '<br><span class="badge bg-success mt-1">@T("page.contentAlreadyAssigned")</span>');
+                            '<br><span class="badge bg-success mt-1">' + LANG.contentAlreadyAssigned + '</span>');
                     }
                     Swal.fire({
                         icon: 'success',
-                        title: '@T("page.contentAssigned")',
+                        title: LANG.contentAssigned,
                         toast: true,
                         position: 'top-end',
                         showConfirmButton: false,
@@ -395,73 +723,15 @@
                         timerProgressBar: true
                     });
                 } else {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: '@T("common.error")',
-                        text: data.message || '@T("common.error")'
-                    });
+                    Swal.fire({ icon: 'warning', title: LANG.error, text: data.message || LANG.error });
                 }
             })
-            .catch(function () {
-                Swal.fire({
-                    icon: 'error',
-                    title: '@T("common.error")',
-                    text: '@T("common.error")'
-                });
+            .catch(function() {
+                Swal.fire({ icon: 'error', title: LANG.error, text: LANG.error });
             });
         }
 
-        function removeAllContents(sectionPos) {
-            Swal.fire({
-                title: '@T("page.confirmRemoveContent")',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: '@T("common.delete")',
-                cancelButtonText: '@T("common.cancel")'
-            }).then(function (result) {
-                if (!result.isConfirmed) return;
-
-                var formData = new FormData();
-                formData.append('pageId', pageId);
-                formData.append('sectionPosition', sectionPos);
-
-                fetch('@Url.Action("RemoveContentFromSection", "Page")', {
-                    method: 'POST',
-                    headers: { 'RequestVerificationToken': antiForgeryToken },
-                    body: formData
-                })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.success) {
-                        clearCellUI(sectionPos);
-                        Swal.fire({
-                            icon: 'success',
-                            title: '@T("page.contentRemoved")',
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 2000,
-                            timerProgressBar: true
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: '@T("common.error")',
-                            text: data.message || '@T("common.error")'
-                        });
-                    }
-                })
-                .catch(function () {
-                    Swal.fire({
-                        icon: 'error',
-                        title: '@T("common.error")',
-                        text: '@T("common.error")'
-                    });
-                });
-            });
-        }
+        // ========== TEKİL SİLME ==========
 
         function removeOneContent(pageContentId, sectionPos) {
             var formData = new FormData();
@@ -474,32 +744,27 @@
                 headers: { 'RequestVerificationToken': antiForgeryToken },
                 body: formData
             })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success) {
-                    // İlgili öğeyi DOM'dan kaldır
-                    var item = document.getElementById('sc-' + pageContentId);
-                    if (item) item.remove();
+                    // Veri yapısından kaldır
+                    var contents = sectionContentsData[sectionPos] || [];
+                    sectionContentsData[sectionPos] = contents.filter(function(c) { return c.pageContentId !== pageContentId; });
+                    sectionAssignedIds[sectionPos] = sectionContentsData[sectionPos].map(function(c) { return c.contentId; });
 
-                    // Assigned ID'lerden kaldır
-                    var ids = sectionAssignedIds[sectionPos] || [];
-                    var removedEl = item ? item.getAttribute('data-content-id') : null;
-                    if (removedEl) {
-                        var idx = ids.indexOf(parseInt(removedEl));
-                        if (idx > -1) ids.splice(idx, 1);
-                    }
-                    sectionAssignedIds[sectionPos] = ids;
-
-                    // Section'da hiç içerik kalmadıysa boş hale getir
-                    var cell = document.getElementById('cell-' + sectionPos);
-                    var remaining = cell ? cell.querySelectorAll('.section-content-item') : [];
-                    if (remaining.length === 0) {
+                    // Hücre ve panel güncelle
+                    if (sectionContentsData[sectionPos].length === 0) {
                         clearCellUI(sectionPos);
+                    } else {
+                        updateCellSummary(sectionPos);
+                    }
+                    if (currentPanelSection === sectionPos) {
+                        renderPanelContents(sectionPos);
                     }
 
                     Swal.fire({
                         icon: 'success',
-                        title: '@T("page.contentRemoved")',
+                        title: LANG.contentRemoved,
                         toast: true,
                         position: 'top-end',
                         showConfirmButton: false,
@@ -507,25 +772,27 @@
                         timerProgressBar: true
                     });
                 } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: '@T("common.error")',
-                        text: data.message || '@T("common.error")'
-                    });
+                    Swal.fire({ icon: 'error', title: LANG.error, text: data.message || LANG.error });
                 }
             })
-            .catch(function () {
-                Swal.fire({
-                    icon: 'error',
-                    title: '@T("common.error")',
-                    text: '@T("common.error")'
-                });
+            .catch(function() {
+                Swal.fire({ icon: 'error', title: LANG.error, text: LANG.error });
             });
         }
+
+        // ========== SÜRE GÜNCELLEME ==========
 
         function updateDuration(pageContentId, inputEl) {
             var val = parseInt(inputEl.value);
             if (isNaN(val) || val < 1) { inputEl.value = 1; val = 1; }
+
+            // Yerel veri güncelle
+            var pos = currentPanelSection;
+            var contents = sectionContentsData[pos] || [];
+            var item = contents.find(function(c) { return c.pageContentId === pageContentId; });
+            if (item) item.durationSeconds = val;
+
+            updatePanelTotalDuration(pos);
 
             var formData = new FormData();
             formData.append('pageContentId', pageContentId);
@@ -537,12 +804,12 @@
                 headers: { 'RequestVerificationToken': antiForgeryToken },
                 body: formData
             })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success) {
                     Swal.fire({
                         icon: 'success',
-                        title: '@T("page.durationUpdated")',
+                        title: LANG.durationUpdated,
                         toast: true,
                         position: 'top-end',
                         showConfirmButton: false,
@@ -551,37 +818,36 @@
                     });
                 }
             })
-            .catch(function () { });
+            .catch(function() { });
         }
 
-        function updateSectionUI(sectionPos, contents) {
+        // ========== HÜCRE UI GÜNCELLEME ==========
+
+        function updateSectionData(sectionPos, contents) {
+            sectionContentsData[sectionPos] = contents;
+            sectionAssignedIds[sectionPos] = contents.map(function(c) { return c.contentId; });
+        }
+
+        function updateCellSummary(sectionPos) {
             var cell = document.getElementById('cell-' + sectionPos);
             if (!cell) return;
 
-            // Assigned ID'leri güncelle
-            sectionAssignedIds[sectionPos] = contents.map(function(c) { return c.contentId; });
+            var contents = sectionContentsData[sectionPos] || [];
+            if (contents.length === 0) {
+                clearCellUI(sectionPos);
+                return;
+            }
 
             cell.classList.add('has-content');
             cell.style.backgroundColor = '#d4edda';
             cell.style.borderColor = '#28a745';
-            cell.removeAttribute('onclick');
+            cell.setAttribute('onclick', "openSectionPanel('" + sectionPos + "')");
 
-            var html = '<div class="w-100" style="display:flex;flex-direction:column;gap:4px;align-items:stretch;">';
-            contents.forEach(function (c) {
-                html +=
-                    '<div id="sc-' + c.pageContentId + '" class="section-content-item" data-content-id="' + (c.contentId || '') + '">' +
-                    '  <i class="bi ' + getContentIcon(c.contentType) + ' text-success"></i>' +
-                    '  <span class="flex-grow-1 text-truncate fw-bold">' + escapeHtml(c.contentTitle || 'Untitled') + '</span>' +
-                    '  <input type="number" class="duration-input" value="' + c.durationSeconds + '" min="1" ' +
-                    '    onchange="updateDuration(' + c.pageContentId + ', this)" title="@T("page.durationSeconds")">' +
-                    '  <span class="text-muted" style="font-size:0.7rem;">s</span>' +
-                    '  <button class="btn btn-outline-danger btn-remove-one" onclick="event.stopPropagation(); removeOneContent(' + c.pageContentId + ', \'' + sectionPos + '\')" title="@T("common.remove")">' +
-                    '    <i class="bi bi-x"></i>' +
-                    '  </button>' +
-                    '</div>';
-            });
-            html += '<button class="btn btn-outline-primary btn-sm mt-1" onclick="event.stopPropagation(); openContentModal(\'' + sectionPos + '\')">' +
-                    '  <i class="bi bi-plus-circle me-1"></i> @T("page.addContent")</button>';
+            var first = contents[0];
+            var html = '<div class="cell-summary" onclick="openSectionPanel(\'' + sectionPos + '\')">';
+            html += '<strong class="text-muted d-block" style="font-size:0.7rem;">' + sectionPos + '</strong>';
+            html += '<div class="text-truncate" style="font-size:0.8rem;"><i class="bi ' + getContentIcon(first.contentType) + ' text-success me-1"></i>' + escapeHtml(first.contentTitle || 'Untitled') + '</div>';
+            html += '<span class="badge bg-success mt-1">' + contents.length + ' ' + LANG.contents + '</span>';
             html += '</div>';
 
             cell.innerHTML = html;
@@ -591,32 +857,48 @@
             var cell = document.getElementById('cell-' + sectionPos);
             if (!cell) return;
 
-            // Assigned ID'leri temizle
+            sectionContentsData[sectionPos] = [];
             sectionAssignedIds[sectionPos] = [];
 
             cell.classList.remove('has-content');
             cell.style.backgroundColor = '#f8f9fa';
             cell.style.borderColor = '#dee2e6';
-            cell.setAttribute('onclick', "openContentModal('" + sectionPos + "')");
+            cell.setAttribute('onclick', "openSectionPanel('" + sectionPos + "')");
 
-            cell.innerHTML =
-                '<strong class="text-muted">' + sectionPos + '</strong>' +
-                '<button class="btn btn-outline-primary btn-sm mt-2" onclick="event.stopPropagation(); openContentModal(\'' + sectionPos + '\')">' +
-                '  <i class="bi bi-plus-circle me-1"></i> @T("page.addContent")' +
-                '</button>';
+            var html = '<strong class="text-muted">' + sectionPos + '</strong>';
+            if (canEdit) {
+                html += '<button class="btn btn-outline-primary btn-sm mt-2" onclick="event.stopPropagation(); openSectionPanel(\'' + sectionPos + '\')">' +
+                        '  <i class="bi bi-plus-circle me-1"></i> ' + LANG.addContent + '</button>';
+            }
+            cell.innerHTML = html;
         }
 
-        function escapeHtml(text) {
-            var div = document.createElement('div');
-            div.appendChild(document.createTextNode(text));
-            return div.innerHTML;
-        }
+        // ========== OFFCANVAS KAPANMA ==========
 
-        // Sayfa yüklendiğinde mevcut atanmış ID'leri initialize et
+        document.getElementById('sectionPanel').addEventListener('hidden.bs.offcanvas', function() {
+            // Aktif hücre vurgusunu kaldır
+            document.querySelectorAll('.design-cell.active-panel').forEach(function(el) {
+                el.classList.remove('active-panel');
+            });
+        });
+
+        // ========== SAYFA YÜKLENDİĞİNDE ==========
+
         (function() {
             @foreach (var kvp in sectionContentMap)
             {
-                <text>sectionAssignedIds['@kvp.Key'] = [@string.Join(",", kvp.Value.Select(pc => pc.ContentID))];</text>
+                <text>
+                sectionAssignedIds['@kvp.Key'] = [@string.Join(",", kvp.Value.Select(pc => pc.ContentID))];
+                sectionContentsData['@kvp.Key'] = [
+                    @foreach (var pc in kvp.Value)
+                    {
+                        if (pc.Content != null)
+                        {
+                            <text>{ pageContentId: @pc.PageContentID, contentId: @pc.ContentID, contentTitle: '@System.Web.HttpUtility.JavaScriptStringEncode(pc.Content.ContentTitle ?? "")', contentType: '@System.Web.HttpUtility.JavaScriptStringEncode(pc.Content.ContentType ?? "")', durationSeconds: @pc.DurationSeconds },</text>
+                        }
+                    }
+                ];
+                </text>
             }
         })();
     </script>
@@ -677,40 +959,26 @@
                         var posEscaped = System.Web.HttpUtility.HtmlAttributeEncode(pos);
 
                         sb.Append($"<div id=\"cell-{posEscaped}\" class=\"design-cell {(hasContent ? "has-content" : "")}\" ");
-                        sb.Append($"style=\"background-color:{bgColor};border:1px solid {borderColor};padding:10px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;{cursor}min-height:80px;\" ");
-                        if (canEdit && !hasContent)
-                            sb.Append($"onclick=\"openContentModal('{pos}')\" ");
+                        sb.Append($"style=\"background-color:{bgColor};border:2px solid {borderColor};padding:10px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer;min-height:80px;\" ");
+                        if (!hasContent)
+                            sb.Append($"onclick=\"openSectionPanel('{pos}')\" ");
                         sb.Append(">");
 
                         if (hasContent)
                         {
-                            sb.Append("<div class=\"w-100\" style=\"display:flex;flex-direction:column;gap:4px;align-items:stretch;\">");
-                            foreach (var assigned in assignedList)
-                            {
-                                if (assigned.Content == null) continue;
-                                var icon = GetContentIcon(assigned.Content.ContentType);
-                                var title = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentTitle);
-                                sb.Append($"<div id=\"sc-{assigned.PageContentID}\" class=\"section-content-item\" data-content-id=\"{assigned.ContentID}\">");
-                                sb.Append($"<i class=\"bi {icon} text-success\"></i>");
-                                sb.Append($"<span class=\"flex-grow-1 text-truncate fw-bold\">{title}</span>");
-                                if (canEdit)
-                                {
-                                    sb.Append($"<input type=\"number\" class=\"duration-input\" value=\"{assigned.DurationSeconds}\" min=\"1\" onchange=\"updateDuration({assigned.PageContentID}, this)\" title=\"{T("page.durationSeconds")}\">");
-                                    sb.Append("<span class=\"text-muted\" style=\"font-size:0.7rem;\">s</span>");
-                                    sb.Append($"<button class=\"btn btn-outline-danger btn-remove-one\" onclick=\"event.stopPropagation(); removeOneContent({assigned.PageContentID}, '{pos}')\" title=\"{T("common.remove")}\">");
-                                    sb.Append("<i class=\"bi bi-x\"></i></button>");
-                                }
-                                else
-                                {
-                                    sb.Append($"<span class=\"badge bg-info\">{assigned.DurationSeconds}s</span>");
-                                }
-                                sb.Append("</div>");
-                            }
-                            if (canEdit)
-                            {
-                                sb.Append($"<button class=\"btn btn-outline-primary btn-sm mt-1\" onclick=\"event.stopPropagation(); openContentModal('{pos}')\">");
-                                sb.Append($"<i class=\"bi bi-plus-circle me-1\"></i> {T("page.addContent")}</button>");
-                            }
+                            // Hücrede sadece özet göster — detay offcanvas panelde
+                            var first = assignedList.FirstOrDefault(a => a.Content != null);
+                            var firstIcon = first != null ? GetContentIcon(first.Content!.ContentType) : "bi-file-text";
+                            var firstTitle = first != null ? System.Web.HttpUtility.HtmlEncode(first.Content!.ContentTitle) : "";
+                            var count = assignedList.Count;
+
+                            sb.Append("<div class=\"cell-summary\" onclick=\"openSectionPanel('" + pos + "')\">");
+                            sb.Append($"<strong class=\"text-muted d-block\" style=\"font-size:0.7rem;\">{pos}</strong>");
+                            sb.Append($"<div class=\"text-truncate\" style=\"font-size:0.8rem;\"><i class=\"bi {firstIcon} text-success me-1\"></i>{firstTitle}</div>");
+                            if (count > 1)
+                                sb.Append($"<span class=\"badge bg-success mt-1\">{count} {T("page.contents")}</span>");
+                            else
+                                sb.Append($"<span class=\"badge bg-success mt-1\">1 {T("page.contents")}</span>");
                             sb.Append("</div>");
                         }
                         else
@@ -719,7 +987,7 @@
                             sb.Append($"<p class=\"text-muted small mb-0\">{col.Width}% x {row.Height}%</p>");
                             if (canEdit)
                             {
-                                sb.Append($"<button class=\"btn btn-outline-primary btn-sm mt-2\" onclick=\"event.stopPropagation(); openContentModal('{pos}')\">");
+                                sb.Append($"<button class=\"btn btn-outline-primary btn-sm mt-2\" onclick=\"event.stopPropagation(); openSectionPanel('{pos}')\">");
                                 sb.Append($"<i class=\"bi bi-plus-circle me-1\"></i> {T("page.addContent")}</button>");
                             }
                         }

@@ -35,7 +35,8 @@ namespace DigitalSignage.Models
             {
                 try
                 {
-                    var def = JsonSerializer.Deserialize<LayoutDefinitionModel>(LayoutDefinition ?? "{}");
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var def = JsonSerializer.Deserialize<LayoutDefinitionModel>(LayoutDefinition ?? "{}", options);
                     if (def?.Rows == null) return 0;
                     return CountSections(def.Rows);
                 }
@@ -69,7 +70,8 @@ namespace DigitalSignage.Models
             {
                 try
                 {
-                    var def = JsonSerializer.Deserialize<LayoutDefinitionModel>(LayoutDefinition ?? "{}");
+                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                    var def = JsonSerializer.Deserialize<LayoutDefinitionModel>(LayoutDefinition ?? "{}", options);
                     return def?.Rows?.Count ?? 0;
                 }
                 catch { return 0; }

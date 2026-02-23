@@ -77,7 +77,6 @@ namespace DigitalSignage.Data.Repositories
                 query = query.Where(p =>
                     p.PageName.ToLower().Contains(term) ||
                     p.PageTitle.ToLower().Contains(term) ||
-                    p.PageCode.ToLower().Contains(term) ||
                     (p.Description != null && p.Description.ToLower().Contains(term)));
             }
 

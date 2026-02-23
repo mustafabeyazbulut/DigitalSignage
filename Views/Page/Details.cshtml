@@ -15,7 +15,7 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h1 class="fw-bold">@Model.PageTitle</h1>
-            <p class="text-muted">@T("page.pageCode"): <code>@Model.PageCode</code></p>
+            <p class="text-muted">@Model.PageName</p>
         </div>
         <div class="col-md-4 text-end">
             <a asp-action="Design" asp-route-id="@Model.PageID" class="btn btn-info">
@@ -51,9 +51,6 @@
                     <dl class="row">
                         <dt class="col-sm-4">@T("page.pageName")</dt>
                         <dd class="col-sm-8">@Model.PageName</dd>
-
-                        <dt class="col-sm-4">@T("page.pageCode")</dt>
-                        <dd class="col-sm-8"><code>@Model.PageCode</code></dd>
 
                         <dt class="col-sm-4">@T("dashboard.department")</dt>
                         <dd class="col-sm-8">@Model.Department?.DepartmentName</dd>
@@ -137,6 +134,178 @@
     </div>
 </div>
 
+<!-- Section Detay Offcanvas Panel (read-only) -->
+@if (hasLayout)
+{
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="detailPanel" style="width:400px;">
+        <div class="offcanvas-header border-bottom">
+            <h5 class="offcanvas-title">
+                <i class="bi bi-grid-3x3-gap me-2"></i> @T("page.sectionContents")
+                <span id="detailPanelBadge" class="badge bg-primary ms-2"></span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <div id="detailPanelDuration" class="alert alert-info small m-3 mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-clock"></i>
+                <span></span>
+            </div>
+            <div id="detailPanelList" class="p-3"></div>
+            <div id="detailPanelEmpty" class="text-center py-5 px-3 d-none">
+                <i class="bi bi-inbox fs-1 text-muted"></i>
+                <p class="text-muted mt-2 mb-0">@T("page.noContentAssigned")</p>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .preview-cell-clickable {
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .preview-cell-clickable:hover {
+        filter: brightness(0.95);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    .preview-cell-clickable.active-panel {
+        outline: 3px solid var(--bs-primary);
+        outline-offset: -1px;
+    }
+    .detail-content-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
+    .detail-content-card .detail-order-num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #495057;
+        flex-shrink: 0;
+    }
+    .detail-content-card .detail-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .detail-content-card .detail-title {
+        font-weight: 600;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
+
+@if (hasLayout)
+{
+    <script>
+        var sectionContentsData = {};
+
+        function getContentIcon(type) {
+            switch ((type || '').toLowerCase()) {
+                case 'image': return 'bi-image';
+                case 'video': return 'bi-play-circle';
+                case 'html': return 'bi-code-slash';
+                case 'pdf': return 'bi-file-pdf';
+                case 'url': return 'bi-link-45deg';
+                default: return 'bi-file-text';
+            }
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        function openDetailPanel(pos) {
+            // Önceki vurguyu kaldır
+            document.querySelectorAll('.preview-cell-clickable.active-panel').forEach(function(el) {
+                el.classList.remove('active-panel');
+            });
+            var cell = document.querySelector('[data-section="' + pos + '"]');
+            if (cell) cell.classList.add('active-panel');
+
+            document.getElementById('detailPanelBadge').textContent = pos;
+
+            var contents = sectionContentsData[pos] || [];
+            var list = document.getElementById('detailPanelList');
+            var emptyEl = document.getElementById('detailPanelEmpty');
+            var durationEl = document.getElementById('detailPanelDuration');
+
+            if (contents.length === 0) {
+                list.innerHTML = '';
+                emptyEl.classList.remove('d-none');
+                durationEl.classList.add('d-none');
+            } else {
+                emptyEl.classList.add('d-none');
+                durationEl.classList.remove('d-none');
+
+                var total = 0;
+                var html = '';
+                contents.forEach(function(c, idx) {
+                    total += c.durationSeconds || 0;
+                    html += '<div class="detail-content-card">';
+                    html += '  <span class="detail-order-num">' + (idx + 1) + '</span>';
+                    html += '  <i class="bi ' + getContentIcon(c.contentType) + ' fs-5 text-primary"></i>';
+                    html += '  <div class="detail-info">';
+                    html += '    <div class="detail-title" title="' + escapeHtml(c.contentTitle) + '">' + escapeHtml(c.contentTitle) + '</div>';
+                    html += '    <small class="text-muted">' + escapeHtml(c.contentType) + '</small>';
+                    html += '  </div>';
+                    html += '  <span class="badge bg-info">' + c.durationSeconds + 's</span>';
+                    html += '</div>';
+                });
+                list.innerHTML = html;
+
+                var span = durationEl.querySelector('span');
+                if (span) span.textContent = '@Html.Raw(T("page.totalDuration")): ' + total + ' @Html.Raw(T("page.seconds")) (' + contents.length + ' @Html.Raw(T("page.contents")))';
+            }
+
+            var panelEl = document.getElementById('detailPanel');
+            var offcanvas = bootstrap.Offcanvas.getInstance(panelEl);
+            if (!offcanvas) offcanvas = new bootstrap.Offcanvas(panelEl);
+            offcanvas.show();
+        }
+
+        // Panel kapanınca vurguyu kaldır
+        document.getElementById('detailPanel').addEventListener('hidden.bs.offcanvas', function() {
+            document.querySelectorAll('.preview-cell-clickable.active-panel').forEach(function(el) {
+                el.classList.remove('active-panel');
+            });
+        });
+
+        // Sayfa yüklendiğinde section verilerini initialize et
+        (function() {
+            @foreach (var kvp in sectionContentMap)
+            {
+                <text>
+                sectionContentsData['@kvp.Key'] = [
+                    @foreach (var pc in kvp.Value)
+                    {
+                        if (pc.Content != null)
+                        {
+                            <text>{ contentTitle: '@System.Web.HttpUtility.JavaScriptStringEncode(pc.Content.ContentTitle ?? "")', contentType: '@System.Web.HttpUtility.JavaScriptStringEncode(pc.Content.ContentType ?? "")', durationSeconds: @pc.DurationSeconds },</text>
+                        }
+                    }
+                ];
+                </text>
+            }
+        })();
+    </script>
+}
+
 @functions {
     string GetContentIcon(string contentType)
     {
@@ -152,7 +321,7 @@
     }
 
     /// <summary>
-    /// Layout preview grid'ini recursive render eder, atanmış içerikleri gösterir (çoklu içerik destekli).
+    /// Layout preview grid'ini recursive render eder — compact özet + tıklama ile offcanvas panel.
     /// </summary>
     IHtmlContent RenderPreviewGrid(
         List<LayoutRowDefinition> rows,
@@ -185,18 +354,18 @@
 
                         if (hasContent)
                         {
-                            sb.Append("<div style=\"background:linear-gradient(135deg,#d4edda,#c3e6cb);border:1px solid #28a745;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;gap:4px;\">");
-                            foreach (var assigned in assignedList)
-                            {
-                                if (assigned.Content == null) continue;
-                                var icon = GetContentIcon(assigned.Content.ContentType);
-                                var title = System.Web.HttpUtility.HtmlEncode(assigned.Content.ContentTitle);
-                                sb.Append($"<div style=\"display:flex;align-items:center;gap:4px;font-size:0.8rem;\">");
-                                sb.Append($"<i class=\"bi {icon} text-success\"></i>");
-                                sb.Append($"<span class=\"fw-bold\">{title}</span>");
-                                sb.Append($"<span class=\"badge bg-info\" style=\"font-size:0.65rem;\">{assigned.DurationSeconds}s</span>");
-                                sb.Append("</div>");
-                            }
+                            var first = assignedList.FirstOrDefault(a => a.Content != null);
+                            var firstIcon = first != null ? GetContentIcon(first.Content!.ContentType) : "bi-file-text";
+                            var firstTitle = first != null ? System.Web.HttpUtility.HtmlEncode(first.Content!.ContentTitle) : "";
+                            var count = assignedList.Count;
+                            var totalDur = assignedList.Sum(a => a.DurationSeconds);
+
+                            sb.Append($"<div class=\"preview-cell-clickable\" data-section=\"{pos}\" onclick=\"openDetailPanel('{pos}')\" style=\"background:linear-gradient(135deg,#d4edda,#c3e6cb);border:1px solid #28a745;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px;gap:2px;text-align:center;\">");
+                            sb.Append($"<span class=\"text-muted\" style=\"font-size:0.65rem;\">{pos}</span>");
+                            sb.Append($"<div style=\"font-size:0.8rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;\"><i class=\"bi {firstIcon} text-success me-1\"></i><span class=\"fw-bold\">{firstTitle}</span></div>");
+                            if (count > 1)
+                                sb.Append($"<span class=\"badge bg-success\" style=\"font-size:0.65rem;\">+{count - 1} daha</span>");
+                            sb.Append($"<span class=\"badge bg-info\" style=\"font-size:0.6rem;\">{totalDur}s</span>");
                             sb.Append("</div>");
                         }
                         else

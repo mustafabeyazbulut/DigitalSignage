@@ -236,7 +236,17 @@
         "durationSeconds": "Duration (sec)",
         "durationUpdated": "Duration updated.",
         "contentAlreadyAssigned": "This content is already assigned to this section.",
-        "sectionContents": "Section Contents"
+        "sectionContents": "Section Contents",
+        "totalDuration": "Total duration",
+        "seconds": "seconds",
+        "contents": "contents",
+        "moveUp": "Move Up",
+        "moveDown": "Move Down",
+        "clearAllContents": "Clear All Contents",
+        "confirmClearAll": "Are you sure you want to remove all contents from this section?",
+        "noContentAssigned": "No content assigned to this section yet.",
+        "reorderSuccess": "Order updated.",
+        "moreContents": "more"
     },
     "layout": {
         "title": "Layout Library",

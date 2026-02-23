@@ -338,7 +338,6 @@ namespace DigitalSignage.Controllers
                 // Sayfa alanları
                 "PageName" => T("page.pageName"),
                 "PageTitle" => T("page.pageTitle"),
-                "PageCode" => T("page.pageCode"),
 
                 // İçerik alanları
                 "ContentType" => T("content.contentType"),

@@ -186,8 +186,7 @@ namespace DigitalSignage.Controllers
             if (!await _authService.CanEditInDepartmentAsync(userId, page.DepartmentID))
                 return AccessDenied();
 
-            // PageCode ve LayoutID otomatik atanacak, navigation property'ler bind edilmiyor
-            ModelState.Remove("PageCode");
+            // LayoutID otomatik atanacak, navigation property'ler bind edilmiyor
             ModelState.Remove("LayoutID");
             ModelState.Remove("Department");
             ModelState.Remove("Layout");
@@ -316,8 +315,7 @@ namespace DigitalSignage.Controllers
             if (!await _authService.CanEditPageAsync(userId, id))
                 return AccessDenied();
 
-            // PageCode readonly, LayoutID Design'dan değiştirilecek, navigation property'ler bind edilmiyor
-            ModelState.Remove("PageCode");
+            // LayoutID Design'dan değiştirilecek, navigation property'ler bind edilmiyor
             ModelState.Remove("LayoutID");
             ModelState.Remove("Department");
             ModelState.Remove("Layout");

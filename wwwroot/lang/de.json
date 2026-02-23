@@ -236,7 +236,17 @@
         "durationSeconds": "Dauer (Sek.)",
         "durationUpdated": "Dauer aktualisiert.",
         "contentAlreadyAssigned": "Dieser Inhalt ist bereits diesem Abschnitt zugewiesen.",
-        "sectionContents": "Abschnittsinhalte"
+        "sectionContents": "Abschnittsinhalte",
+        "totalDuration": "Gesamtdauer",
+        "seconds": "Sekunden",
+        "contents": "Inhalte",
+        "moveUp": "Nach oben",
+        "moveDown": "Nach unten",
+        "clearAllContents": "Alle Inhalte entfernen",
+        "confirmClearAll": "Sind Sie sicher, dass Sie alle Inhalte aus diesem Abschnitt entfernen möchten?",
+        "noContentAssigned": "Diesem Abschnitt wurden noch keine Inhalte zugewiesen.",
+        "reorderSuccess": "Reihenfolge aktualisiert.",
+        "moreContents": "mehr"
     },
     "layout": {
         "title": "Layout-Bibliothek",
