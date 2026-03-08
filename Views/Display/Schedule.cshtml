@@ -39,8 +39,7 @@
         .toolbar-btn.active { background: rgba(255,193,7,0.3); border-color: #ffc107; }
 
         .page-indicator { font-weight: 600; min-width: 60px; text-align: center; }
-        .schedule-name { font-weight: 700; font-size: 1rem; white-space: nowrap; }
-        .current-page-name { font-size: 0.85rem; opacity: 0.9; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .current-page-name { font-size: 0.9rem; font-weight: 600; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .next-page-info { font-size: 0.75rem; opacity: 0.6; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         /* Progress bar */
@@ -76,11 +75,6 @@
         <!-- Toolbar -->
         <div class="schedule-toolbar" id="toolbar">
             <div class="toolbar-left">
-                <span class="schedule-name">
-                    <i class="bi bi-collection-play me-1"></i>
-                    @Model.ScheduleName
-                </span>
-                <span style="opacity:0.3;">|</span>
                 <span class="current-page-name" id="currentPageName"></span>
             </div>
             <div class="toolbar-center">
