@@ -5,96 +5,192 @@
     var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
     string T(string key) => lang?.Get(locale, key) ?? key;
     ViewData["Title"] = T("schedule.editTitle");
+
+    var companyId = (int)ViewBag.CompanyId;
+    var pages = ViewBag.Pages as List<DigitalSignage.Models.Page> ?? new List<DigitalSignage.Models.Page>();
+    var schedulePages = Model.SchedulePages?.OrderBy(sp => sp.DisplayOrder).ToList()
+                        ?? new List<DigitalSignage.Models.SchedulePage>();
+    var assignedPageIds = schedulePages.Select(sp => sp.PageID).ToHashSet();
 }
 
-<div class="container mt-4">
+@section Styles {
+    <style>
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid #eee;
+            background: #fff;
+            transition: background 0.15s;
+        }
+        .playlist-item:hover { background: #f8f9fa; }
+        .playlist-item .drag-handle {
+            cursor: grab;
+            color: #aaa;
+            margin-right: 12px;
+            font-size: 1.1rem;
+        }
+        .playlist-item .drag-handle:active { cursor: grabbing; }
+        .playlist-item .order-badge {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #6c757d; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: bold; margin-right: 12px; flex-shrink: 0;
+        }
+        .playlist-item .page-info { flex: 1; min-width: 0; }
+        .playlist-item .page-info .page-name { font-weight: 600; }
+        .playlist-item .page-info .dept-name { font-size: 0.8rem; color: #6c757d; }
+        .playlist-item .duration-col { width: 130px; flex-shrink: 0; margin: 0 12px; }
+        .playlist-item .actions-col { flex-shrink: 0; }
+    </style>
+}
+
+<div class="container-fluid mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">@T("schedule.editTitle")</h2>
+        <button type="button" class="btn btn-outline-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">
+            <i class="fas fa-arrow-left me-2"></i> @T("common.backToList")
+        </button>
+    </div>
+
     <div class="row">
-        <div class="col-md-10 offset-md-1">
-            <h1>@T("schedule.editTitle")</h1>
+        <!-- Sol: Zamanlama bilgileri -->
+        <div class="col-lg-3">
+            <form asp-action="Edit" method="post" id="schedule-form">
+                <input type="hidden" asp-for="ScheduleID" />
+                <input type="hidden" asp-for="CompanyID" />
+                <input type="hidden" asp-for="CreatedDate" />
+                <div asp-validation-summary="All" class="alert alert-danger"></div>
 
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>@T("schedule.scheduleInfo")</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="ScheduleName" class="form-label fw-bold">@T("schedule.scheduleName")</label>
+                                <input asp-for="ScheduleName" class="form-control" />
+                                <span asp-validation-for="ScheduleName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Description" class="form-label">@T("company.description")</label>
+                                <textarea asp-for="Description" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" asp-for="IsActive">
+                                    <label class="form-check-label fw-bold" asp-for="IsActive">@T("common.active")</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-check me-2"></i> @T("common.update")
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">@T("common.cancel")</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sağ: Playlist yönetimi -->
+        <div class="col-lg-9">
+            <!-- Mevcut playlist -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list-ol me-2"></i>@T("schedule.currentPlaylist")</h5>
+                </div>
+                <div class="card-body p-0" id="playlist-container">
+                    @if (schedulePages.Any())
+                    {
+                        @foreach (var sp in schedulePages)
+                        {
+                            <div class="playlist-item" data-id="@sp.SchedulePageID">
+                                <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
+                                <div class="order-badge">@sp.DisplayOrder</div>
+                                <div class="page-info">
+                                    <div class="page-name">@sp.Page?.PageName</div>
+                                    <div class="dept-name">@sp.Page?.Department?.DepartmentName</div>
+                                </div>
+                                <div class="duration-col">
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" class="form-control edit-duration" value="@sp.DisplayDuration"
+                                               min="5" max="3600" data-spid="@sp.SchedulePageID" />
+                                        <span class="input-group-text">@T("schedule.sec")</span>
+                                    </div>
+                                </div>
+                                <div class="actions-col">
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-page"
+                                            data-spid="@sp.SchedulePageID" title="@T("common.remove")">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted" id="empty-playlist">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">@T("schedule.emptyPlaylist")</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Sayfa ekle -->
             <div class="card shadow-sm">
-                <div class="card-body">
-                    <form asp-action="Edit" method="post">
-                        <input type="hidden" asp-for="ScheduleID" />
-                        <input type="hidden" asp-for="CreatedDate" />
-                        <div asp-validation-summary="All" class="alert alert-danger"></div>
-
-                        <div class="mb-3">
-                            <label asp-for="DepartmentID" class="form-label fw-bold">@T("dashboard.department")</label>
-                            <select asp-for="DepartmentID" class="form-select" asp-items="ViewBag.Departments">
-                                <option value="">@T("schedule.selectDepartment")</option>
-                            </select>
-                            <span asp-validation-for="DepartmentID" class="text-danger"></span>
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>@T("schedule.addPage")</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-hover table-sm mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>@T("page.pageName")</th>
+                                    <th>@T("common.department")</th>
+                                    <th style="width:80px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pg in pages)
+                                {
+                                    var isAssigned = assignedPageIds.Contains(pg.PageID);
+                                    <tr class="@(isAssigned ? "table-secondary" : "")" data-page-id="@pg.PageID">
+                                        <td>
+                                            <div class="fw-bold @(isAssigned ? "text-muted" : "")">@pg.PageName</div>
+                                            <small class="text-muted">@pg.PageTitle</small>
+                                        </td>
+                                        <td><span class="badge bg-light text-dark">@pg.Department?.DepartmentName</span></td>
+                                        <td>
+                                            @if (isAssigned)
+                                            {
+                                                <span class="badge bg-success"><i class="fas fa-check"></i></span>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-primary add-page-btn"
+                                                        data-page-id="@pg.PageID">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (!pages.Any())
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-file-alt fa-2x mb-2"></i>
+                            <p class="mb-0">@T("schedule.noPagesInCompany")</p>
                         </div>
-
-                        <div class="mb-3">
-                            <label asp-for="ScheduleName" class="form-label fw-bold">@T("schedule.scheduleName")</label>
-                            <input asp-for="ScheduleName" class="form-control" />
-                            <span asp-validation-for="ScheduleName" class="text-danger"></span>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="StartDate" class="form-label fw-bold">@T("schedule.startDate")</label>
-                                    <input asp-for="StartDate" type="datetime-local" class="form-control" />
-                                    <span asp-validation-for="StartDate" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="EndDate" class="form-label">@T("schedule.endDate")</label>
-                                    <input asp-for="EndDate" type="datetime-local" class="form-control" />
-                                    <span asp-validation-for="EndDate" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="StartTime" class="form-label">@T("schedule.startTime")</label>
-                                    <input asp-for="StartTime" type="time" class="form-control" />
-                                    <span asp-validation-for="StartTime" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="EndTime" class="form-label">@T("schedule.endTime")</label>
-                                    <input asp-for="EndTime" type="time" class="form-control" />
-                                    <span asp-validation-for="EndTime" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3 form-check">
-                                    <input asp-for="IsRecurring" class="form-check-input" />
-                                    <label asp-for="IsRecurring" class="form-check-label"></label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="RecurrencePattern" class="form-label">@T("schedule.recurrencePattern")</label>
-                                    <input asp-for="RecurrencePattern" class="form-control" placeholder="@T("schedule.recurrencePatternPlaceholder")" />
-                                    <span asp-validation-for="RecurrencePattern" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3 form-check">
-                            <input asp-for="IsActive" class="form-check-input" />
-                            <label asp-for="IsActive" class="form-check-label"></label>
-                        </div>
-
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-circle"></i> @T("common.update")
-                            </button>
-                            <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">@T("common.cancel")</button>
-                        </div>
-                    </form>
+                    }
                 </div>
             </div>
         </div>
@@ -102,5 +198,84 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+    <script>
+        var SCHEDULE_ID = @Model.ScheduleID;
+        var TOKEN = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        // Sayfa ekle
+        document.querySelectorAll('.add-page-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var pageId = this.getAttribute('data-page-id');
+                fetch('@Url.Action("AddPage")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': TOKEN
+                    },
+                    body: 'scheduleId=' + SCHEDULE_ID + '&pageId=' + pageId + '&duration=30'
+                }).then(function (r) { if (r.ok) location.reload(); });
+            });
+        });
+
+        // Sayfa kaldır
+        document.querySelectorAll('.remove-page').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var spId = this.getAttribute('data-spid');
+                fetch('@Url.Action("RemovePage")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': TOKEN
+                    },
+                    body: 'schedulePageId=' + spId + '&scheduleId=' + SCHEDULE_ID
+                }).then(function (r) { if (r.ok) location.reload(); });
+            });
+        });
+
+        // Süre güncelle
+        var durationTimers = {};
+        document.querySelectorAll('.edit-duration').forEach(function (inp) {
+            inp.addEventListener('change', function () {
+                var spId = this.getAttribute('data-spid');
+                var duration = parseInt(this.value) || 30;
+                clearTimeout(durationTimers[spId]);
+                durationTimers[spId] = setTimeout(function () {
+                    fetch('@Url.Action("UpdatePageDuration")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': TOKEN
+                        },
+                        body: 'schedulePageId=' + spId + '&scheduleId=' + SCHEDULE_ID + '&duration=' + duration
+                    });
+                }, 500);
+            });
+        });
+
+        // Drag & drop sıralama
+        var container = document.getElementById('playlist-container');
+        if (container && container.querySelectorAll('.playlist-item').length > 0) {
+            new Sortable(container, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: function () {
+                    var ids = [];
+                    container.querySelectorAll('.playlist-item').forEach(function (el, i) {
+                        ids.push(parseInt(el.getAttribute('data-id')));
+                        el.querySelector('.order-badge').textContent = i + 1;
+                    });
+                    fetch('@Url.Action("ReorderPages")' + '?scheduleId=' + SCHEDULE_ID, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': TOKEN
+                        },
+                        body: JSON.stringify(ids)
+                    });
+                }
+            });
+        }
+    </script>
 }

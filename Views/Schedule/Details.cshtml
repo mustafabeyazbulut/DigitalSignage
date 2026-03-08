@@ -1,98 +1,121 @@
 @model DigitalSignage.Models.Schedule
 
 @{
-    ViewData["Title"] = "Schedule Details";
+    var locale = ViewBag.CurrentLocale as string ?? "en";
+    var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
+    string T(string key) => lang?.Get(locale, key) ?? key;
+    ViewData["Title"] = T("schedule.detailsTitle");
+
+    var schedulePages = Model.SchedulePages?.OrderBy(sp => sp.DisplayOrder).ToList()
+                        ?? new List<DigitalSignage.Models.SchedulePage>();
 }
 
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1>@Model.ScheduleName</h1>
-        </div>
-        <div class="col-md-4 text-end">
-            <a asp-action="Edit" asp-route-id="@Model.ScheduleID" class="btn btn-warning">Edit</a>
-            <a asp-action="Delete" asp-route-id="@Model.ScheduleID" class="btn btn-danger">Delete</a>
+<div class="container-fluid mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">@Model.ScheduleName</h2>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.ScheduleID" class="btn btn-warning">
+                <i class="fas fa-edit me-1"></i> @T("common.edit")
+            </a>
+            <a asp-action="Delete" asp-route-id="@Model.ScheduleID" class="btn btn-danger">
+                <i class="fas fa-trash me-1"></i> @T("common.delete")
+            </a>
+            <button type="button" class="btn btn-outline-secondary ms-1" data-smart-back="@ViewBag.BreadcrumbBackUrl">
+                <i class="fas fa-arrow-left me-1"></i> @T("common.backToList")
+            </button>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">Department</dt>
-                <dd class="col-sm-9">@Model.Department?.DepartmentName</dd>
+    <div class="row">
+        <!-- Sol: Bilgiler + Özet -->
+        <div class="col-lg-3">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>@T("schedule.scheduleInfo")</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">@T("schedule.scheduleName")</dt>
+                        <dd class="col-sm-7">@Model.ScheduleName</dd>
 
-                <dt class="col-sm-3">Start Date</dt>
-                <dd class="col-sm-9">@Model.StartDate.ToString("yyyy-MM-dd")</dd>
+                        <dt class="col-sm-5">@T("common.company")</dt>
+                        <dd class="col-sm-7">@Model.Company?.CompanyName</dd>
 
-                <dt class="col-sm-3">End Date</dt>
-                <dd class="col-sm-9">@Model.EndDate.ToString("yyyy-MM-dd")</dd>
-
-                <dt class="col-sm-3">Start Time</dt>
-                <dd class="col-sm-9">@Model.StartTime.ToString(@"hh\:mm")</dd>
-
-                <dt class="col-sm-3">End Time</dt>
-                <dd class="col-sm-9">@Model.EndTime.ToString(@"hh\:mm")</dd>
-
-                <dt class="col-sm-3">Recurring</dt>
-                <dd class="col-sm-9">
-                    @if (Model.IsRecurring)
-                    {
-                        <span class="badge bg-warning">Yes</span>
-                        @if (!string.IsNullOrEmpty(Model.RecurrencePattern))
+                        @if (!string.IsNullOrEmpty(Model.Description))
                         {
-                            <div class="mt-1"><small>Pattern: @Model.RecurrencePattern</small></div>
+                            <dt class="col-sm-5">@T("company.description")</dt>
+                            <dd class="col-sm-7">@Model.Description</dd>
                         }
+
+                        <dt class="col-sm-5">@T("common.status")</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
+                                @(Model.IsActive ? T("common.active") : T("common.inactive"))
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-5">@T("common.createdDate")</dt>
+                        <dd class="col-sm-7">@Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")</dd>
+                    </dl>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sağ: Playlist -->
+        <div class="col-lg-9">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list-ol me-2"></i>@T("schedule.playlist")</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (schedulePages.Any())
+                    {
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:60px;">#</th>
+                                    <th>@T("page.pageName")</th>
+                                    <th>@T("common.department")</th>
+                                    <th>@T("page.layout")</th>
+                                    <th style="width:120px;">@T("schedule.duration")</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var sp in schedulePages)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-secondary rounded-pill">@sp.DisplayOrder</span></td>
+                                        <td>
+                                            <div class="fw-bold">@sp.Page?.PageName</div>
+                                            <small class="text-muted">@sp.Page?.PageTitle</small>
+                                        </td>
+                                        <td><span class="badge bg-light text-dark">@sp.Page?.Department?.DepartmentName</span></td>
+                                        <td>
+                                            @if (sp.Page?.Layout != null)
+                                            {
+                                                <span class="badge bg-info text-dark">@sp.Page.Layout.LayoutName</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                        </td>
+                                        <td><span class="fw-bold">@sp.DisplayDuration</span> @T("schedule.sec")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     }
                     else
                     {
-                        <span class="badge bg-secondary">No</span>
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p>@T("schedule.emptyPlaylist")</p>
+                        </div>
                     }
-                </dd>
-
-                <dt class="col-sm-3">Status</dt>
-                <dd class="col-sm-9">
-                    <span class="badge @(Model.IsActive ? "bg-success" : "bg-danger")">
-                        @(Model.IsActive ? "Active" : "Inactive")
-                    </span>
-                </dd>
-
-                <dt class="col-sm-3">Created Date</dt>
-                <dd class="col-sm-9">@Model.CreatedDate.ToString("yyyy-MM-dd HH:mm")</dd>
-            </dl>
-        </div>
-    </div>
-
-    @if (Model.SchedulePages != null && Model.SchedulePages.Any())
-    {
-        <div class="card mt-3">
-            <div class="card-header">
-                <h5>Scheduled Pages</h5>
-            </div>
-            <div class="card-body">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Order</th>
-                            <th>Page</th>
-                            <th>Duration (seconds)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var sp in Model.SchedulePages.OrderBy(x => x.DisplayOrder))
-                        {
-                            <tr>
-                                <td>@sp.DisplayOrder</td>
-                                <td>@sp.Page?.PageName</td>
-                                <td>@sp.DisplayDuration</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                </div>
             </div>
         </div>
-    }
-
-    <div class="mt-3">
-        <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">Back to List</button>
     </div>
 </div>

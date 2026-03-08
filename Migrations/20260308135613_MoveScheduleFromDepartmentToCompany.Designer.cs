@@ -4,6 +4,7 @@ using DigitalSignage.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DigitalSignage.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260308135613_MoveScheduleFromDepartmentToCompany")]
+    partial class MoveScheduleFromDepartmentToCompany
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -67,7 +70,7 @@ namespace DigitalSignage.Migrations
 
                     b.HasKey("CompanyID");
 
-                    b.ToTable("Companies", (string)null);
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.CompanyConfiguration", b =>
@@ -173,7 +176,7 @@ namespace DigitalSignage.Migrations
                     b.HasIndex("CompanyID")
                         .IsUnique();
 
-                    b.ToTable("CompanyConfigurations", (string)null);
+                    b.ToTable("CompanyConfigurations");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.Content", b =>
@@ -227,7 +230,7 @@ namespace DigitalSignage.Migrations
 
                     b.HasIndex("DepartmentID", "CreatedDate");
 
-                    b.ToTable("Contents", (string)null);
+                    b.ToTable("Contents");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.Department", b =>
@@ -265,7 +268,7 @@ namespace DigitalSignage.Migrations
 
                     b.HasIndex("CompanyID");
 
-                    b.ToTable("Departments", (string)null);
+                    b.ToTable("Departments");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.Layout", b =>
@@ -302,7 +305,7 @@ namespace DigitalSignage.Migrations
 
                     b.HasIndex("CompanyID");
 
-                    b.ToTable("Layouts", (string)null);
+                    b.ToTable("Layouts");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.LayoutSection", b =>
@@ -344,7 +347,7 @@ namespace DigitalSignage.Migrations
 
                     b.HasIndex("LayoutID");
 
-                    b.ToTable("LayoutSections", (string)null);
+                    b.ToTable("LayoutSections");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.Page", b =>
@@ -392,7 +395,7 @@ namespace DigitalSignage.Migrations
 
                     b.HasIndex("DepartmentID", "IsActive");
 
-                    b.ToTable("Pages", (string)null);
+                    b.ToTable("Pages");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.PageContent", b =>
@@ -431,7 +434,7 @@ namespace DigitalSignage.Migrations
 
                     b.HasIndex("PageID");
 
-                    b.ToTable("PageContents", (string)null);
+                    b.ToTable("PageContents");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.PageSection", b =>
@@ -460,7 +463,7 @@ namespace DigitalSignage.Migrations
 
                     b.HasIndex("PageID");
 
-                    b.ToTable("PageSections", (string)null);
+                    b.ToTable("PageSections");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.Schedule", b =>
@@ -477,17 +480,32 @@ namespace DigitalSignage.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsRecurring")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("RecurrencePattern")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("ScheduleName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
 
                     b.HasKey("ScheduleID");
 
@@ -495,7 +513,7 @@ namespace DigitalSignage.Migrations
 
                     b.HasIndex("CompanyID", "IsActive");
 
-                    b.ToTable("Schedules", (string)null);
+                    b.ToTable("Schedules");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.SchedulePage", b =>
@@ -527,7 +545,7 @@ namespace DigitalSignage.Migrations
 
                     b.HasIndex("ScheduleID");
 
-                    b.ToTable("SchedulePages", (string)null);
+                    b.ToTable("SchedulePages");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.User", b =>
@@ -588,7 +606,7 @@ namespace DigitalSignage.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.UserCompanyRole", b =>
@@ -628,7 +646,7 @@ namespace DigitalSignage.Migrations
                     b.HasIndex("UserID", "CompanyID")
                         .IsUnique();
 
-                    b.ToTable("UserCompanyRoles", (string)null);
+                    b.ToTable("UserCompanyRoles");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.UserDepartmentRole", b =>
@@ -668,7 +686,7 @@ namespace DigitalSignage.Migrations
                     b.HasIndex("UserID", "DepartmentID")
                         .IsUnique();
 
-                    b.ToTable("UserDepartmentRoles", (string)null);
+                    b.ToTable("UserDepartmentRoles");
                 });
 
             modelBuilder.Entity("DigitalSignage.Models.CompanyConfiguration", b =>

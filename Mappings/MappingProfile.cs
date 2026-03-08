@@ -44,8 +44,7 @@ namespace DigitalSignage.Mappings
             CreateMap<Department, DepartmentViewModel>()
                 .ForMember(dest => dest.CompanyName, opt => opt.MapFrom(src => src.Company != null ? src.Company.CompanyName : string.Empty))
                 .ForMember(dest => dest.PageCount, opt => opt.MapFrom(src => src.Pages != null ? src.Pages.Count : 0))
-                .ForMember(dest => dest.ContentCount, opt => opt.MapFrom(src => src.Contents != null ? src.Contents.Count : 0))
-                .ForMember(dest => dest.ScheduleCount, opt => opt.MapFrom(src => src.Schedules != null ? src.Schedules.Count : 0));
+                .ForMember(dest => dest.ContentCount, opt => opt.MapFrom(src => src.Contents != null ? src.Contents.Count : 0));
             CreateMap<DepartmentViewModel, Department>();
             CreateMap<CreateDepartmentDTO, Department>()
                 .ForMember(dest => dest.DepartmentID, opt => opt.Ignore())
@@ -128,7 +127,7 @@ namespace DigitalSignage.Mappings
                 .ForMember(dest => dest.SchedulePages, opt => opt.Ignore());
             CreateMap<UpdateScheduleDTO, Schedule>()
                 .ForMember(dest => dest.ScheduleID, opt => opt.Ignore())
-                .ForMember(dest => dest.DepartmentID, opt => opt.Ignore())
+                .ForMember(dest => dest.CompanyID, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedDate, opt => opt.Ignore());
 
             // UserCompanyRole Mappings

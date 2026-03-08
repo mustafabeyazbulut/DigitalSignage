@@ -10,7 +10,6 @@ namespace DigitalSignage.ViewModels
         public string CompanyName { get; set; } = string.Empty;
         public int PageCount { get; set; }
         public int ContentCount { get; set; }
-        public int ScheduleCount { get; set; }
         public DateTime CreatedDate { get; set; }
     }
 }

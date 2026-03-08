@@ -5,58 +5,29 @@
     var lang = ViewBag.Lang as DigitalSignage.Services.ILanguageService;
     string T(string key) => lang?.Get(locale, key) ?? key;
     ViewData["Title"] = T("schedule.deleteTitle");
+
+    var schedulePages = Model.SchedulePages?.OrderBy(sp => sp.DisplayOrder).ToList()
+                        ?? new List<DigitalSignage.Models.SchedulePage>();
 }
 
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <h1 class="text-danger">@T("schedule.deleteTitle")</h1>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="text-danger fw-bold mb-4">@T("schedule.deleteTitle")</h2>
 
             <div class="alert alert-danger">
-                <h4>@T("schedule.deleteWarning")</h4>
-                <p><strong>@T("common.cannotUndo")</strong></p>
+                <h5 class="mb-1"><i class="fas fa-exclamation-triangle me-2"></i>@T("schedule.deleteWarning")</h5>
+                <p class="mb-0"><strong>@T("common.cannotUndo")</strong></p>
             </div>
 
-            <div class="card">
+            <div class="card shadow-sm mb-3">
                 <div class="card-body">
-                    <dl class="row">
+                    <dl class="row mb-0">
                         <dt class="col-sm-4">@T("schedule.scheduleName")</dt>
                         <dd class="col-sm-8">@Model.ScheduleName</dd>
 
-                        <dt class="col-sm-4">@T("dashboard.department")</dt>
-                        <dd class="col-sm-8">
-                            @if (Model.Department != null)
-                            {
-                                @Model.Department.DepartmentName
-                            }
-                            else
-                            {
-                                <span>@T("department.departmentID"): @Model.DepartmentID</span>
-                            }
-                        </dd>
-
-                        <dt class="col-sm-4">@T("schedule.schedulePeriod")</dt>
-                        <dd class="col-sm-8">
-                            @Model.StartDate.ToString("dd/MM/yyyy HH:mm") - @Model.EndDate.ToString("dd/MM/yyyy HH:mm")
-                        </dd>
-
-                        <dt class="col-sm-4">@T("schedule.timeRange")</dt>
-                        <dd class="col-sm-8">
-                            @Model.StartTime.ToString(@"hh\:mm") - @Model.EndTime.ToString(@"hh\:mm")
-                        </dd>
-
-                        <dt class="col-sm-4">@T("schedule.isRecurring")</dt>
-                        <dd class="col-sm-8">
-                            <span class="badge @(Model.IsRecurring ? "bg-info" : "bg-secondary")">
-                                @(Model.IsRecurring ? T("common.yes") : T("common.no"))
-                            </span>
-                        </dd>
-
-                        @if (Model.IsRecurring && !string.IsNullOrEmpty(Model.RecurrencePattern))
-                        {
-                            <dt class="col-sm-4">@T("schedule.recurrencePattern")</dt>
-                            <dd class="col-sm-8">@Model.RecurrencePattern</dd>
-                        }
+                        <dt class="col-sm-4">@T("common.company")</dt>
+                        <dd class="col-sm-8">@Model.Company?.CompanyName</dd>
 
                         <dt class="col-sm-4">@T("common.status")</dt>
                         <dd class="col-sm-8">
@@ -64,16 +35,27 @@
                                 @(Model.IsActive ? T("common.active") : T("common.inactive"))
                             </span>
                         </dd>
+
+                        @if (schedulePages.Any())
+                        {
+                            <dt class="col-sm-4">@T("schedule.playlist")</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-warning text-dark">@schedulePages.Count @T("schedule.pages")</span>
+                                <small class="text-muted ms-1">@T("schedule.deleteAffectsPages")</small>
+                            </dd>
+                        }
                     </dl>
                 </div>
             </div>
 
-            <form asp-action="Delete" method="post" class="mt-3">
+            <form asp-action="Delete" method="post" class="d-flex gap-2">
                 <input type="hidden" asp-for="ScheduleID" />
                 <button type="submit" class="btn btn-danger">
-                    <i class="bi bi-trash"></i> @T("common.confirmDelete")
+                    <i class="fas fa-trash me-2"></i> @T("common.confirmDelete")
                 </button>
-                <a asp-action="Index" class="btn btn-secondary">@T("common.cancel")</a>
+                <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">
+                    @T("common.cancel")
+                </button>
             </form>
         </div>
     </div>

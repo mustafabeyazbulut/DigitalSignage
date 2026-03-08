@@ -41,6 +41,14 @@ namespace DigitalSignage.Services
 
         public async Task DeleteAsync(int id)
         {
+            // Sayfa silinmeden önce ilişkili zamanlama kayıtlarını temizle
+            // (SQL Server çoklu cascade path'e izin vermediği için manuel silme)
+            var schedulePages = await _unitOfWork.SchedulePages.GetSchedulesByPageAsync(id);
+            foreach (var sp in schedulePages)
+            {
+                await _unitOfWork.SchedulePages.DeleteAsync(sp.SchedulePageID);
+            }
+
             await _unitOfWork.Pages.DeleteAsync(id);
             await _unitOfWork.SaveChangesAsync();
         }

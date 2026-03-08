@@ -22,7 +22,7 @@ namespace DigitalSignage.Data.Repositories
             return await _dbSet.AsNoTracking()
                 .Where(sp => sp.PageID == pageId && sp.IsActive)
                 .Include(sp => sp.Schedule)
-                .OrderBy(sp => sp.Schedule.StartDate)
+                .OrderBy(sp => sp.Schedule.ScheduleName)
                 .ToListAsync();
         }
 

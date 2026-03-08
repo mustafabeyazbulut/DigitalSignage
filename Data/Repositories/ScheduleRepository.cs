@@ -8,66 +8,43 @@ namespace DigitalSignage.Data.Repositories
     {
         public ScheduleRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<Schedule>> GetSchedulesByDepartmentAsync(int departmentId)
+        public async Task<IEnumerable<Schedule>> GetSchedulesByCompanyAsync(int companyId)
         {
             return await _dbSet.AsNoTracking()
-                .Where(s => s.DepartmentID == departmentId)
-                .OrderBy(s => s.StartDate)
+                .Where(s => s.CompanyID == companyId)
+                .Include(s => s.SchedulePages)
+                .OrderBy(s => s.ScheduleName)
                 .ToListAsync();
         }
 
         public async Task<Schedule?> GetScheduleWithPagesAsync(int scheduleId)
         {
             return await _dbSet
-                .Include(s => s.Department)
+                .Include(s => s.Company)
                 .Include(s => s.SchedulePages.OrderBy(sp => sp.DisplayOrder))
                     .ThenInclude(sp => sp.Page)
                         .ThenInclude(p => p.Layout)
+                .Include(s => s.SchedulePages.OrderBy(sp => sp.DisplayOrder))
+                    .ThenInclude(sp => sp.Page)
+                        .ThenInclude(p => p.Department)
                 .FirstOrDefaultAsync(s => s.ScheduleID == scheduleId);
         }
 
-        public async Task<IEnumerable<Schedule>> GetActiveSchedulesByDepartmentAsync(int departmentId)
+        public async Task<IEnumerable<Schedule>> GetActiveSchedulesByCompanyAsync(int companyId)
         {
             return await _dbSet.AsNoTracking()
-                .Where(s => s.DepartmentID == departmentId && s.IsActive)
-                .OrderBy(s => s.StartDate)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Schedule>> GetSchedulesByDateRangeAsync(
-            int departmentId, DateTime startDate, DateTime endDate)
-        {
-            return await _dbSet.AsNoTracking()
-                .Where(s => s.DepartmentID == departmentId &&
-                            s.StartDate <= endDate &&
-                            s.EndDate >= startDate)
-                .OrderBy(s => s.StartDate)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Schedule>> GetCurrentActiveSchedulesAsync(int departmentId)
-        {
-            var now = DateTime.UtcNow;
-            var currentTime = now.TimeOfDay;
-
-            return await _dbSet.AsNoTracking()
-                .Where(s => s.DepartmentID == departmentId &&
-                            s.IsActive &&
-                            s.StartDate <= now &&
-                            s.EndDate >= now &&
-                            s.StartTime <= currentTime &&
-                            s.EndTime >= currentTime)
+                .Where(s => s.CompanyID == companyId && s.IsActive)
                 .Include(s => s.SchedulePages.OrderBy(sp => sp.DisplayOrder))
                     .ThenInclude(sp => sp.Page)
-                .OrderBy(s => s.StartDate)
+                .OrderBy(s => s.ScheduleName)
                 .ToListAsync();
         }
 
         public async Task<PagedResult<Schedule>> GetSchedulesPagedAsync(
-            int departmentId, int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null)
+            int companyId, int pageNumber, int pageSize, string? searchTerm = null, bool? isActive = null)
         {
             IQueryable<Schedule> query = _dbSet.AsNoTracking()
-                .Where(s => s.DepartmentID == departmentId);
+                .Where(s => s.CompanyID == companyId);
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
@@ -82,7 +59,8 @@ namespace DigitalSignage.Data.Repositories
             var totalCount = await query.CountAsync();
 
             var items = await query
-                .OrderBy(s => s.StartDate)
+                .Include(s => s.SchedulePages)
+                .OrderBy(s => s.ScheduleName)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();

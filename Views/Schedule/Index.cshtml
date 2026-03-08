@@ -11,45 +11,36 @@
     var searchTerm = ViewBag.SearchTerm as string ?? "";
     var sortBy = ViewBag.SortBy as string ?? "";
     var sortOrder = ViewBag.SortOrder as string ?? "asc";
-    var departmentId = ViewBag.DepartmentId as int?;
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/tables.css" />
 }
 
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1>@T("schedule.title")</h1>
+<div class="container-fluid mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">@T("schedule.title")</h2>
             <p class="text-muted mb-0">@T("schedule.subtitle")</p>
         </div>
-        <div class="col-md-4 text-end">
-            @if (ViewBag.CanEdit == true || ViewBag.IsSystemAdmin == true || ViewBag.IsCompanyAdmin == true)
-            {
-                <a asp-action="Create" class="btn btn-primary" asp-route-departmentId="@departmentId">
-                    <i class="bi bi-plus-circle"></i> @T("schedule.newSchedule")
-                </a>
-            }
-        </div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>@T("schedule.newSchedule")
+        </a>
     </div>
 
-    <!-- Search Form -->
+    <!-- Arama -->
     <div class="card mb-4">
-        <div class="card-body">
-            <form method="get" asp-action="Index" class="row g-3">
-                <div class="col-md-10">
+        <div class="card-body py-2">
+            <form method="get" asp-action="Index" class="row g-2 align-items-center">
+                <div class="col">
                     <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
                         <input type="text" name="search" class="form-control" placeholder="@T("common.search")..." value="@searchTerm">
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">@T("common.search")</button>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">@T("common.search")</button>
                 </div>
-                @if(departmentId != null) {
-                    <input type="hidden" name="departmentId" value="@departmentId" />
-                }
             </form>
         </div>
     </div>
@@ -62,33 +53,15 @@
                     <thead>
                         <tr>
                             <th>
-                                <a href="?search=@searchTerm&sortBy=ScheduleName&sortOrder=@(sortBy == "ScheduleName" && sortOrder == "asc" ? "desc" : "asc")@(departmentId != null ? $"&departmentId={departmentId}" : "")" class="text-white text-decoration-none">
+                                <a href="?search=@searchTerm&sortBy=ScheduleName&sortOrder=@(sortBy == "ScheduleName" && sortOrder == "asc" ? "desc" : "asc")" class="text-white text-decoration-none">
                                     @T("schedule.scheduleName")
                                     @if (sortBy == "ScheduleName")
                                     {
-                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
+                                        <i class="fas fa-arrow-@(sortOrder == "asc" ? "up" : "down") ms-1"></i>
                                     }
                                 </a>
                             </th>
-                            <th>
-                                <a href="?search=@searchTerm&sortBy=StartDate&sortOrder=@(sortBy == "StartDate" && sortOrder == "asc" ? "desc" : "asc")@(departmentId != null ? $"&departmentId={departmentId}" : "")" class="text-white text-decoration-none">
-                                    @T("schedule.startDate")
-                                    @if (sortBy == "StartDate")
-                                    {
-                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
-                                    }
-                                </a>
-                            </th>
-                            <th>
-                                <a href="?search=@searchTerm&sortBy=EndDate&sortOrder=@(sortBy == "EndDate" && sortOrder == "asc" ? "desc" : "asc")@(departmentId != null ? $"&departmentId={departmentId}" : "")" class="text-white text-decoration-none">
-                                    @T("schedule.endDate")
-                                    @if (sortBy == "EndDate")
-                                    {
-                                        <i class="bi bi-arrow-@(sortOrder == "asc" ? "up" : "down")"></i>
-                                    }
-                                </a>
-                            </th>
-                            <th>@T("schedule.timeRange")</th>
+                            <th>@T("schedule.pageCount")</th>
                             <th>@T("common.status")</th>
                             <th>@T("common.actions")</th>
                         </tr>
@@ -96,13 +69,18 @@
                     <tbody>
                         @foreach (var item in Model)
                         {
+                            var pageCount = item.SchedulePages?.Count ?? 0;
                             <tr>
-                                <td>@item.ScheduleName</td>
-                                <td>@item.StartDate.ToShortDateString()</td>
-                                <td>@item.EndDate.ToShortDateString()</td>
                                 <td>
-                                    <span class="type-badge time">
-                                        <i class="bi bi-clock"></i> @item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm")
+                                    <div class="fw-bold">@item.ScheduleName</div>
+                                    @if (!string.IsNullOrEmpty(item.Description))
+                                    {
+                                        <small class="text-muted">@item.Description</small>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-file me-1"></i>@pageCount @T("schedule.pages")
                                     </span>
                                 </td>
                                 <td>
@@ -113,28 +91,22 @@
                                 <td class="table-actions">
                                     <div class="action-dropdown">
                                         <button type="button" class="action-dropdown-toggle" title="@T("common.actions")">
-                                            <i class="bi bi-three-dots-vertical"></i>
+                                            <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <div class="action-dropdown-menu">
                                             <a asp-action="Details" asp-route-id="@item.ScheduleID" class="action-dropdown-item action-view">
-                                                <i class="bi bi-eye"></i>
+                                                <i class="fas fa-eye"></i>
                                                 <span>@T("common.details")</span>
                                             </a>
-                                            @if (ViewBag.CanEdit == true)
-                                            {
-                                                <a asp-action="Edit" asp-route-id="@item.ScheduleID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">
-                                                    <i class="bi bi-pencil"></i>
-                                                    <span>@T("common.edit")</span>
-                                                </a>
-                                            }
-                                            @if (ViewBag.CanDelete == true)
-                                            {
-                                                <div class="action-dropdown-divider"></div>
-                                                <a asp-action="Delete" asp-route-id="@item.ScheduleID" class="action-dropdown-item action-delete">
-                                                    <i class="bi bi-trash"></i>
-                                                    <span>@T("common.delete")</span>
-                                                </a>
-                                            }
+                                            <a asp-action="Edit" asp-route-id="@item.ScheduleID" class="action-dropdown-item action-edit">
+                                                <i class="fas fa-edit"></i>
+                                                <span>@T("common.edit")</span>
+                                            </a>
+                                            <div class="action-dropdown-divider"></div>
+                                            <a asp-action="Delete" asp-route-id="@item.ScheduleID" class="action-dropdown-item action-delete">
+                                                <i class="fas fa-trash"></i>
+                                                <span>@T("common.delete")</span>
+                                            </a>
                                         </div>
                                     </div>
                                 </td>
@@ -145,24 +117,23 @@
             </div>
         </div>
 
-        <!-- Pagination -->
         @if (totalPages > 1)
         {
             <nav class="mt-4">
                 <ul class="pagination justify-content-center">
                     <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage - 1)@(departmentId != null ? $"&departmentId={departmentId}" : "")">
+                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage - 1)">
                             @T("common.previous")
                         </a>
                     </li>
                     @for (int i = 1; i <= totalPages; i++)
                     {
                         <li class="page-item @(i == currentPage ? "active" : "")">
-                            <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@i@(departmentId != null ? $"&departmentId={departmentId}" : "")">@i</a>
+                            <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@i">@i</a>
                         </li>
                     }
                     <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage + 1)@(departmentId != null ? $"&departmentId={departmentId}" : "")">
+                        <a class="page-link" href="?search=@searchTerm&sortBy=@sortBy&sortOrder=@sortOrder&page=@(currentPage + 1)">
                             @T("common.next")
                         </a>
                     </li>
@@ -173,7 +144,7 @@
     else
     {
         <div class="table-empty-state">
-            <i class="bi bi-calendar-x"></i>
+            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
             <h3>@T("schedule.noSchedules")</h3>
             <p>@T("schedule.createFirstSchedule")</p>
         </div>

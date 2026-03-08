@@ -187,14 +187,14 @@ namespace DigitalSignage.Data
             {
                 entity.HasKey(e => e.ScheduleID);
 
-                entity.HasOne(s => s.Department)
-                    .WithMany(d => d.Schedules)
-                    .HasForeignKey(s => s.DepartmentID)
+                entity.HasOne(s => s.Company)
+                    .WithMany(c => c.Schedules)
+                    .HasForeignKey(s => s.CompanyID)
                     .OnDelete(DeleteBehavior.Cascade);
 
                 // Performans: FK indeksleri
-                entity.HasIndex(s => s.DepartmentID);
-                entity.HasIndex(s => new { s.DepartmentID, s.IsActive });
+                entity.HasIndex(s => s.CompanyID);
+                entity.HasIndex(s => new { s.CompanyID, s.IsActive });
             });
 
             modelBuilder.Entity<SchedulePage>(entity =>

@@ -1,6 +1,7 @@
 using DigitalSignage.Models;
 using DigitalSignage.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using AuthService = DigitalSignage.Services.IAuthorizationService;
 
 namespace DigitalSignage.Controllers
@@ -8,84 +9,78 @@ namespace DigitalSignage.Controllers
     public class ScheduleController : BaseController
     {
         private readonly IScheduleService _scheduleService;
-        private readonly IDepartmentService _departmentService;
         private readonly ICompanyService _companyService;
         private readonly IPageService _pageService;
+        private readonly IDepartmentService _departmentService;
         private readonly AuthService _authService;
 
         public ScheduleController(
             IScheduleService scheduleService,
-            IDepartmentService departmentService,
             ICompanyService companyService,
             IPageService pageService,
+            IDepartmentService departmentService,
             AuthService authService)
         {
             _scheduleService = scheduleService;
-            _departmentService = departmentService;
             _companyService = companyService;
             _pageService = pageService;
+            _departmentService = departmentService;
             _authService = authService;
         }
 
-        public async Task<IActionResult> Index(int? departmentId, string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
+        // Sadece SystemAdmin veya CompanyAdmin erişebilir
+        private async Task<bool> CanAccessSchedulesAsync(int userId, int companyId)
+        {
+            if (await _authService.IsSystemAdminAsync(userId))
+                return true;
+            return await _authService.IsCompanyAdminAsync(userId, companyId);
+        }
+
+        public async Task<IActionResult> Index(string search = "", string sortBy = "", string sortOrder = "asc", int page = 1)
         {
             const int pageSize = 10;
             var userId = GetCurrentUserId();
-            if (!await _authService.HasAnyRoleAsync(userId))
+            var isSystemAdmin = await _authService.IsSystemAdminAsync(userId);
+
+            // Şirket context'ini al
+            var companyId = HttpContext.Session.GetInt32("SelectedCompanyId");
+
+            // SystemAdmin veya CompanyAdmin olmalı
+            if (!isSystemAdmin && !await _authService.HasAnyCompanyAdminRoleAsync(userId))
                 return AccessDenied();
 
             IEnumerable<Schedule> allSchedules;
 
-            if (departmentId.HasValue)
+            if (companyId.HasValue && companyId.Value > 0)
             {
-                if (!await _authService.CanAccessDepartmentAsync(userId, departmentId.Value))
+                if (!await CanAccessSchedulesAsync(userId, companyId.Value))
                     return AccessDenied();
 
-                allSchedules = await _scheduleService.GetByDepartmentIdAsync(departmentId.Value);
-                ViewBag.DepartmentId = departmentId;
-
-                ViewBag.CanEdit = await _authService.CanEditInDepartmentAsync(userId, departmentId.Value);
-                ViewBag.CanDelete = await _authService.IsDepartmentManagerAsync(userId, departmentId.Value);
+                allSchedules = await _scheduleService.GetByCompanyIdAsync(companyId.Value);
+            }
+            else if (isSystemAdmin)
+            {
+                // SystemAdmin şirket seçmeden tüm schedule'ları görebilir
+                allSchedules = await _scheduleService.GetAllAsync();
             }
             else
             {
-                var sessionCompanyId = HttpContext.Session.GetInt32("SelectedCompanyId");
-                var isSystemAdmin = await _authService.IsSystemAdminAsync(userId);
-
-                if (isSystemAdmin && (!sessionCompanyId.HasValue || sessionCompanyId.Value <= 0))
+                // CompanyAdmin ise kendi şirketlerindeki schedule'ları göster
+                var companies = await _authService.GetUserCompaniesAsync(userId);
+                var adminCompanies = new List<Company>();
+                foreach (var c in companies)
                 {
-                    allSchedules = await _scheduleService.GetAllAsync();
-                }
-                else
-                {
-                    List<Models.Company> companies;
-                    if (sessionCompanyId.HasValue && sessionCompanyId.Value > 0)
-                    {
-                        if (!await _authService.CanAccessCompanyAsync(userId, sessionCompanyId.Value))
-                            return AccessDenied();
-                        var company = await _companyService.GetByIdAsync(sessionCompanyId.Value);
-                        companies = company != null ? new List<Models.Company> { company } : new List<Models.Company>();
-                    }
-                    else
-                    {
-                        companies = await _authService.GetUserCompaniesAsync(userId);
-                    }
-
-                    var scheduleList = new List<Schedule>();
-                    foreach (var company in companies)
-                    {
-                        var depts = await _authService.GetUserDepartmentsAsync(userId, company.CompanyID);
-                        foreach (var dept in depts)
-                        {
-                            var deptSchedules = await _scheduleService.GetByDepartmentIdAsync(dept.DepartmentID);
-                            scheduleList.AddRange(deptSchedules);
-                        }
-                    }
-                    allSchedules = scheduleList;
+                    if (await _authService.IsCompanyAdminAsync(userId, c.CompanyID))
+                        adminCompanies.Add(c);
                 }
 
-                ViewBag.CanEdit = isSystemAdmin || await _authService.HasAnyCompanyAdminRoleAsync(userId);
-                ViewBag.CanDelete = ViewBag.CanEdit;
+                var scheduleList = new List<Schedule>();
+                foreach (var c in adminCompanies)
+                {
+                    var companySchedules = await _scheduleService.GetByCompanyIdAsync(c.CompanyID);
+                    scheduleList.AddRange(companySchedules);
+                }
+                allSchedules = scheduleList;
             }
 
             IEnumerable<Schedule> query = allSchedules;
@@ -103,12 +98,6 @@ namespace DigitalSignage.Controllers
                 "ScheduleName" => sortOrder == "asc"
                     ? query.OrderBy(s => s.ScheduleName)
                     : query.OrderByDescending(s => s.ScheduleName),
-                "StartDate" => sortOrder == "asc"
-                    ? query.OrderBy(s => s.StartDate)
-                    : query.OrderByDescending(s => s.StartDate),
-                "EndDate" => sortOrder == "asc"
-                    ? query.OrderBy(s => s.EndDate)
-                    : query.OrderByDescending(s => s.EndDate),
                 _ => query.OrderBy(s => s.ScheduleName)
             };
 
@@ -125,52 +114,65 @@ namespace DigitalSignage.Controllers
             ViewBag.SearchTerm = search;
             ViewBag.SortBy = sortBy;
             ViewBag.SortOrder = sortOrder;
+            ViewBag.CanEdit = true; // Bu sayfaya sadece admin erişebildiği için her zaman true
+            ViewBag.CanDelete = true;
 
             return View(schedules);
         }
 
-        public async Task<IActionResult> Create(int? departmentId)
+        public async Task<IActionResult> Create()
         {
             var userId = GetCurrentUserId();
-            if (!await _authService.HasAnyRoleAsync(userId))
+            var companyId = HttpContext.Session.GetInt32("SelectedCompanyId");
+
+            if (!companyId.HasValue || companyId.Value <= 0)
+            {
+                AddErrorMessage(T("common.selectCompanyFirst"));
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!await CanAccessSchedulesAsync(userId, companyId.Value))
                 return AccessDenied();
 
-            if (departmentId.HasValue)
-            {
-                if (!await _authService.CanEditInDepartmentAsync(userId, departmentId.Value))
-                    return AccessDenied();
-
-                ViewBag.DepartmentId = departmentId;
-            }
-            else
-            {
-                ViewBag.Departments = await GetAccessibleDepartmentsAsync(userId);
-            }
+            // Şirketin tüm sayfalarını getir
+            ViewBag.CompanyId = companyId.Value;
+            ViewBag.Pages = await GetCompanyPagesAsync(companyId.Value);
 
             return View();
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Schedule schedule)
+        public async Task<IActionResult> Create(Schedule schedule, int[] selectedPageIds, int[] pageDurations)
         {
             var userId = GetCurrentUserId();
 
-            if (!await _authService.CanEditInDepartmentAsync(userId, schedule.DepartmentID))
+            if (!await CanAccessSchedulesAsync(userId, schedule.CompanyID))
                 return AccessDenied();
 
-            // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
-            ModelState.Remove("Department");
+            ModelState.Remove("Company");
             ModelState.Remove("SchedulePages");
 
             if (ModelState.IsValid)
             {
                 await _scheduleService.CreateAsync(schedule);
+
+                // Seçili sayfaları ekle
+                if (selectedPageIds != null && selectedPageIds.Length > 0)
+                {
+                    for (int i = 0; i < selectedPageIds.Length; i++)
+                    {
+                        var duration = (pageDurations != null && i < pageDurations.Length) ? pageDurations[i] : 30;
+                        await _scheduleService.AddPageToScheduleAsync(schedule.ScheduleID, selectedPageIds[i], duration, i + 1);
+                    }
+                }
+
                 AddSuccessMessage(T("schedule.createdSuccess"));
-                return RedirectToAction(nameof(Index), new { departmentId = schedule.DepartmentID });
+                return RedirectToAction(nameof(Edit), new { id = schedule.ScheduleID });
             }
 
-            ViewBag.Departments = await GetAccessibleDepartmentsAsync(userId);
+            ViewBag.CompanyId = schedule.CompanyID;
+            ViewBag.Pages = await GetCompanyPagesAsync(schedule.CompanyID);
             return View(schedule);
         }
 
@@ -185,7 +187,7 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (!await _authService.CanAccessDepartmentAsync(userId, schedule.DepartmentID))
+            if (!await CanAccessSchedulesAsync(userId, schedule.CompanyID))
                 return AccessDenied();
 
             return View(schedule);
@@ -194,7 +196,7 @@ namespace DigitalSignage.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var userId = GetCurrentUserId();
-            var schedule = await _scheduleService.GetByIdAsync(id);
+            var schedule = await _scheduleService.GetScheduleWithPagesAsync(id);
 
             if (schedule == null)
             {
@@ -202,10 +204,12 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (!await _authService.CanEditInDepartmentAsync(userId, schedule.DepartmentID))
+            if (!await CanAccessSchedulesAsync(userId, schedule.CompanyID))
                 return AccessDenied();
 
-            ViewBag.Departments = await GetAccessibleDepartmentsAsync(userId);
+            ViewBag.CompanyId = schedule.CompanyID;
+            ViewBag.Pages = await GetCompanyPagesAsync(schedule.CompanyID);
+
             return View(schedule);
         }
 
@@ -221,28 +225,105 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (!await _authService.CanEditInDepartmentAsync(userId, schedule.DepartmentID))
+            if (!await CanAccessSchedulesAsync(userId, schedule.CompanyID))
                 return AccessDenied();
 
-            // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
-            ModelState.Remove("Department");
+            ModelState.Remove("Company");
             ModelState.Remove("SchedulePages");
 
             if (ModelState.IsValid)
             {
                 await _scheduleService.UpdateAsync(schedule);
                 AddSuccessMessage(T("schedule.updatedSuccess"));
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Edit), new { id = schedule.ScheduleID });
             }
 
-            ViewBag.Departments = await GetAccessibleDepartmentsAsync(userId);
+            ViewBag.CompanyId = schedule.CompanyID;
+            ViewBag.Pages = await GetCompanyPagesAsync(schedule.CompanyID);
             return View(schedule);
+        }
+
+        // AJAX: Sayfa ekle
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddPage(int scheduleId, int pageId, int duration = 30)
+        {
+            var userId = GetCurrentUserId();
+            var schedule = await _scheduleService.GetByIdAsync(scheduleId);
+            if (schedule == null)
+                return NotFound();
+
+            if (!await CanAccessSchedulesAsync(userId, schedule.CompanyID))
+                return Forbid();
+
+            // Mevcut sıradaki son elemanın order'ını al
+            var existing = await _scheduleService.GetScheduleWithPagesAsync(scheduleId);
+            var nextOrder = (existing?.SchedulePages?.Count ?? 0) + 1;
+
+            await _scheduleService.AddPageToScheduleAsync(scheduleId, pageId, duration, nextOrder);
+            return Ok();
+        }
+
+        // AJAX: Sayfa kaldır
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemovePage(int schedulePageId, int scheduleId)
+        {
+            var userId = GetCurrentUserId();
+            var schedule = await _scheduleService.GetByIdAsync(scheduleId);
+            if (schedule == null)
+                return NotFound();
+
+            if (!await CanAccessSchedulesAsync(userId, schedule.CompanyID))
+                return Forbid();
+
+            await _scheduleService.RemovePageFromScheduleAsync(schedulePageId);
+            return Ok();
+        }
+
+        // AJAX: Süre güncelle
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdatePageDuration(int schedulePageId, int scheduleId, int duration)
+        {
+            var userId = GetCurrentUserId();
+            var schedule = await _scheduleService.GetByIdAsync(scheduleId);
+            if (schedule == null)
+                return NotFound();
+
+            if (!await CanAccessSchedulesAsync(userId, schedule.CompanyID))
+                return Forbid();
+
+            var sp = await _scheduleService.GetScheduleWithPagesAsync(scheduleId);
+            var item = sp?.SchedulePages?.FirstOrDefault(x => x.SchedulePageID == schedulePageId);
+            if (item == null)
+                return NotFound();
+
+            await _scheduleService.UpdateSchedulePageAsync(schedulePageId, duration, item.DisplayOrder);
+            return Ok();
+        }
+
+        // AJAX: Sıralama güncelle
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReorderPages(int scheduleId, [FromBody] int[] schedulePageIds)
+        {
+            var userId = GetCurrentUserId();
+            var schedule = await _scheduleService.GetByIdAsync(scheduleId);
+            if (schedule == null)
+                return NotFound();
+
+            if (!await CanAccessSchedulesAsync(userId, schedule.CompanyID))
+                return Forbid();
+
+            await _scheduleService.ReorderSchedulePagesAsync(scheduleId, schedulePageIds);
+            return Ok();
         }
 
         public async Task<IActionResult> Delete(int id)
         {
             var userId = GetCurrentUserId();
-            var schedule = await _scheduleService.GetByIdAsync(id);
+            var schedule = await _scheduleService.GetScheduleWithPagesAsync(id);
 
             if (schedule == null)
             {
@@ -250,7 +331,7 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (!await _authService.IsDepartmentManagerAsync(userId, schedule.DepartmentID))
+            if (!await CanAccessSchedulesAsync(userId, schedule.CompanyID))
                 return AccessDenied();
 
             return View(schedule);
@@ -269,7 +350,7 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (!await _authService.IsDepartmentManagerAsync(userId, schedule.DepartmentID))
+            if (!await CanAccessSchedulesAsync(userId, schedule.CompanyID))
                 return AccessDenied();
 
             await _scheduleService.DeleteAsync(id);
@@ -277,26 +358,26 @@ namespace DigitalSignage.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private async Task<List<Department>> GetAccessibleDepartmentsAsync(int userId)
+        // Şirketin tüm aktif sayfalarını departman bilgisiyle getir
+        private async Task<List<Page>> GetCompanyPagesAsync(int companyId)
         {
-            var sessionCompanyId = HttpContext.Session.GetInt32("SelectedCompanyId");
-            var departments = new List<Department>();
+            var departments = await _departmentService.GetByCompanyIdAsync(companyId);
+            var allPages = new List<Page>();
 
-            if (sessionCompanyId.HasValue && sessionCompanyId.Value > 0)
+            foreach (var dept in departments)
             {
-                var depts = await _authService.GetUserDepartmentsAsync(userId, sessionCompanyId.Value);
-                departments.AddRange(depts);
-            }
-            else
-            {
-                var userCompanies = await _authService.GetUserCompaniesAsync(userId);
-                foreach (var company in userCompanies)
+                var deptPages = await _pageService.GetActivePagesByDepartmentAsync(dept.DepartmentID);
+                foreach (var p in deptPages)
                 {
-                    var depts = await _authService.GetUserDepartmentsAsync(userId, company.CompanyID);
-                    departments.AddRange(depts);
+                    p.Department = dept; // Navigation property'yi set et
                 }
+                allPages.AddRange(deptPages);
             }
-            return departments;
+
+            return allPages
+                .OrderBy(p => p.Department?.DepartmentName)
+                .ThenBy(p => p.PageName)
+                .ToList();
         }
     }
 }

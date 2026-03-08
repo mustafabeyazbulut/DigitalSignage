@@ -45,8 +45,8 @@ namespace DigitalSignage.Data.Repositories
 
         public async Task<Department?> GetDepartmentWithSchedulesAsync(int departmentId)
         {
+            // Schedule artık Company bazlı, Department'la ilişkisi kaldırıldı
             return await _dbSet
-                .Include(d => d.Schedules.Where(s => s.IsActive))
                 .FirstOrDefaultAsync(d => d.DepartmentID == departmentId);
         }
 
@@ -63,7 +63,6 @@ namespace DigitalSignage.Data.Repositories
                 .Include(d => d.Company)
                 .Include(d => d.Pages)
                     .ThenInclude(p => p.Layout)
-                .Include(d => d.Schedules)
                 .Include(d => d.Contents)
                 .FirstOrDefaultAsync(d => d.DepartmentID == departmentId);
         }

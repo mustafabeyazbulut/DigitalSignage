@@ -37,6 +37,7 @@ namespace DigitalSignage.Models
         public ICollection<Department> Departments { get; set; } = new List<Department>();
         public ICollection<Layout> Layouts { get; set; } = new List<Layout>();
         public ICollection<UserCompanyRole> UserCompanyRoles { get; set; } = new List<UserCompanyRole>();
+        public ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
         public CompanyConfiguration? Configuration { get; set; }
     }
 }
