@@ -356,7 +356,7 @@
                         {
                             var first = assignedList.FirstOrDefault(a => a.Content != null);
                             var firstIcon = first != null ? GetContentIcon(first.Content!.ContentType) : "bi-file-text";
-                            var firstTitle = first != null ? System.Web.HttpUtility.HtmlEncode(first.Content!.ContentTitle) : "";
+                            var firstTitle = first != null ? System.Net.WebUtility.HtmlEncode(first.Content!.ContentTitle) : "";
                             var count = assignedList.Count;
                             var totalDur = assignedList.Sum(a => a.DurationSeconds);
 

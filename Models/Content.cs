@@ -11,7 +11,7 @@ namespace DigitalSignage.Models
 
         [Required]
         [MaxLength(50)]
-        public string ContentType { get; set; } = "Text"; // Text, Image, Video, HTML, PDF, URL, Clock, Weather, PageTitle, InfoBar
+        public string ContentType { get; set; } = "Text"; // Text, Image, Video, HTML, PDF, URL, Clock, Weather, PageTitle, InfoBar, Default
 
         [MaxLength(255)]
         public string? ContentTitle { get; set; }

@@ -285,7 +285,8 @@ using (var scope = app.Services.CreateScope())
         ("Clock", "Saat"),
         ("Weather", "Hava Durumu"),
         ("PageTitle", "Sayfa Başlığı"),
-        ("InfoBar", "Bilgi Çubuğu")
+        ("InfoBar", "Bilgi Çubuğu"),
+        ("Default", "Standart İçerik")
     };
 
     foreach (var (type, title) in systemWidgets)

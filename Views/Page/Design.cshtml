@@ -426,6 +426,7 @@
                 case 'weather': return 'bi-cloud-sun';
                 case 'pagetitle': return 'bi-type-h1';
                 case 'infobar': return 'bi-layout-text-window';
+                case 'default': return 'bi-grid-1x2';
                 default: return 'bi-file-text';
             }
         }
@@ -927,6 +928,7 @@
             "weather" => "bi-cloud-sun",
             "pagetitle" => "bi-type-h1",
             "infobar" => "bi-layout-text-window",
+            "default" => "bi-grid-1x2",
             _ => "bi-file-text"
         };
     }
@@ -982,7 +984,7 @@
                             // Hücrede sadece özet göster — detay offcanvas panelde
                             var first = assignedList.FirstOrDefault(a => a.Content != null);
                             var firstIcon = first != null ? GetContentIcon(first.Content!.ContentType) : "bi-file-text";
-                            var firstTitle = first != null ? System.Web.HttpUtility.HtmlEncode(first.Content!.ContentTitle) : "";
+                            var firstTitle = first != null ? System.Net.WebUtility.HtmlEncode(first.Content!.ContentTitle) : "";
                             var count = assignedList.Count;
 
                             sb.Append("<div class=\"cell-summary\" onclick=\"openSectionPanel('" + pos + "')\">");
