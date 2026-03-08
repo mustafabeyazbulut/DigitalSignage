@@ -274,6 +274,44 @@ else
     }
 }
 
+// Sistem widget'larını oluştur (her ortamda — silinirse otomatik geri gelir)
+using (var scope = app.Services.CreateScope())
+{
+    var ctx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var widgetLogger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    var systemWidgets = new (string Type, string Title)[]
+    {
+        ("Clock", "Saat"),
+        ("Weather", "Hava Durumu"),
+        ("PageTitle", "Sayfa Başlığı"),
+        ("InfoBar", "Bilgi Çubuğu")
+    };
+
+    foreach (var (type, title) in systemWidgets)
+    {
+        if (!ctx.Contents.Any(c => c.IsSystemContent && c.ContentType == type))
+        {
+            ctx.Contents.Add(new DigitalSignage.Models.Content
+            {
+                ContentType = type,
+                ContentTitle = title,
+                IsSystemContent = true,
+                IsActive = true,
+                DepartmentID = null,
+                CreatedBy = "System",
+                CreatedDate = DateTime.UtcNow
+            });
+        }
+    }
+
+    if (ctx.ChangeTracker.HasChanges())
+    {
+        ctx.SaveChanges();
+        widgetLogger.LogInformation("Eksik sistem widget'ları oluşturuldu.");
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

@@ -352,7 +352,9 @@
         "notFound": "Inhalt nicht gefunden.",
         "htmlPlaceholder": "<b>Geben Sie hier Ihren Inhalt ein...</b>",
         "unsupportedFormat": "Nicht unterstütztes Dateiformat.",
-        "urlRequired": "URL-Adresse ist erforderlich."
+        "urlRequired": "URL-Adresse ist erforderlich.",
+        "widget": "Widget",
+        "cannotDeleteSystemContent": "System-Widgets können nicht gelöscht werden."
     },
     "schedule": {
         "title": "Zeitpläne",

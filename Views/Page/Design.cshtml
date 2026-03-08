@@ -407,7 +407,8 @@
             contentAssigned: '@Html.Raw(T("page.contentAssigned"))',
             contentAlreadyAssigned: '@Html.Raw(T("page.contentAlreadyAssigned"))',
             durationUpdated: '@Html.Raw(T("page.durationUpdated"))',
-            error: '@Html.Raw(T("common.error"))'
+            error: '@Html.Raw(T("common.error"))',
+            widget: '@Html.Raw(T("content.widget"))'
         };
 
         // Section bazında atanmış içerik bilgilerini takip et
@@ -421,6 +422,10 @@
                 case 'html': return 'bi-code-slash';
                 case 'pdf': return 'bi-file-pdf';
                 case 'url': return 'bi-link-45deg';
+                case 'clock': return 'bi-clock';
+                case 'weather': return 'bi-cloud-sun';
+                case 'pagetitle': return 'bi-type-h1';
+                case 'infobar': return 'bi-layout-text-window';
                 default: return 'bi-file-text';
             }
         }
@@ -664,15 +669,19 @@
                     grid.classList.remove('d-none');
                     data.contents.forEach(function(c) {
                         var isAssigned = assignedIds.indexOf(c.contentId) !== -1;
+                        var isWidget = c.isSystemContent === true;
+                        var iconColor = isWidget ? 'text-warning' : 'text-primary';
+                        var badgeClass = isWidget ? 'bg-warning text-dark' : 'bg-secondary';
                         var col = document.createElement('div');
                         col.className = 'col-md-4';
                         col.innerHTML =
-                            '<div class="card content-card h-100 ' + (isAssigned ? 'already-assigned' : '') + '" ' +
+                            '<div class="card content-card h-100 ' + (isAssigned ? 'already-assigned' : '') + (isWidget ? ' border-warning' : '') + '" ' +
                             (isAssigned ? '' : 'onclick="assignContent(' + c.contentId + ', this)"') + '>' +
                             '  <div class="card-body text-center">' +
-                            '    <i class="bi ' + getContentIcon(c.contentType) + ' fs-2 text-primary"></i>' +
+                            '    <i class="bi ' + getContentIcon(c.contentType) + ' fs-2 ' + iconColor + '"></i>' +
                             '    <h6 class="fw-bold mt-2 mb-1">' + escapeHtml(c.contentTitle || 'Untitled') + '</h6>' +
-                            '    <span class="badge bg-secondary">' + escapeHtml(c.contentType) + '</span>' +
+                            '    <span class="badge ' + badgeClass + '">' + escapeHtml(c.contentType) + '</span>' +
+                            (isWidget ? ' <span class="badge bg-info">' + LANG.widget + '</span>' : '') +
                             (isAssigned ? '<br><span class="badge bg-success mt-1">' + LANG.contentAlreadyAssigned + '</span>' : '') +
                             '  </div>' +
                             '</div>';
@@ -914,6 +923,10 @@
             "html" => "bi-code-slash",
             "pdf" => "bi-file-pdf",
             "url" => "bi-link-45deg",
+            "clock" => "bi-clock",
+            "weather" => "bi-cloud-sun",
+            "pagetitle" => "bi-type-h1",
+            "infobar" => "bi-layout-text-window",
             _ => "bi-file-text"
         };
     }

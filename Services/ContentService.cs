@@ -1,6 +1,7 @@
 using DigitalSignage.Models;
 using DigitalSignage.Models.Common;
 using DigitalSignage.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace DigitalSignage.Services
 {
@@ -70,6 +71,15 @@ namespace DigitalSignage.Services
             string? contentType = null, string? searchTerm = null, bool? isActive = null)
         {
             return await _unitOfWork.Contents.GetContentsPagedAsync(departmentId, pageNumber, pageSize, contentType, searchTerm, isActive);
+        }
+
+        public async Task<IEnumerable<Content>> GetSystemContentsAsync()
+        {
+            return await _unitOfWork.Contents
+                .QueryAsNoTracking()
+                .Where(c => c.IsSystemContent && c.IsActive)
+                .OrderBy(c => c.ContentTitle)
+                .ToListAsync();
         }
     }
 }

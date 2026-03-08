@@ -10,5 +10,6 @@ namespace DigitalSignage.Services
         Task<IEnumerable<Content>> GetContentsByTypeAsync(int departmentId, string contentType);
         Task<IEnumerable<Content>> GetActiveContentsByDepartmentAsync(int departmentId);
         Task<PagedResult<Content>> GetContentsPagedAsync(int departmentId, int pageNumber, int pageSize, string? contentType = null, string? searchTerm = null, bool? isActive = null);
+        Task<IEnumerable<Content>> GetSystemContentsAsync();
     }
 }

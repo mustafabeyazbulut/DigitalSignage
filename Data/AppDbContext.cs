@@ -224,11 +224,13 @@ namespace DigitalSignage.Data
                 entity.HasOne(c => c.Department)
                     .WithMany(d => d.Contents)
                     .HasForeignKey(c => c.DepartmentID)
-                    .OnDelete(DeleteBehavior.NoAction); // Content silindiğinde page content'te sorun çıkmasın
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 // Performans: FK indeksleri
                 entity.HasIndex(c => c.DepartmentID);
                 entity.HasIndex(c => new { c.DepartmentID, c.CreatedDate });
+                entity.HasIndex(c => c.IsSystemContent);
             });
         }
     }

@@ -352,7 +352,9 @@
         "notFound": "Content not found.",
         "htmlPlaceholder": "<b>Enter your content here...</b>",
         "unsupportedFormat": "Unsupported file format.",
-        "urlRequired": "URL address is required."
+        "urlRequired": "URL address is required.",
+        "widget": "Widget",
+        "cannotDeleteSystemContent": "System widgets cannot be deleted."
     },
     "schedule": {
         "title": "Schedules",

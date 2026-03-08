@@ -395,12 +395,17 @@ namespace DigitalSignage.Controllers
                 return Json(new { success = false, message = "Erişim reddedildi." });
 
             var contents = await _contentService.GetActiveContentsByDepartmentAsync(departmentId);
-            var result = contents.Select(c => new
+
+            // Sistem widget'larını da ekle
+            var systemWidgets = await _contentService.GetSystemContentsAsync();
+
+            var result = systemWidgets.Concat(contents).Select(c => new
             {
                 contentId = c.ContentID,
                 contentTitle = c.ContentTitle,
                 contentType = c.ContentType,
-                thumbnailPath = c.ThumbnailPath
+                thumbnailPath = c.ThumbnailPath,
+                isSystemContent = c.IsSystemContent
             });
 
             return Json(new { success = true, contents = result });

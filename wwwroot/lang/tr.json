@@ -352,7 +352,9 @@
         "notFound": "İçerik bulunamadı.",
         "htmlPlaceholder": "<b>İçeriğinizi buraya girin...</b>",
         "unsupportedFormat": "Desteklenmeyen dosya formatı.",
-        "urlRequired": "URL adresi gereklidir."
+        "urlRequired": "URL adresi gereklidir.",
+        "widget": "Widget",
+        "cannotDeleteSystemContent": "Sistem widget'ları silinemez."
     },
     "schedule": {
         "title": "Zamanlamalar",

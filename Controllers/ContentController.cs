@@ -161,7 +161,7 @@ namespace DigitalSignage.Controllers
         {
             var userId = GetCurrentUserId();
 
-            if (!await _authService.CanEditInDepartmentAsync(userId, content.DepartmentID))
+            if (!content.DepartmentID.HasValue || !await _authService.CanEditInDepartmentAsync(userId, content.DepartmentID.Value))
                 return AccessDenied();
 
             // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
@@ -181,7 +181,7 @@ namespace DigitalSignage.Controllers
                     }
 
                     // Departmandan şirket ID'sini al
-                    var dept = await _departmentService.GetByIdAsync(content.DepartmentID);
+                    var dept = await _departmentService.GetByIdAsync(content.DepartmentID.Value);
                     var companyId = dept!.CompanyID;
                     content.MediaPath = await _fileStorage.SaveFileAsync(mediaFile, companyId);
                 }
@@ -196,7 +196,7 @@ namespace DigitalSignage.Controllers
 
                 await _contentService.CreateAsync(content);
                 AddSuccessMessage(T("content.createdSuccess"));
-                return RedirectToAction(nameof(Index), new { departmentId = content.DepartmentID });
+                return RedirectToAction(nameof(Index), new { departmentId = content.DepartmentID.Value });
             }
 
             ViewBag.Departments = await GetAccessibleDepartmentsAsync(userId);
@@ -214,7 +214,7 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (!await _authService.CanAccessDepartmentAsync(userId, content.DepartmentID))
+            if (!content.DepartmentID.HasValue || !await _authService.CanAccessDepartmentAsync(userId, content.DepartmentID.Value))
                 return AccessDenied();
 
             return View(content);
@@ -231,7 +231,7 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (!await _authService.CanEditInDepartmentAsync(userId, content.DepartmentID))
+            if (!content.DepartmentID.HasValue || !await _authService.CanEditInDepartmentAsync(userId, content.DepartmentID.Value))
                 return AccessDenied();
 
             ViewBag.Departments = await GetAccessibleDepartmentsAsync(userId);
@@ -250,7 +250,7 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (!await _authService.CanEditInDepartmentAsync(userId, content.DepartmentID))
+            if (!content.DepartmentID.HasValue || !await _authService.CanEditInDepartmentAsync(userId, content.DepartmentID.Value))
                 return AccessDenied();
 
             // Form'da gelmeyen non-nullable property'leri ModelState'ten çıkar
@@ -273,7 +273,7 @@ namespace DigitalSignage.Controllers
                     _fileStorage.DeleteFile(content.MediaPath);
 
                     // Departmandan şirket ID'sini al
-                    var dept = await _departmentService.GetByIdAsync(content.DepartmentID);
+                    var dept = await _departmentService.GetByIdAsync(content.DepartmentID.Value);
                     var companyId = dept!.CompanyID;
                     content.MediaPath = await _fileStorage.SaveFileAsync(file, companyId);
                 }
@@ -298,7 +298,7 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (!await _authService.IsDepartmentManagerAsync(userId, content.DepartmentID))
+            if (!content.DepartmentID.HasValue || !await _authService.IsDepartmentManagerAsync(userId, content.DepartmentID.Value))
                 return AccessDenied();
 
             return View(content);
@@ -317,7 +317,14 @@ namespace DigitalSignage.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            if (!await _authService.IsDepartmentManagerAsync(userId, content.DepartmentID))
+            // Sistem widget'ları silinemez
+            if (content.IsSystemContent)
+            {
+                AddErrorMessage(T("content.cannotDeleteSystemContent"));
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!content.DepartmentID.HasValue || !await _authService.IsDepartmentManagerAsync(userId, content.DepartmentID.Value))
                 return AccessDenied();
 
             _fileStorage.DeleteFile(content.MediaPath);
