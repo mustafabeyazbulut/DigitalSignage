@@ -294,7 +294,16 @@
         "inUseWarning": "This layout is currently used by pages. Deleting it will detach the layout from those pages.",
         "splitCell": "Split Cell",
         "unsplitCell": "Remove Split",
-        "nested": "Nested"
+        "nested": "Nested",
+        "templates": "Quick Templates",
+        "tplFull": "Full",
+        "tplTwoCols": "2 Columns",
+        "tplTwoRows": "2 Rows",
+        "tplGrid2x2": "2×2 Grid",
+        "tplHeaderContent": "Header+Body",
+        "tplSidebar": "Sidebar",
+        "tplThreeCols": "3 Columns",
+        "tplThreeRows": "3 Rows"
     },
     "content": {
         "title": "Media Library",

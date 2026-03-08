@@ -23,7 +23,7 @@
         <div asp-validation-summary="All" class="alert alert-danger"></div>
 
         <div class="row">
-            <!-- Left: Form fields + Builder controls -->
+            <!-- Sol: Form + Builder Kontrolleri -->
             <div class="col-lg-7">
                 <div class="card shadow-sm mb-3">
                     <div class="card-header">
@@ -61,20 +61,20 @@
 
                 <div class="d-grid gap-2">
                     <button type="submit" id="layout-submit-btn" class="btn btn-primary btn-lg">
-                        <i class="bi bi-check-circle me-2"></i> @T("common.update")
+                        <i class="fas fa-check me-2"></i> @T("common.update")
                     </button>
                     <button type="button" class="btn btn-secondary" data-smart-back="@ViewBag.BreadcrumbBackUrl">@T("common.cancel")</button>
                 </div>
             </div>
 
-            <!-- Right: Live Preview -->
+            <!-- Sag: Canli Onizleme -->
             <div class="col-lg-5">
                 <div class="card shadow-sm" style="position:sticky;top:20px;">
                     <div class="card-header">
                         <h5 class="mb-0"><i class="fas fa-eye me-2"></i>@T("layout.preview")</h5>
                     </div>
                     <div class="card-body">
-                        <div id="layout-preview" style="height:400px;border:2px solid #dee2e6;border-radius:8px;padding:4px;display:flex;flex-direction:column;gap:4px;background:#f8f9fa;"></div>
+                        <div id="layout-preview" class="lb-preview"></div>
                     </div>
                 </div>
             </div>
@@ -82,23 +82,36 @@
     </form>
 </div>
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/layout-builder.css" asp-append-version="true" />
+}
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/layout-builder.js"></script>
+    <script src="~/js/layout-builder.js" asp-append-version="true"></script>
     <script>
         window.layoutBuilderTranslations = {
-            addRow: '@T("layout.addRow")',
-            removeRow: '@T("layout.removeRow")',
-            addCol: '@T("layout.addColumn")',
-            removeCol: '@T("layout.removeColumn")',
-            height: '@T("layout.rowHeight")',
-            colTotal: '@T("layout.columnWidth")',
-            row: '@T("layout.row")',
-            totalHeight: '@T("layout.totalHeight")',
-            equalDistribute: '@T("layout.equalDistribute")',
-            splitCell: '@T("layout.splitCell")',
-            unsplitCell: '@T("layout.unsplitCell")',
-            nested: '@T("layout.nested")'
+            addRow: '@Html.Raw(T("layout.addRow"))',
+            removeRow: '@Html.Raw(T("layout.removeRow"))',
+            addCol: '@Html.Raw(T("layout.addColumn"))',
+            removeCol: '@Html.Raw(T("layout.removeColumn"))',
+            height: '@Html.Raw(T("layout.rowHeight"))',
+            colTotal: '@Html.Raw(T("layout.columnWidth"))',
+            row: '@Html.Raw(T("layout.row"))',
+            totalHeight: '@Html.Raw(T("layout.totalHeight"))',
+            equalDistribute: '@Html.Raw(T("layout.equalDistribute"))',
+            splitCell: '@Html.Raw(T("layout.splitCell"))',
+            unsplitCell: '@Html.Raw(T("layout.unsplitCell"))',
+            nested: '@Html.Raw(T("layout.nested"))',
+            templates: '@Html.Raw(T("layout.templates"))',
+            tpl_full: '@Html.Raw(T("layout.tplFull"))',
+            tpl_twoCols: '@Html.Raw(T("layout.tplTwoCols"))',
+            tpl_twoRows: '@Html.Raw(T("layout.tplTwoRows"))',
+            tpl_grid2x2: '@Html.Raw(T("layout.tplGrid2x2"))',
+            tpl_headerContent: '@Html.Raw(T("layout.tplHeaderContent"))',
+            tpl_sidebar: '@Html.Raw(T("layout.tplSidebar"))',
+            tpl_threeCols: '@Html.Raw(T("layout.tplThreeCols"))',
+            tpl_threeRows: '@Html.Raw(T("layout.tplThreeRows"))'
         };
         LayoutBuilder.init('@Html.Raw(Model.LayoutDefinition?.Replace("'", "\\'") ?? "{\"rows\":[{\"height\":100,\"columns\":[{\"width\":100}]}]}")');
     </script>

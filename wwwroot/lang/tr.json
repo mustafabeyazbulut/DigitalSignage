@@ -294,7 +294,16 @@
         "inUseWarning": "Bu düzen şu anda sayfalar tarafından kullanılmaktadır. Silinirse ilgili sayfalardan düzen bağlantısı kaldırılacaktır.",
         "splitCell": "Hücreyi Böl",
         "unsplitCell": "Bölmeyi Kaldır",
-        "nested": "İç İçe"
+        "nested": "İç İçe",
+        "templates": "Hazır Şablonlar",
+        "tplFull": "Tam Ekran",
+        "tplTwoCols": "2 Sütun",
+        "tplTwoRows": "2 Satır",
+        "tplGrid2x2": "2×2 Grid",
+        "tplHeaderContent": "Başlık+İçerik",
+        "tplSidebar": "Kenar Panel",
+        "tplThreeCols": "3 Sütun",
+        "tplThreeRows": "3 Satır"
     },
     "content": {
         "title": "Medya Kütüphanesi",

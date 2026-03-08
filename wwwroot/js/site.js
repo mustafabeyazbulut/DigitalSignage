@@ -262,9 +262,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize navigation analytics
     NavigationAnalytics.init();
 
-    // Expose analytics summary to console (for debugging)
-    // Type: NavigationAnalytics.logSummary() in console
-    console.log('💡 Tip: Type "NavigationAnalytics.logSummary()" to see navigation analytics');
 });
 
 // Navigation Analytics Tracker

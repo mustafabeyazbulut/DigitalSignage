@@ -294,7 +294,16 @@
         "inUseWarning": "Dieses Layout wird derzeit von Seiten verwendet. Beim Löschen wird die Layout-Zuordnung dieser Seiten aufgehoben.",
         "splitCell": "Zelle teilen",
         "unsplitCell": "Teilung aufheben",
-        "nested": "Verschachtelt"
+        "nested": "Verschachtelt",
+        "templates": "Schnellvorlagen",
+        "tplFull": "Vollbild",
+        "tplTwoCols": "2 Spalten",
+        "tplTwoRows": "2 Zeilen",
+        "tplGrid2x2": "2×2 Raster",
+        "tplHeaderContent": "Kopf+Inhalt",
+        "tplSidebar": "Seitenleiste",
+        "tplThreeCols": "3 Spalten",
+        "tplThreeRows": "3 Zeilen"
     },
     "content": {
         "title": "Mediathek",
