@@ -296,7 +296,7 @@
                     {
                         if (pc.Content != null)
                         {
-                            <text>{ contentTitle: '@System.Web.HttpUtility.JavaScriptStringEncode(pc.Content.ContentTitle ?? "")', contentType: '@System.Web.HttpUtility.JavaScriptStringEncode(pc.Content.ContentType ?? "")', durationSeconds: @pc.DurationSeconds },</text>
+                            <text>{ contentTitle: '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(pc.Content.ContentTitle ?? ""))', contentType: '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(pc.Content.ContentType ?? ""))', durationSeconds: @pc.DurationSeconds },</text>
                         }
                     }
                 ];
