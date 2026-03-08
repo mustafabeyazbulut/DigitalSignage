@@ -238,7 +238,8 @@
         "confirmClearAll": "Are you sure you want to remove all contents from this section?",
         "noContentAssigned": "No content assigned to this section yet.",
         "reorderSuccess": "Order updated.",
-        "moreContents": "more"
+        "moreContents": "more",
+        "preview": "Preview"
     },
     "layout": {
         "title": "Layout Library",

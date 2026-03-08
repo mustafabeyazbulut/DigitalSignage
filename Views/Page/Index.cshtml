@@ -127,6 +127,10 @@
                                                 <i class="bi bi-palette"></i>
                                                 <span>@T("page.designLayout")</span>
                                             </a>
+                                            <a href="/Display/@item.PageID" target="_blank" class="action-dropdown-item" style="color: #198754;">
+                                                <i class="bi bi-display"></i>
+                                                <span>@T("page.preview")</span>
+                                            </a>
                                             @if (ViewBag.CanEdit == true)
                                             {
                                                 <a asp-action="Edit" asp-route-id="@item.PageID" asp-route-returnUrl="@Url.Action("Index")" class="action-dropdown-item action-edit">

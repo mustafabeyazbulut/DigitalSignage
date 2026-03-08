@@ -326,7 +326,12 @@ app.UseHttpsRedirection();
 app.Use(async (context, next) =>
 {
     context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
-    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    // Display sayfaları Schedule içinde iframe ile gösterildiği için SAMEORIGIN
+    var path = context.Request.Path.Value ?? "";
+    if (path.StartsWith("/Display/", StringComparison.OrdinalIgnoreCase))
+        context.Response.Headers.Append("X-Frame-Options", "SAMEORIGIN");
+    else
+        context.Response.Headers.Append("X-Frame-Options", "DENY");
     context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
     context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
 

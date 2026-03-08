@@ -18,6 +18,9 @@
             <p class="text-muted">@Model.PageName</p>
         </div>
         <div class="col-md-4 text-end">
+            <a href="/Display/@Model.PageID" target="_blank" class="btn btn-success">
+                <i class="bi bi-display me-1"></i> @T("page.preview")
+            </a>
             <a asp-action="Design" asp-route-id="@Model.PageID" class="btn btn-info">
                 <i class="bi bi-grid-3x3 me-1"></i>
                 @if (hasLayout)

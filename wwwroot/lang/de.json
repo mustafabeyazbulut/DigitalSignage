@@ -238,7 +238,8 @@
         "confirmClearAll": "Sind Sie sicher, dass Sie alle Inhalte aus diesem Abschnitt entfernen möchten?",
         "noContentAssigned": "Diesem Abschnitt wurden noch keine Inhalte zugewiesen.",
         "reorderSuccess": "Reihenfolge aktualisiert.",
-        "moreContents": "mehr"
+        "moreContents": "mehr",
+        "preview": "Vorschau"
     },
     "layout": {
         "title": "Layout-Bibliothek",

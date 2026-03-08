@@ -45,6 +45,7 @@ namespace DigitalSignage.Data.Repositories
         {
             return await _dbSet
                 .Include(p => p.Department)
+                    .ThenInclude(d => d.Company)
                 .Include(p => p.Layout!)
                     .ThenInclude(l => l.LayoutSections)
                 .Include(p => p.PageContents.OrderBy(pc => pc.DisplayOrder))

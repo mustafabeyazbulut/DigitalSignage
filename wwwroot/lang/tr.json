@@ -238,7 +238,8 @@
         "confirmClearAll": "Bu bölümdeki tüm içerikleri kaldırmak istediğinize emin misiniz?",
         "noContentAssigned": "Bu bölüme henüz içerik atanmamış.",
         "reorderSuccess": "Sıralama güncellendi.",
-        "moreContents": "daha"
+        "moreContents": "daha",
+        "preview": "Önizleme"
     },
     "layout": {
         "title": "Düzen Kütüphanesi",

@@ -1,0 +1,423 @@
+@model DigitalSignage.Models.Page
+@using System.Text.Json
+@{
+    Layout = null;
+    var contentMap = ViewBag.ContentMap as Dictionary<string, List<DigitalSignage.Models.PageContent>>
+                     ?? new Dictionary<string, List<DigitalSignage.Models.PageContent>>();
+
+    var layoutDef = !string.IsNullOrEmpty(Model.Layout?.LayoutDefinition)
+        ? JsonSerializer.Deserialize<DigitalSignage.Models.LayoutDefinitionModel>(
+            Model.Layout.LayoutDefinition,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+        : null;
+
+    var company = Model.Department?.Company;
+    var logoUrl = !string.IsNullOrEmpty(company?.LogoPath)
+        ? $"/display-media/{company.LogoPath}"
+        : "";
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@Model.PageTitle</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100vw; height: 100vh; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #000; }
+
+        .display-grid { width: 100%; height: 100%; display: flex; flex-direction: column; }
+        .display-row { display: flex; flex: none; }
+        .display-cell {
+            position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Slideshow */
+        .slide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s ease; }
+        .slide.active { opacity: 1; }
+
+        /* İçerik tipleri */
+        .content-image { width: 100%; height: 100%; object-fit: contain; }
+        .content-video { width: 100%; height: 100%; object-fit: contain; }
+        .content-html { width: 100%; height: 100%; padding: 16px; color: #fff; overflow: auto; font-size: 1.1rem; line-height: 1.6; }
+        .content-text { width: 100%; height: 100%; padding: 20px; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; text-align: center; }
+        .content-url { width: 100%; height: 100%; border: none; }
+        .content-pdf { width: 100%; height: 100%; border: none; }
+
+        /* Widget: Sayfa Başlığı */
+        .widget-pagetitle {
+            width: 100%; height: 100%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 12px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e); color: #fff; padding: 20px;
+        }
+        .widget-pagetitle .company-logo { max-height: 30%; max-width: 60%; object-fit: contain; }
+        .widget-pagetitle .page-title { font-size: 2rem; font-weight: 700; text-align: center; }
+
+        /* Widget: Saat */
+        .widget-clock {
+            width: 100%; height: 100%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff;
+        }
+        .widget-clock .clock-time { font-size: 4rem; font-weight: 700; letter-spacing: 4px; }
+        .widget-clock .clock-date { font-size: 1.2rem; opacity: 0.7; margin-top: 8px; }
+
+        /* Widget: Hava Durumu */
+        .widget-weather {
+            width: 100%; height: 100%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 8px;
+            background: linear-gradient(135deg, #2193b0, #6dd5ed); color: #fff; padding: 16px;
+        }
+        .widget-weather .weather-icon { font-size: 3rem; }
+        .widget-weather .weather-temp { font-size: 2.5rem; font-weight: 700; }
+        .widget-weather .weather-desc { font-size: 1rem; opacity: 0.8; }
+
+        /* Widget: Bilgi Çubuğu / Standart İçerik */
+        .widget-infobar, .widget-default {
+            width: 100%; height: 100%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 10px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e); color: #fff; padding: 16px;
+        }
+        .widget-infobar .company-logo, .widget-default .company-logo { max-height: 20%; max-width: 50%; object-fit: contain; }
+        .widget-infobar .info-clock, .widget-default .info-clock { font-size: 2.5rem; font-weight: 700; letter-spacing: 2px; }
+        .widget-infobar .info-date, .widget-default .info-date { font-size: 0.9rem; opacity: 0.7; }
+        .widget-infobar .info-weather, .widget-default .info-weather { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; }
+        .widget-default .page-title { font-size: 1.6rem; font-weight: 700; text-align: center; }
+
+        /* Boş hücre */
+        .empty-cell { width: 100%; height: 100%; background: #111; }
+    </style>
+</head>
+<body>
+    @if (layoutDef?.Rows != null && layoutDef.Rows.Any())
+    {
+        <div class="display-grid" id="display-grid">
+            @{ RenderRows(layoutDef.Rows, ""); }
+        </div>
+    }
+    else
+    {
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;">
+            <i class="bi bi-exclamation-triangle me-3"></i> Bu sayfa için düzen tanımlı değil.
+        </div>
+    }
+
+    <script>
+        var PAGE_TITLE = @Html.Raw(JsonSerializer.Serialize(Model.PageTitle));
+        var COMPANY_NAME = @Html.Raw(JsonSerializer.Serialize(company?.CompanyName ?? ""));
+        var LOGO_URL = @Html.Raw(JsonSerializer.Serialize(logoUrl));
+
+        // Section verilerini oluştur
+        var SECTIONS = {};
+        @foreach (var kvp in contentMap)
+        {
+            var pos = kvp.Key;
+            <text>
+            SECTIONS['@Html.Raw(pos)'] = [
+                @foreach (var pc in kvp.Value)
+                {
+                    if (pc.Content != null)
+                    {
+                        var mediaUrl = !string.IsNullOrEmpty(pc.Content.MediaPath)
+                            ? $"/display-media/{pc.Content.MediaPath}"
+                            : "";
+                        <text>{
+                            contentType: '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(pc.Content.ContentType ?? ""))',
+                            contentTitle: '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(pc.Content.ContentTitle ?? ""))',
+                            contentData: '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(pc.Content.ContentData ?? ""))',
+                            mediaPath: '@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(mediaUrl))',
+                            duration: @pc.DurationSeconds,
+                            isSystem: @(pc.Content.IsSystemContent ? "true" : "false")
+                        },</text>
+                    }
+                }
+            ];
+            </text>
+        }
+
+        // Her section için slideshow başlat
+        document.addEventListener('DOMContentLoaded', function() {
+            Object.keys(SECTIONS).forEach(function(pos) {
+                var cell = document.querySelector('[data-section="' + pos + '"]');
+                if (!cell) return;
+
+                var items = SECTIONS[pos];
+                if (!items || items.length === 0) return;
+
+                // İlk içeriği render et
+                renderSlides(cell, items);
+
+                // Birden fazla içerik varsa slideshow başlat
+                if (items.length > 1) {
+                    startSlideshow(cell, items);
+                }
+            });
+
+            // Saatleri başlat
+            updateClocks();
+            setInterval(updateClocks, 1000);
+
+            // Hava durumunu al
+            fetchWeather();
+        });
+
+        function renderSlides(cell, items) {
+            cell.innerHTML = '';
+            items.forEach(function(item, i) {
+                var slide = document.createElement('div');
+                slide.className = 'slide' + (i === 0 ? ' active' : '');
+                slide.innerHTML = renderContent(item);
+                cell.appendChild(slide);
+            });
+        }
+
+        function renderContent(item) {
+            var type = (item.contentType || '').toLowerCase();
+
+            // Sistem widget'ları
+            if (item.isSystem) {
+                switch (type) {
+                    case 'pagetitle':
+                        return '<div class="widget-pagetitle">' +
+                            (LOGO_URL ? '<img src="' + LOGO_URL + '" class="company-logo" alt="Logo" />' : '') +
+                            '<div class="page-title">' + escapeHtml(PAGE_TITLE) + '</div>' +
+                            '</div>';
+
+                    case 'clock':
+                        return '<div class="widget-clock">' +
+                            '<div class="clock-time" data-clock></div>' +
+                            '<div class="clock-date" data-clock-date></div>' +
+                            '</div>';
+
+                    case 'weather':
+                        return '<div class="widget-weather">' +
+                            '<div class="weather-icon" data-weather-icon><i class="bi bi-cloud-sun"></i></div>' +
+                            '<div class="weather-temp" data-weather-temp>--&deg;C</div>' +
+                            '<div class="weather-desc" data-weather-desc></div>' +
+                            '</div>';
+
+                    case 'infobar':
+                        return '<div class="widget-infobar">' +
+                            (LOGO_URL ? '<img src="' + LOGO_URL + '" class="company-logo" alt="Logo" />' : '') +
+                            '<div class="info-clock" data-clock></div>' +
+                            '<div class="info-date" data-clock-date></div>' +
+                            '<div class="info-weather" data-weather-icon data-weather-temp data-weather-desc>' +
+                            '  <i class="bi bi-cloud-sun"></i> <span data-weather-temp>--&deg;C</span>' +
+                            '</div>' +
+                            '</div>';
+
+                    case 'default':
+                        return '<div class="widget-default">' +
+                            (LOGO_URL ? '<img src="' + LOGO_URL + '" class="company-logo" alt="Logo" />' : '') +
+                            '<div class="page-title">' + escapeHtml(PAGE_TITLE) + '</div>' +
+                            '<div class="info-clock" data-clock></div>' +
+                            '<div class="info-date" data-clock-date></div>' +
+                            '<div class="info-weather" data-weather-icon data-weather-temp data-weather-desc>' +
+                            '  <i class="bi bi-cloud-sun"></i> <span data-weather-temp>--&deg;C</span>' +
+                            '</div>' +
+                            '</div>';
+                }
+            }
+
+            // Normal içerikler
+            switch (type) {
+                case 'image':
+                    return '<img src="' + item.mediaPath + '" class="content-image" alt="" />';
+
+                case 'video':
+                    return '<video class="content-video" autoplay muted loop playsinline><source src="' + item.mediaPath + '" /></video>';
+
+                case 'html':
+                    return '<div class="content-html">' + item.contentData + '</div>';
+
+                case 'text':
+                    return '<div class="content-text">' + escapeHtml(item.contentData || item.contentTitle) + '</div>';
+
+                case 'url':
+                    var url = toEmbedUrl(item.contentData || '');
+                    return '<iframe src="' + escapeHtml(url) + '" class="content-url" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+
+                case 'pdf':
+                    return '<iframe src="' + item.mediaPath + '" class="content-pdf"></iframe>';
+
+                default:
+                    return '<div class="content-text">' + escapeHtml(item.contentTitle) + '</div>';
+            }
+        }
+
+        function startSlideshow(cell, items) {
+            var currentIndex = 0;
+            var slides = cell.querySelectorAll('.slide');
+
+            function nextSlide() {
+                slides[currentIndex].classList.remove('active');
+                currentIndex = (currentIndex + 1) % items.length;
+                slides[currentIndex].classList.add('active');
+
+                // Video ise yeniden başlat
+                var video = slides[currentIndex].querySelector('video');
+                if (video) { video.currentTime = 0; video.play(); }
+
+                // Sonraki slide'ın süresine göre zamanlayıcı ayarla
+                setTimeout(nextSlide, items[currentIndex].duration * 1000);
+            }
+
+            // İlk slide'ın süresine göre başlat
+            setTimeout(nextSlide, items[0].duration * 1000);
+        }
+
+        // Saat güncelleme
+        function updateClocks() {
+            var now = new Date();
+            var time = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            var date = now.toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            document.querySelectorAll('[data-clock]').forEach(function(el) {
+                el.textContent = time;
+            });
+            document.querySelectorAll('[data-clock-date]').forEach(function(el) {
+                el.textContent = date;
+            });
+        }
+
+        // Hava durumu (tarayıcı geolocation + Open-Meteo API)
+        function fetchWeather() {
+            if (!navigator.geolocation) return;
+
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                var lat = pos.coords.latitude;
+                var lon = pos.coords.longitude;
+                var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,weather_code&timezone=auto';
+
+                fetch(url)
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (!data.current) return;
+                        var temp = Math.round(data.current.temperature_2m);
+                        var code = data.current.weather_code;
+                        var icon = getWeatherIcon(code);
+                        var desc = getWeatherDescription(code);
+
+                        document.querySelectorAll('[data-weather-temp]').forEach(function(el) {
+                            el.textContent = temp + '\u00B0C';
+                        });
+                        document.querySelectorAll('[data-weather-icon]').forEach(function(el) {
+                            el.innerHTML = '<i class="bi ' + icon + '"></i>';
+                        });
+                        document.querySelectorAll('[data-weather-desc]').forEach(function(el) {
+                            el.textContent = desc;
+                        });
+                    });
+            }, function() {
+                // Konum izni reddedilirse varsayılan göster
+            });
+        }
+
+        function getWeatherIcon(code) {
+            if (code === 0) return 'bi-sun';
+            if (code <= 3) return 'bi-cloud-sun';
+            if (code <= 49) return 'bi-cloud';
+            if (code <= 69) return 'bi-cloud-rain';
+            if (code <= 79) return 'bi-snow';
+            if (code <= 99) return 'bi-cloud-lightning-rain';
+            return 'bi-cloud';
+        }
+
+        function getWeatherDescription(code) {
+            if (code === 0) return 'Açık';
+            if (code <= 3) return 'Parçalı bulutlu';
+            if (code <= 49) return 'Bulutlu';
+            if (code <= 59) return 'Çisenti';
+            if (code <= 69) return 'Yağmurlu';
+            if (code <= 79) return 'Kar yağışlı';
+            if (code <= 99) return 'Fırtınalı';
+            return '';
+        }
+
+        // Video/harita platformlarının URL'lerini embed formatına çevir
+        function toEmbedUrl(url) {
+            if (!url) return url;
+
+            // YouTube: watch?v=ID, youtu.be/ID, shorts/ID, live/ID, playlist?list=ID
+            var ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            if (ytMatch) return 'https://www.youtube.com/embed/' + ytMatch[1] + '?autoplay=1&mute=1';
+            var ytPlaylist = url.match(/youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/);
+            if (ytPlaylist) return 'https://www.youtube.com/embed/videoseries?list=' + ytPlaylist[1] + '&autoplay=1&mute=1';
+
+            // Vimeo: vimeo.com/ID
+            var vmMatch = url.match(/vimeo\.com\/(\d+)/);
+            if (vmMatch) return 'https://player.vimeo.com/video/' + vmMatch[1] + '?autoplay=1&muted=1';
+
+            // Dailymotion: dailymotion.com/video/ID
+            var dmMatch = url.match(/dailymotion\.com\/video\/([a-zA-Z0-9]+)/);
+            if (dmMatch) return 'https://www.dailymotion.com/embed/video/' + dmMatch[1] + '?autoplay=1&mute=1';
+
+            // Google Maps: maps.google.com veya goo.gl/maps — place embed
+            if (url.match(/google\.\w+\/maps/)) {
+                return 'https://maps.google.com/maps?output=embed&q=' + encodeURIComponent(url);
+            }
+
+            // Google Slides / Docs / Sheets — yayınlanmış link
+            var gSlidesMatch = url.match(/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/);
+            if (gSlidesMatch) return 'https://docs.google.com/presentation/d/' + gSlidesMatch[1] + '/embed?start=true&loop=true&delayms=5000';
+            var gDocsMatch = url.match(/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/);
+            if (gDocsMatch) return 'https://docs.google.com/document/d/' + gDocsMatch[1] + '/preview';
+            var gSheetsMatch = url.match(/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+            if (gSheetsMatch) return 'https://docs.google.com/spreadsheets/d/' + gSheetsMatch[1] + '/preview';
+
+            // Spotify: track, album, playlist, episode
+            var spMatch = url.match(/open\.spotify\.com\/(track|album|playlist|episode)\/([a-zA-Z0-9]+)/);
+            if (spMatch) return 'https://open.spotify.com/embed/' + spMatch[1] + '/' + spMatch[2];
+
+            // Diğer URL'ler olduğu gibi
+            return url;
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(text || ''));
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
+
+@functions {
+    void RenderRows(List<DigitalSignage.Models.LayoutRowDefinition> rows, string parentPos)
+    {
+        for (int ri = 0; ri < rows.Count; ri++)
+        {
+            var row = rows[ri];
+            var rowPos = string.IsNullOrEmpty(parentPos) ? $"R{ri + 1}" : $"{parentPos}.R{ri + 1}";
+
+            <div class="display-row" style="height:@(row.Height)%;">
+                @if (row.Columns != null)
+                {
+                    for (int ci = 0; ci < row.Columns.Count; ci++)
+                    {
+                        var col = row.Columns[ci];
+                        var cellPos = $"{rowPos}C{ci + 1}";
+
+                        if (col.Rows != null && col.Rows.Any())
+                        {
+                            // İç içe bölme — recursive
+                            <div style="width:@(col.Width)%;display:flex;flex-direction:column;">
+                                @{ RenderRows(col.Rows, $"{rowPos}C{ci + 1}"); }
+                            </div>
+                        }
+                        else
+                        {
+                            // Yaprak hücre
+                            <div class="display-cell" data-section="@cellPos" style="width:@(col.Width)%;">
+                                <div class="empty-cell"></div>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+        }
+    }
+}

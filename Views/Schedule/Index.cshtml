@@ -98,6 +98,10 @@
                                                 <i class="fas fa-eye"></i>
                                                 <span>@T("common.details")</span>
                                             </a>
+                                            <a href="/Display/Schedule/@item.ScheduleID" target="_blank" class="action-dropdown-item" style="color: #198754;">
+                                                <i class="bi bi-display"></i>
+                                                <span>@T("page.preview")</span>
+                                            </a>
                                             <a asp-action="Edit" asp-route-id="@item.ScheduleID" class="action-dropdown-item action-edit">
                                                 <i class="fas fa-edit"></i>
                                                 <span>@T("common.edit")</span>
