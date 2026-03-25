@@ -41,6 +41,23 @@ namespace DigitalSignage.Middleware
                 }
             }
 
+            // Öncelik 3: Session boşsa (uygulama restart vb.) kullanıcının ilk erişebildiği şirketi seç
+            if (companyId == null)
+            {
+                var userIdClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
+                {
+                    var companies = await authService.GetUserCompaniesAsync(userId);
+                    var firstCompany = companies.FirstOrDefault();
+                    if (firstCompany != null)
+                    {
+                        companyId = firstCompany.CompanyID;
+                        context.Session.SetInt32("SelectedCompanyId", companyId.Value);
+                        _logger.LogDebug($"Tenant context auto-resolved from DB: CompanyId={companyId}");
+                    }
+                }
+            }
+
             // Context'e set et (yetki kontrolü service/controller katmanında yapılacak)
             // NOT: Burada yetki kontrolü yapılmaz çünkü SystemAdmin tüm şirketlere erişebilir
             // Authorization kontrolü AuthorizationService ve Controller'larda yapılır

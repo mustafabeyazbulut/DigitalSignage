@@ -78,6 +78,9 @@ namespace DigitalSignage.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
+                // Login sonrası varsayılan şirket seçimini yap
+                await SetDefaultCompanyAsync(user.UserID);
+
                 AddSuccessMessage(string.Format(T("auth.welcomeBack"), user.Email));
 
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -176,6 +179,9 @@ namespace DigitalSignage.Controllers
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
+
+            // Login sonrası varsayılan şirket seçimini yap
+            await SetDefaultCompanyAsync(existingUser.UserID);
 
             AddSuccessMessage(string.Format(T("auth.welcomeBack"), existingUser.Email));
 
@@ -411,6 +417,20 @@ namespace DigitalSignage.Controllers
             ViewBag.ReturnUrl = returnUrl;
             ViewBag.IsAdminChangingPassword = isAdminChangingPassword;
             return View(user);
+        }
+
+        /// <summary>
+        /// Login sonrası kullanıcının erişebildiği ilk şirketi session'a yazar.
+        /// Böylece TenantResolverMiddleware ve Dashboard doğru şirket context'ini kullanır.
+        /// </summary>
+        private async Task SetDefaultCompanyAsync(int userId)
+        {
+            var companies = await _authService.GetUserCompaniesAsync(userId);
+            var firstCompany = companies.FirstOrDefault();
+            if (firstCompany != null)
+            {
+                HttpContext.Session.SetInt32("SelectedCompanyId", firstCompany.CompanyID);
+            }
         }
 
         [HttpPost]
